@@ -1,0 +1,3 @@
+GROQ_API_KEY=gsk_Z...
+HTTP_PROXY=http://usuario:senha@ip:porta
+HTTPS_PROXY=http://usuario:senha@ip:porta
