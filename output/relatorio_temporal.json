@@ -1,0 +1,1328 @@
+{
+  "resumo": {
+    "total_pregacoes": 956,
+    "periodo_analise": "2012-2026",
+    "total_anos": 13
+  },
+  "progressao_anual": {
+    "por_ano": {
+      "2016": {
+        "total": 70,
+        "temas": {
+          "Doutrina da Salvação": 4,
+          "Doutrina de Cristo": 13,
+          "Doutrina da Igreja": 8,
+          "Doutrina de Deus": 8,
+          "Doutrina das Últimas Coisas": 17,
+          "Doutrina da Palavra de Deus": 4,
+          "Doutrina do Homem": 8,
+          "Doutrina do Espírito Santo": 8
+        },
+        "pregadores": {
+          "Nélio Monteiro": 52,
+          "Jaine Feliciano": 3,
+          "Robson Soares": 2,
+          "Liliane De Passo Fundo Rs Onde": 1,
+          "Márcio Santos": 1
+        },
+        "livros": {
+          "João": 6,
+          "Josué": 2,
+          "Colossenses": 2,
+          "Lucas": 10,
+          "Números": 3,
+          "Salmos": 5,
+          "Atos": 4,
+          "Daniel": 5,
+          "Provérbios": 1,
+          "Zacarias": 1,
+          "Mateus": 5,
+          "Apocalipse": 3,
+          "Êxodo": 8,
+          "Deuteronômio": 1,
+          "Romanos": 1,
+          "Oséias": 2,
+          "Gênesis": 1,
+          "Hebreus": 2
+        },
+        "subtemas": {
+          "Novo nascimento": 1,
+          "Cruz": 7,
+          "Santidade de Deus": 2,
+          "Deus como Criador e Sustentador": 3,
+          "Esperança cristã": 10,
+          "Eternidade": 6,
+          "Ressurreição": 1,
+          "Comunhão": 3,
+          "Pecado": 7,
+          "Consciência": 1,
+          "Missão": 2,
+          "Idolatria do coração": 2,
+          "Soberania de Deus": 2,
+          "Caráter de Deus": 1,
+          "Segunda vinda de Cristo": 1
+        }
+      },
+      "2014": {
+        "total": 3,
+        "temas": {
+          "Doutrina do Espírito Santo": 2,
+          "Doutrina das Últimas Coisas": 1
+        },
+        "pregadores": {
+          "Robson Soares": 1,
+          "Nélio Monteiro": 1
+        },
+        "livros": {
+          "Êxodo": 1,
+          "Zacarias": 1,
+          "Lucas": 1
+        },
+        "subtemas": {}
+      },
+      "2012": {
+        "total": 14,
+        "temas": {
+          "Doutrina da Palavra de Deus": 2,
+          "Doutrina das Últimas Coisas": 3,
+          "Doutrina do Homem": 2,
+          "Doutrina da Salvação": 2,
+          "Doutrina do Espírito Santo": 2,
+          "Doutrina de Cristo": 2,
+          "Doutrina de Deus": 1
+        },
+        "pregadores": {
+          "Nélio Monteiro": 6,
+          "Jaine Feliciano": 3,
+          "Robson Soares": 1
+        },
+        "livros": {
+          "Êxodo": 2,
+          "Mateus": 1,
+          "Romanos": 3,
+          "João": 3,
+          "Atos": 1,
+          "Lucas": 1
+        },
+        "subtemas": {
+          "Eternidade": 1,
+          "Pecado": 2,
+          "Idolatria do coração": 1,
+          "Novo nascimento": 1,
+          "Queda": 1,
+          "Esperança cristã": 1
+        }
+      },
+      "2017": {
+        "total": 70,
+        "temas": {
+          "Doutrina das Últimas Coisas": 20,
+          "Doutrina da Igreja": 10,
+          "Doutrina do Homem": 7,
+          "Doutrina do Espírito Santo": 7,
+          "Doutrina de Cristo": 11,
+          "Doutrina da Palavra de Deus": 2,
+          "Doutrina de Deus": 7,
+          "Doutrina da Salvação": 6
+        },
+        "pregadores": {
+          "Nélio Monteiro": 43,
+          "Robson Soares": 2,
+          "Eliel Restaurar": 1,
+          "Jaine Feliciano": 2,
+          "Irmã Claudia": 1,
+          "Rafael Pena Ver": 1,
+          "Lucas Essa": 1,
+          "De 09/07/2017": 1,
+          "De 25/06/2017": 1,
+          "Felipe Você Continuar": 1,
+          "Você Possa Sentir": 1,
+          "Ivan Heker": 1,
+          "Silvio Farias": 3,
+          "Igreja Monteiro": 1,
+          "Eliel Marins": 1
+        },
+        "livros": {
+          "Daniel": 1,
+          "Isaías": 2,
+          "Eclesiastes": 2,
+          "Efésios": 12,
+          "Gênesis": 2,
+          "João": 6,
+          "Rute": 1,
+          "Marcos": 7,
+          "Romanos": 1,
+          "Gálatas": 2,
+          "Jonas": 3,
+          "Atos": 3,
+          "Apocalipse": 1,
+          "Mateus": 10,
+          "Habacuque": 2,
+          "Lucas": 3,
+          "Colossenses": 1,
+          "Salmos": 2,
+          "Joel": 2,
+          "Hebreus": 1,
+          "Filipenses": 1,
+          "Jeremias": 1,
+          "Neemias": 1
+        },
+        "subtemas": {
+          "Esperança cristã": 16,
+          "Eternidade": 5,
+          "Pecado": 4,
+          "Soberania de Deus": 4,
+          "Consciência": 1,
+          "Juízo final": 5,
+          "Cruz": 8,
+          "Comunhão": 3,
+          "Idolatria do coração": 1,
+          "Missão": 4,
+          "Santificação": 1,
+          "Perseverança dos santos": 1,
+          "Deus como Criador e Sustentador": 3,
+          "Santidade de Deus": 3,
+          "Ressurreição": 2,
+          "Caráter de Deus": 1
+        }
+      },
+      "2018": {
+        "total": 70,
+        "temas": {
+          "Doutrina de Cristo": 15,
+          "Doutrina do Homem": 9,
+          "Doutrina do Espírito Santo": 7,
+          "Doutrina da Palavra de Deus": 8,
+          "Doutrina das Últimas Coisas": 13,
+          "Doutrina da Salvação": 6,
+          "Doutrina da Igreja": 11,
+          "Doutrina de Deus": 1
+        },
+        "pregadores": {
+          "Nélio Monteiro": 39,
+          "Silvio Farias": 3,
+          "Jaine Feliciano": 3,
+          "Thales Atributos Que": 1,
+          "Ryan Souza": 2,
+          "Você Precisa": 1,
+          "Ministrado Pelo": 1,
+          "Daniel Abraçar": 1,
+          "Ministrado Pelo Irmão Gabriel": 1,
+          "Eu Gostaria": 1,
+          "Eternidade Que": 1
+        },
+        "livros": {
+          "João": 8,
+          "Juízes": 1,
+          "Lucas": 3,
+          "Romanos": 3,
+          "Hebreus": 4,
+          "Eclesiastes": 1,
+          "Atos": 11,
+          "Jeremias": 7,
+          "Gênesis": 7,
+          "Salmos": 3,
+          "Neemias": 1,
+          "Ezequiel": 1,
+          "Mateus": 8,
+          "Provérbios": 2,
+          "Gálatas": 1,
+          "Tiago": 1,
+          "Efésios": 1
+        },
+        "subtemas": {
+          "Cruz": 9,
+          "Pecado": 8,
+          "Idolatria do coração": 3,
+          "Ressurreição": 6,
+          "Consciência": 2,
+          "Juízo final": 4,
+          "Eternidade": 8,
+          "Esperança cristã": 9,
+          "Comunhão": 3,
+          "Missão": 3,
+          "Convicção do pecado": 1,
+          "Senhorio de Cristo": 1,
+          "Queda": 1,
+          "Regeneração": 1,
+          "Autoridade das Escrituras": 1,
+          "Segunda vinda de Cristo": 1,
+          "Soberania de Deus": 1,
+          "Deus como Criador e Sustentador": 1
+        }
+      },
+      "2019": {
+        "total": 49,
+        "temas": {
+          "Doutrina das Últimas Coisas": 14,
+          "Doutrina de Deus": 6,
+          "Doutrina de Cristo": 12,
+          "Doutrina da Salvação": 5,
+          "Doutrina da Palavra de Deus": 3,
+          "Doutrina do Homem": 2,
+          "Doutrina da Igreja": 5,
+          "Doutrina do Espírito Santo": 2
+        },
+        "pregadores": {
+          "Nélio Monteiro": 40,
+          "Mensagem Fabrícia / Congresso": 1,
+          "Espero Que": 1,
+          "De Pastor Luiz Fernando": 1,
+          "Jaine Feliciano": 1,
+          "Silvio Farias": 1
+        },
+        "livros": {
+          "Salmos": 4,
+          "João": 4,
+          "Lucas": 3,
+          "Romanos": 4,
+          "Gênesis": 1,
+          "Neemias": 1,
+          "Gálatas": 3,
+          "Hebreus": 2,
+          "Isaías": 1,
+          "Marcos": 5,
+          "Mateus": 6,
+          "Apocalipse": 1,
+          "Daniel": 1,
+          "Deuteronômio": 1,
+          "Jó": 2,
+          "Êxodo": 1,
+          "Atos": 5,
+          "Ezequiel": 1,
+          "Eclesiastes": 1
+        },
+        "subtemas": {
+          "Esperança cristã": 8,
+          "Eternidade": 11,
+          "Cruz": 9,
+          "Deus como Criador e Sustentador": 3,
+          "Soberania de Deus": 2,
+          "Pecado": 2,
+          "Corpo de Cristo": 1,
+          "Missão": 1,
+          "Trindade": 1,
+          "Ressurreição": 3,
+          "Convicção do pecado": 1
+        }
+      },
+      "2020": {
+        "total": 114,
+        "temas": {
+          "Doutrina das Últimas Coisas": 22,
+          "Doutrina de Deus": 8,
+          "Doutrina de Cristo": 15,
+          "Doutrina da Igreja": 26,
+          "Doutrina da Palavra de Deus": 6,
+          "Doutrina do Homem": 14,
+          "Doutrina da Salvação": 17,
+          "Doutrina do Espírito Santo": 6
+        },
+        "pregadores": {
+          "Nélio Monteiro": 66,
+          "Gabriel Monteiro": 5,
+          "Silvio Farias": 6,
+          "De Pastor Silvio Faria": 1,
+          "Ryan Souza": 1,
+          "Lucas Portanto Irmãos": 1,
+          "Jhonatas Lira Que": 1,
+          "Do Irmão Mateus": 1,
+          "Mensagem Irmão": 1
+        },
+        "livros": {
+          "Marcos": 5,
+          "João": 16,
+          "Salmos": 9,
+          "Êxodo": 3,
+          "Mateus": 15,
+          "Filipenses": 13,
+          "Lucas": 3,
+          "Deuteronômio": 4,
+          "Hebreus": 6,
+          "Romanos": 4,
+          "Isaías": 6,
+          "Apocalipse": 3,
+          "Efésios": 1,
+          "Atos": 9,
+          "Tiago": 3,
+          "Jeremias": 1,
+          "Ezequiel": 1,
+          "Gênesis": 3,
+          "Gálatas": 1,
+          "Jonas": 1,
+          "Cântico dos Cânticos": 1
+        },
+        "subtemas": {
+          "Esperança cristã": 14,
+          "Eternidade": 11,
+          "Deus como Criador e Sustentador": 3,
+          "Cruz": 4,
+          "Ressurreição": 6,
+          "Aplicação da Palavra": 1,
+          "Missão": 6,
+          "Pecado": 12,
+          "Comunhão": 7,
+          "Autoridade das Escrituras": 1,
+          "Juízo final": 3,
+          "Santidade de Deus": 1,
+          "Santificação": 2,
+          "Soberania de Deus": 2,
+          "Graça": 1,
+          "Queda": 3,
+          "Consciência": 2,
+          "Idolatria do coração": 1,
+          "Senhorio de Cristo": 1,
+          "Novo nascimento": 1
+        }
+      },
+      "2021": {
+        "total": 111,
+        "temas": {
+          "Doutrina de Cristo": 14,
+          "Doutrina da Salvação": 9,
+          "Doutrina das Últimas Coisas": 35,
+          "Doutrina da Igreja": 23,
+          "Doutrina da Palavra de Deus": 8,
+          "Doutrina do Homem": 9,
+          "Doutrina do Espírito Santo": 7,
+          "Doutrina de Deus": 6
+        },
+        "pregadores": {
+          "Nélio Monteiro": 80,
+          "Luiz Fernando Que": 1,
+          "Jaine Feliciano": 1,
+          "Do Irmão Junio Vasconcelos": 1,
+          "Do Irmão Tiago": 1,
+          "Ryan Souza": 1,
+          "Ernesto Milani": 2,
+          "Seminarista Ryan": 1,
+          "Gabriel Monteiro": 2,
+          "Silvio Farias": 2
+        },
+        "livros": {
+          "Mateus": 16,
+          "Colossenses": 3,
+          "Isaías": 4,
+          "Salmos": 8,
+          "João": 16,
+          "Hebreus": 4,
+          "Ezequiel": 2,
+          "Atos": 9,
+          "Lucas": 6,
+          "Naum": 2,
+          "Romanos": 4,
+          "Neemias": 3,
+          "Eclesiastes": 1,
+          "Josué": 3,
+          "Lamentações": 3,
+          "Apocalipse": 2,
+          "Deuteronômio": 3,
+          "Provérbios": 2,
+          "Tiago": 2,
+          "Jó": 4,
+          "Rute": 1,
+          "Números": 1,
+          "Efésios": 1,
+          "Êxodo": 1,
+          "Jeremias": 1,
+          "Filipenses": 2,
+          "Gênesis": 2
+        },
+        "subtemas": {
+          "Cruz": 9,
+          "Ressurreição": 4,
+          "Esperança cristã": 27,
+          "Eternidade": 19,
+          "Pecado": 9,
+          "Missão": 9,
+          "Comunhão": 7,
+          "Juízo final": 2,
+          "Senhorio de Cristo": 1,
+          "Queda": 1,
+          "Consciência": 1,
+          "Autoridade das Escrituras": 2,
+          "Deus como Criador e Sustentador": 2,
+          "Santidade de Deus": 1,
+          "Idolatria do coração": 2,
+          "Segunda vinda de Cristo": 1
+        }
+      },
+      "2022": {
+        "total": 102,
+        "temas": {
+          "Doutrina da Salvação": 17,
+          "Doutrina das Últimas Coisas": 20,
+          "Doutrina da Igreja": 25,
+          "Doutrina do Homem": 6,
+          "Doutrina de Cristo": 16,
+          "Doutrina da Palavra de Deus": 8,
+          "Doutrina do Espírito Santo": 7,
+          "Doutrina de Deus": 3
+        },
+        "pregadores": {
+          "Nélio Monteiro": 51,
+          "Gabriel Monteiro": 2,
+          "Fernando Arede": 1,
+          "Mensagem Irmã Neuzinha": 2,
+          "Mensagem Guilherme Saito": 1,
+          "Jailson": 2,
+          "Reinal Reimon": 1,
+          "Silvio Farias": 2
+        },
+        "livros": {
+          "Salmos": 10,
+          "Isaías": 6,
+          "Gálatas": 5,
+          "Provérbios": 3,
+          "Lucas": 10,
+          "Gênesis": 4,
+          "Deuteronômio": 1,
+          "Efésios": 6,
+          "Atos": 4,
+          "Êxodo": 2,
+          "Mateus": 9,
+          "João": 17,
+          "Hebreus": 5,
+          "Apocalipse": 3,
+          "Colossenses": 1,
+          "Josué": 1,
+          "Ageu": 1,
+          "Jeremias": 1,
+          "Romanos": 1,
+          "Tiago": 1,
+          "Marcos": 2
+        },
+        "subtemas": {
+          "Esperança cristã": 11,
+          "Comunhão": 4,
+          "Pecado": 5,
+          "Consciência": 3,
+          "Cruz": 12,
+          "Eternidade": 13,
+          "Missão": 7,
+          "Caráter de Deus": 1,
+          "Juízo final": 3,
+          "Queda": 2,
+          "Senhorio de Cristo": 1,
+          "Corpo de Cristo": 2,
+          "Novo nascimento": 1,
+          "Ressurreição": 1
+        }
+      },
+      "2023": {
+        "total": 86,
+        "temas": {
+          "Doutrina da Palavra de Deus": 11,
+          "Doutrina de Cristo": 18,
+          "Doutrina das Últimas Coisas": 18,
+          "Doutrina do Homem": 9,
+          "Doutrina de Deus": 6,
+          "Doutrina da Igreja": 11,
+          "Doutrina da Salvação": 8,
+          "Doutrina do Espírito Santo": 5
+        },
+        "pregadores": {
+          "Nélio Monteiro": 51,
+          "Ryan Souza": 6,
+          "Gabriel Monteiro": 24,
+          "Estevão Qual": 1
+        },
+        "livros": {
+          "Provérbios": 2,
+          "Marcos": 2,
+          "Salmos": 5,
+          "Isaías": 4,
+          "Josué": 2,
+          "Miquéias": 1,
+          "Gálatas": 1,
+          "Romanos": 18,
+          "Mateus": 6,
+          "Lucas": 8,
+          "Hebreus": 3,
+          "Gênesis": 1,
+          "João": 14,
+          "Daniel": 1,
+          "Ezequiel": 1,
+          "Tiago": 2,
+          "Filipenses": 1,
+          "Malaquias": 1,
+          "Atos": 2,
+          "Juízes": 1,
+          "Jó": 1,
+          "Neemias": 1,
+          "Efésios": 2,
+          "Deuteronômio": 1,
+          "Levítico": 1,
+          "Êxodo": 1,
+          "Colossenses": 1
+        },
+        "subtemas": {
+          "Cruz": 15,
+          "Ressurreição": 8,
+          "Esperança cristã": 13,
+          "Eternidade": 11,
+          "Encarnação": 1,
+          "Pecado": 9,
+          "Queda": 4,
+          "Deus como Criador e Sustentador": 4,
+          "Caráter de Deus": 2,
+          "Comunhão": 3,
+          "Consciência": 2,
+          "Idolatria do coração": 2,
+          "Aplicação da Palavra": 1,
+          "Corpo de Cristo": 1,
+          "Missão": 6,
+          "Juízo final": 4,
+          "Santidade de Deus": 3,
+          "Soberania de Deus": 2,
+          "Trindade": 1,
+          "Novo nascimento": 1,
+          "Santificação": 1
+        }
+      },
+      "2024": {
+        "total": 133,
+        "temas": {
+          "Doutrina das Últimas Coisas": 27,
+          "Doutrina da Igreja": 24,
+          "Doutrina de Deus": 7,
+          "Doutrina de Cristo": 26,
+          "Doutrina da Salvação": 21,
+          "Doutrina da Palavra de Deus": 10,
+          "Doutrina do Espírito Santo": 12,
+          "Doutrina do Homem": 6
+        },
+        "pregadores": {
+          "Nélio Monteiro": 76,
+          "Ryan Souza": 9,
+          "Gabriel Monteiro": 29,
+          "Geovane Glória": 1,
+          "Solyana Coelho": 1,
+          "Anair Bragança": 1,
+          "Daniel Monteiro": 4,
+          "Arlécio Como Ficar Indiferente": 1,
+          "Jaine Feliciano": 2,
+          "Jailson": 1,
+          "Guilherme Saito": 1,
+          "André Você Crê Nisso": 1,
+          "André Sempre Existe Algo": 1
+        },
+        "livros": {
+          "Zacarias": 1,
+          "João": 19,
+          "Salmos": 13,
+          "Ageu": 3,
+          "Mateus": 9,
+          "Isaías": 6,
+          "Gálatas": 3,
+          "Hebreus": 25,
+          "Daniel": 3,
+          "Atos": 6,
+          "Jó": 1,
+          "Gênesis": 6,
+          "Provérbios": 1,
+          "Apocalipse": 5,
+          "Ezequiel": 1,
+          "Colossenses": 1,
+          "Lucas": 7,
+          "Romanos": 3,
+          "Êxodo": 2,
+          "Marcos": 4,
+          "Jonas": 4,
+          "Números": 1,
+          "Filipenses": 1,
+          "Ester": 1,
+          "Tiago": 1,
+          "Rute": 1,
+          "Oséias": 1,
+          "Jeremias": 1,
+          "Efésios": 2
+        },
+        "subtemas": {
+          "Esperança cristã": 21,
+          "Deus como Criador e Sustentador": 3,
+          "Cruz": 20,
+          "Ressurreição": 10,
+          "Eternidade": 21,
+          "Senhorio de Cristo": 3,
+          "Corpo de Cristo": 2,
+          "Comunhão": 3,
+          "Juízo final": 7,
+          "Pecado": 6,
+          "Queda": 2,
+          "Consciência": 4,
+          "Perseverança dos santos": 3,
+          "Autoridade das Escrituras": 2,
+          "Novo nascimento": 2,
+          "Encarnação": 3,
+          "Santidade de Deus": 2,
+          "Soberania de Deus": 1,
+          "Caráter de Deus": 1,
+          "Regeneração": 1,
+          "Vida no Espírito": 1,
+          "Trindade": 1,
+          "Missão": 1
+        }
+      },
+      "2025": {
+        "total": 129,
+        "temas": {
+          "Doutrina da Palavra de Deus": 10,
+          "Doutrina de Cristo": 27,
+          "Doutrina das Últimas Coisas": 32,
+          "Doutrina da Igreja": 18,
+          "Doutrina da Salvação": 12,
+          "Doutrina do Espírito Santo": 16,
+          "Doutrina do Homem": 7,
+          "Doutrina de Deus": 7
+        },
+        "pregadores": {
+          "Nélio Monteiro": 66,
+          "Gabriel Monteiro": 35,
+          "Ryan Souza": 15,
+          "Jorge Augusto": 1,
+          "Pr Héber Aleixo": 1,
+          "Guilherme Saito": 1,
+          "Geovane Glória": 1,
+          "Jailson": 1,
+          "Daniel Monteiro": 2,
+          "Jaine Feliciano": 1
+        },
+        "livros": {
+          "Lucas": 11,
+          "Romanos": 2,
+          "Apocalipse": 4,
+          "Zacarias": 1,
+          "Gênesis": 8,
+          "Isaías": 3,
+          "Atos": 33,
+          "Jeremias": 1,
+          "Mateus": 11,
+          "Deuteronômio": 2,
+          "Marcos": 5,
+          "Salmos": 7,
+          "Gálatas": 2,
+          "Daniel": 2,
+          "Tito": 1,
+          "Eclesiastes": 2,
+          "Hebreus": 6,
+          "Colossenses": 5,
+          "João": 15,
+          "Efésios": 1,
+          "Êxodo": 1,
+          "Lamentações": 1,
+          "Sofonias": 2,
+          "Filipenses": 1,
+          "Provérbios": 1
+        },
+        "subtemas": {
+          "Cruz": 22,
+          "Ressurreição": 10,
+          "Eternidade": 21,
+          "Encarnação": 1,
+          "Missão": 8,
+          "Esperança cristã": 15,
+          "Juízo final": 8,
+          "Segunda vinda de Cristo": 3,
+          "Pecado": 7,
+          "Queda": 1,
+          "Convicção do pecado": 5,
+          "Autoridade das Escrituras": 5,
+          "Comunhão": 5,
+          "Senhorio de Cristo": 1,
+          "Deus como Criador e Sustentador": 3,
+          "Suficiência da Palavra": 1,
+          "Novo nascimento": 4,
+          "Caráter de Deus": 2,
+          "Justificação": 1,
+          "Idolatria do coração": 1,
+          "Fé": 1,
+          "Graça": 1,
+          "Perseverança dos santos": 1,
+          "Santidade de Deus": 1,
+          "Corpo de Cristo": 1,
+          "Soberania de Deus": 1
+        }
+      },
+      "2026": {
+        "total": 5,
+        "temas": {
+          "Doutrina de Cristo": 3,
+          "Doutrina das Últimas Coisas": 1,
+          "Doutrina do Homem": 1
+        },
+        "pregadores": {
+          "Gabriel Monteiro": 5
+        },
+        "livros": {
+          "Mateus": 4,
+          "Lucas": 1
+        },
+        "subtemas": {
+          "Cruz": 2,
+          "Esperança cristã": 1,
+          "Pecado": 1
+        }
+      }
+    },
+    "anos_ordenados": [
+      2012,
+      2014,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025,
+      2026
+    ],
+    "evolucao_temas": {
+      "Doutrina da Palavra de Deus": {
+        "2012": {
+          "quantidade": 2,
+          "percentual": 14.3
+        },
+        "2016": {
+          "quantidade": 4,
+          "percentual": 5.7
+        },
+        "2017": {
+          "quantidade": 2,
+          "percentual": 2.9
+        },
+        "2018": {
+          "quantidade": 8,
+          "percentual": 11.4
+        },
+        "2019": {
+          "quantidade": 3,
+          "percentual": 6.1
+        },
+        "2020": {
+          "quantidade": 6,
+          "percentual": 5.3
+        },
+        "2021": {
+          "quantidade": 8,
+          "percentual": 7.2
+        },
+        "2022": {
+          "quantidade": 8,
+          "percentual": 7.8
+        },
+        "2023": {
+          "quantidade": 11,
+          "percentual": 12.8
+        },
+        "2024": {
+          "quantidade": 10,
+          "percentual": 7.5
+        },
+        "2025": {
+          "quantidade": 10,
+          "percentual": 7.8
+        }
+      },
+      "Doutrina das Últimas Coisas": {
+        "2012": {
+          "quantidade": 3,
+          "percentual": 21.4
+        },
+        "2014": {
+          "quantidade": 1,
+          "percentual": 33.3
+        },
+        "2016": {
+          "quantidade": 17,
+          "percentual": 24.3
+        },
+        "2017": {
+          "quantidade": 20,
+          "percentual": 28.6
+        },
+        "2018": {
+          "quantidade": 13,
+          "percentual": 18.6
+        },
+        "2019": {
+          "quantidade": 14,
+          "percentual": 28.6
+        },
+        "2020": {
+          "quantidade": 22,
+          "percentual": 19.3
+        },
+        "2021": {
+          "quantidade": 35,
+          "percentual": 31.5
+        },
+        "2022": {
+          "quantidade": 20,
+          "percentual": 19.6
+        },
+        "2023": {
+          "quantidade": 18,
+          "percentual": 20.9
+        },
+        "2024": {
+          "quantidade": 27,
+          "percentual": 20.3
+        },
+        "2025": {
+          "quantidade": 32,
+          "percentual": 24.8
+        },
+        "2026": {
+          "quantidade": 1,
+          "percentual": 20.0
+        }
+      },
+      "Doutrina do Homem": {
+        "2012": {
+          "quantidade": 2,
+          "percentual": 14.3
+        },
+        "2016": {
+          "quantidade": 8,
+          "percentual": 11.4
+        },
+        "2017": {
+          "quantidade": 7,
+          "percentual": 10.0
+        },
+        "2018": {
+          "quantidade": 9,
+          "percentual": 12.9
+        },
+        "2019": {
+          "quantidade": 2,
+          "percentual": 4.1
+        },
+        "2020": {
+          "quantidade": 14,
+          "percentual": 12.3
+        },
+        "2021": {
+          "quantidade": 9,
+          "percentual": 8.1
+        },
+        "2022": {
+          "quantidade": 6,
+          "percentual": 5.9
+        },
+        "2023": {
+          "quantidade": 9,
+          "percentual": 10.5
+        },
+        "2024": {
+          "quantidade": 6,
+          "percentual": 4.5
+        },
+        "2025": {
+          "quantidade": 7,
+          "percentual": 5.4
+        },
+        "2026": {
+          "quantidade": 1,
+          "percentual": 20.0
+        }
+      },
+      "Doutrina da Salvação": {
+        "2012": {
+          "quantidade": 2,
+          "percentual": 14.3
+        },
+        "2016": {
+          "quantidade": 4,
+          "percentual": 5.7
+        },
+        "2017": {
+          "quantidade": 6,
+          "percentual": 8.6
+        },
+        "2018": {
+          "quantidade": 6,
+          "percentual": 8.6
+        },
+        "2019": {
+          "quantidade": 5,
+          "percentual": 10.2
+        },
+        "2020": {
+          "quantidade": 17,
+          "percentual": 14.9
+        },
+        "2021": {
+          "quantidade": 9,
+          "percentual": 8.1
+        },
+        "2022": {
+          "quantidade": 17,
+          "percentual": 16.7
+        },
+        "2023": {
+          "quantidade": 8,
+          "percentual": 9.3
+        },
+        "2024": {
+          "quantidade": 21,
+          "percentual": 15.8
+        },
+        "2025": {
+          "quantidade": 12,
+          "percentual": 9.3
+        }
+      },
+      "Doutrina do Espírito Santo": {
+        "2012": {
+          "quantidade": 2,
+          "percentual": 14.3
+        },
+        "2014": {
+          "quantidade": 2,
+          "percentual": 66.7
+        },
+        "2016": {
+          "quantidade": 8,
+          "percentual": 11.4
+        },
+        "2017": {
+          "quantidade": 7,
+          "percentual": 10.0
+        },
+        "2018": {
+          "quantidade": 7,
+          "percentual": 10.0
+        },
+        "2019": {
+          "quantidade": 2,
+          "percentual": 4.1
+        },
+        "2020": {
+          "quantidade": 6,
+          "percentual": 5.3
+        },
+        "2021": {
+          "quantidade": 7,
+          "percentual": 6.3
+        },
+        "2022": {
+          "quantidade": 7,
+          "percentual": 6.9
+        },
+        "2023": {
+          "quantidade": 5,
+          "percentual": 5.8
+        },
+        "2024": {
+          "quantidade": 12,
+          "percentual": 9.0
+        },
+        "2025": {
+          "quantidade": 16,
+          "percentual": 12.4
+        }
+      },
+      "Doutrina de Cristo": {
+        "2012": {
+          "quantidade": 2,
+          "percentual": 14.3
+        },
+        "2016": {
+          "quantidade": 13,
+          "percentual": 18.6
+        },
+        "2017": {
+          "quantidade": 11,
+          "percentual": 15.7
+        },
+        "2018": {
+          "quantidade": 15,
+          "percentual": 21.4
+        },
+        "2019": {
+          "quantidade": 12,
+          "percentual": 24.5
+        },
+        "2020": {
+          "quantidade": 15,
+          "percentual": 13.2
+        },
+        "2021": {
+          "quantidade": 14,
+          "percentual": 12.6
+        },
+        "2022": {
+          "quantidade": 16,
+          "percentual": 15.7
+        },
+        "2023": {
+          "quantidade": 18,
+          "percentual": 20.9
+        },
+        "2024": {
+          "quantidade": 26,
+          "percentual": 19.5
+        },
+        "2025": {
+          "quantidade": 27,
+          "percentual": 20.9
+        },
+        "2026": {
+          "quantidade": 3,
+          "percentual": 60.0
+        }
+      },
+      "Doutrina de Deus": {
+        "2012": {
+          "quantidade": 1,
+          "percentual": 7.1
+        },
+        "2016": {
+          "quantidade": 8,
+          "percentual": 11.4
+        },
+        "2017": {
+          "quantidade": 7,
+          "percentual": 10.0
+        },
+        "2018": {
+          "quantidade": 1,
+          "percentual": 1.4
+        },
+        "2019": {
+          "quantidade": 6,
+          "percentual": 12.2
+        },
+        "2020": {
+          "quantidade": 8,
+          "percentual": 7.0
+        },
+        "2021": {
+          "quantidade": 6,
+          "percentual": 5.4
+        },
+        "2022": {
+          "quantidade": 3,
+          "percentual": 2.9
+        },
+        "2023": {
+          "quantidade": 6,
+          "percentual": 7.0
+        },
+        "2024": {
+          "quantidade": 7,
+          "percentual": 5.3
+        },
+        "2025": {
+          "quantidade": 7,
+          "percentual": 5.4
+        }
+      },
+      "Doutrina da Igreja": {
+        "2016": {
+          "quantidade": 8,
+          "percentual": 11.4
+        },
+        "2017": {
+          "quantidade": 10,
+          "percentual": 14.3
+        },
+        "2018": {
+          "quantidade": 11,
+          "percentual": 15.7
+        },
+        "2019": {
+          "quantidade": 5,
+          "percentual": 10.2
+        },
+        "2020": {
+          "quantidade": 26,
+          "percentual": 22.8
+        },
+        "2021": {
+          "quantidade": 23,
+          "percentual": 20.7
+        },
+        "2022": {
+          "quantidade": 25,
+          "percentual": 24.5
+        },
+        "2023": {
+          "quantidade": 11,
+          "percentual": 12.8
+        },
+        "2024": {
+          "quantidade": 24,
+          "percentual": 18.0
+        },
+        "2025": {
+          "quantidade": 18,
+          "percentual": 14.0
+        }
+      }
+    },
+    "total_anos": 13,
+    "periodo": "2012-2026"
+  },
+  "ciclos_espirituais": {
+    "por_trimestre": {
+      "Q4": {
+        "total": 220,
+        "temas_dominantes": {
+          "Doutrina das Últimas Coisas": 55,
+          "Doutrina de Cristo": 43,
+          "Doutrina da Igreja": 39
+        },
+        "distribuicao_meses": {
+          "12": 72,
+          "11": 72,
+          "10": 76
+        }
+      },
+      "Q3": {
+        "total": 220,
+        "temas_dominantes": {
+          "Doutrina das Últimas Coisas": 49,
+          "Doutrina da Igreja": 39,
+          "Doutrina de Cristo": 32
+        },
+        "distribuicao_meses": {
+          "9": 79,
+          "8": 69,
+          "7": 72
+        }
+      },
+      "Q2": {
+        "total": 228,
+        "temas_dominantes": {
+          "Doutrina das Últimas Coisas": 49,
+          "Doutrina de Cristo": 47,
+          "Doutrina da Igreja": 42
+        },
+        "distribuicao_meses": {
+          "5": 76,
+          "6": 77,
+          "4": 75
+        }
+      },
+      "Q1": {
+        "total": 206,
+        "temas_dominantes": {
+          "Doutrina das Últimas Coisas": 48,
+          "Doutrina de Cristo": 36,
+          "Doutrina do Homem": 30
+        },
+        "distribuicao_meses": {
+          "2": 60,
+          "3": 74,
+          "1": 72
+        }
+      }
+    },
+    "padroes_identificados": [
+      {
+        "trimestre": "Q1",
+        "descricao": "Início do ano - Renovação e Compromisso",
+        "tema_dominante": "Doutrina das Últimas Coisas",
+        "frequencia": 48,
+        "percentual": 23.3,
+        "interpretacao": "Ênfase em Doutrina das Últimas Coisas durante Início do ano - Renovação e Compromisso"
+      },
+      {
+        "trimestre": "Q2",
+        "descricao": "Primavera - Crescimento e Evangelismo",
+        "tema_dominante": "Doutrina das Últimas Coisas",
+        "frequencia": 49,
+        "percentual": 21.5,
+        "interpretacao": "Ênfase em Doutrina das Últimas Coisas durante Primavera - Crescimento e Evangelismo"
+      },
+      {
+        "trimestre": "Q3",
+        "descricao": "Meio do ano - Consolidação e Ensino",
+        "tema_dominante": "Doutrina das Últimas Coisas",
+        "frequencia": 49,
+        "percentual": 22.3,
+        "interpretacao": "Ênfase em Doutrina das Últimas Coisas durante Meio do ano - Consolidação e Ensino"
+      },
+      {
+        "trimestre": "Q4",
+        "descricao": "Final do ano - Gratidão e Esperança",
+        "tema_dominante": "Doutrina das Últimas Coisas",
+        "frequencia": 55,
+        "percentual": 25.0,
+        "interpretacao": "Final do ano com perspectiva escatológica"
+      }
+    ],
+    "estacoes_espirituais": {
+      "Q1": "Início do ano - Renovação e Compromisso",
+      "Q2": "Primavera - Crescimento e Evangelismo",
+      "Q3": "Meio do ano - Consolidação e Ensino",
+      "Q4": "Final do ano - Gratidão e Esperança"
+    }
+  },
+  "evolucao_tematica": {
+    "periodo_1": {
+      "anos": "2012-2019",
+      "total_pregacoes": 276,
+      "temas": {
+        "Doutrina das Últimas Coisas": 68,
+        "Doutrina de Cristo": 53,
+        "Doutrina da Igreja": 34,
+        "Doutrina do Homem": 28,
+        "Doutrina do Espírito Santo": 28,
+        "Doutrina da Salvação": 23,
+        "Doutrina de Deus": 23,
+        "Doutrina da Palavra de Deus": 19
+      }
+    },
+    "periodo_2": {
+      "anos": "2020-2026",
+      "total_pregacoes": 680,
+      "temas": {
+        "Doutrina das Últimas Coisas": 155,
+        "Doutrina da Igreja": 127,
+        "Doutrina de Cristo": 119,
+        "Doutrina da Salvação": 84,
+        "Doutrina da Palavra de Deus": 53,
+        "Doutrina do Espírito Santo": 53,
+        "Doutrina do Homem": 52,
+        "Doutrina de Deus": 37
+      }
+    },
+    "mudancas_significativas": [
+      {
+        "tema": "Doutrina da Igreja",
+        "periodo_1": {
+          "quantidade": 34,
+          "percentual": 12.3
+        },
+        "periodo_2": {
+          "quantidade": 127,
+          "percentual": 18.7
+        },
+        "mudanca_percentual": 6.4,
+        "tendencia": "CRESCEU",
+        "interpretacao": "Ênfase crescente em Doutrina da Igreja - possível direcionamento estratégico da liderança"
+      },
+      {
+        "tema": "Doutrina da Salvação",
+        "periodo_1": {
+          "quantidade": 23,
+          "percentual": 8.3
+        },
+        "periodo_2": {
+          "quantidade": 84,
+          "percentual": 12.4
+        },
+        "mudanca_percentual": 4.0,
+        "tendencia": "CRESCEU",
+        "interpretacao": "Crescimento moderado em Doutrina da Salvação"
+      }
+    ]
+  }
+}

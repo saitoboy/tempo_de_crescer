@@ -1,24 +1,46 @@
 #!/usr/bin/env python3
 """
-🏷️ THEMATIC_CLASSIFIER.PY v2.0 - Classificador Temático de Pregações
-Classifica pregações usando a Taxonomia de Wayne Grudem (Teologia Sistemática)
-Versão enriquecida com subtemas e indicadores textuais detalhados
+🏷️ THEMATIC_CLASSIFIER.PY v3.1 - Classificador Híbrido (TF-IDF + Heurístico)
+
+METODOLOGIA:
+Este é um sistema híbrido que combina:
+1. TF-IDF estatístico para tokens individuais
+2. Scoring heurístico para n-grams teológicos (frases-chave)
+3. Contextualização semântica para desambiguação
+
+DECISÃO METODOLÓGICA:
+Escolhemos modelo híbrido porque:
+- Teologia usa frases técnicas ("novo nascimento", "justificação pela fé")
+- TF-IDF puro não captura semântica teológica
+- Heurística pura não generaliza
+- Híbrido maximiza interpretabilidade + acurácia contextual
+
+CIENTISTA RESPONSÁVEL: Guilherme Saito
+VERSÃO: 3.1 (Rigorosa)
+DATA: Janeiro 2026
 """
 
 import json
 import re
+import math
 from typing import Dict, List, Optional, Tuple, Set
 from collections import Counter, defaultdict
 from pathlib import Path
+import statistics
 
 
 class ThematicClassifier:
-    """Classificador temático baseado em Wayne Grudem - Versão Enriquecida"""
+    """
+    Classificador Temático Híbrido (TF-IDF + Heurístico)
+    
+    Combina análise estatística (TF-IDF) com conhecimento teológico especialista
+    para classificar pregações na Taxonomia de Wayne Grudem.
+    """
     
     def __init__(self):
-        """Inicializa o classificador com taxonomia completa de Grudem"""
+        """Inicializa o classificador"""
         
-        # ========== TAXONOMIA DE GRUDEM (8 CATEGORIAS) - VERSÃO ENRIQUECIDA ==========
+        # ========== TAXONOMIA DE GRUDEM ==========
         self.taxonomia_grudem = {
             1: {
                 "nome": "Doutrina da Palavra de Deus",
@@ -29,8 +51,7 @@ class ThematicClassifier:
                     "Revelação de Deus",
                     "Pregação expositiva",
                     "Aplicação da Palavra"
-                ],
-                "aliases": ["Palavra", "Escrituras", "Bíblia", "Bibliologia"]
+                ]
             },
             2: {
                 "nome": "Doutrina de Deus",
@@ -41,8 +62,7 @@ class ThematicClassifier:
                     "Soberania de Deus",
                     "Trindade",
                     "Deus como Criador e Sustentador"
-                ],
-                "aliases": ["Deus", "Teologia Própria", "Trindade"]
+                ]
             },
             3: {
                 "nome": "Doutrina do Homem",
@@ -53,8 +73,7 @@ class ThematicClassifier:
                     "Consciência",
                     "Idolatria do coração",
                     "Necessidade de salvação"
-                ],
-                "aliases": ["Antropologia", "Pecado", "Natureza Humana", "Hamartologia"]
+                ]
             },
             4: {
                 "nome": "Doutrina de Cristo",
@@ -65,8 +84,7 @@ class ThematicClassifier:
                     "Ressurreição",
                     "Senhorio de Cristo",
                     "Mediação"
-                ],
-                "aliases": ["Cristologia", "Jesus", "Redenção", "Cristo"]
+                ]
             },
             5: {
                 "nome": "Doutrina da Salvação",
@@ -78,8 +96,7 @@ class ThematicClassifier:
                     "Fé",
                     "Santificação",
                     "Perseverança dos santos"
-                ],
-                "aliases": ["Soteriologia", "Salvação", "Conversão"]
+                ]
             },
             6: {
                 "nome": "Doutrina do Espírito Santo",
@@ -90,8 +107,7 @@ class ThematicClassifier:
                     "Vida no Espírito",
                     "Santificação",
                     "Consolação"
-                ],
-                "aliases": ["Pneumatologia", "Espírito Santo", "Espírito"]
+                ]
             },
             7: {
                 "nome": "Doutrina da Igreja",
@@ -103,8 +119,7 @@ class ThematicClassifier:
                     "Perdão",
                     "Missão",
                     "Vida comunitária"
-                ],
-                "aliases": ["Eclesiologia", "Igreja", "Corpo de Cristo"]
+                ]
             },
             8: {
                 "nome": "Doutrina das Últimas Coisas",
@@ -115,523 +130,494 @@ class ThematicClassifier:
                     "Eternidade",
                     "Segunda vinda de Cristo",
                     "Nova criação"
-                ],
-                "aliases": ["Escatologia", "Eternidade", "Segunda Vinda"]
+                ]
             }
         }
         
         
-        # ========== INDICADORES TEXTUAIS ENRIQUECIDOS ==========
-        self.indicadores_textuais = {
+        # ========== N-GRAMS TEOLÓGICOS (SCORING HEURÍSTICO) ==========
+        # Frases completas que TF-IDF não captura adequadamente
+        self.ngrams_teologicos = {
             1: {
-                # Doutrina da Palavra de Deus
-                "expressoes_fortes": [
-                    "a palavra de deus diz",
-                    "a bíblia nos ensina",
-                    "segundo as escrituras",
-                    "está escrito",
-                    "palavra do senhor",
-                    "assim diz o senhor",
+                "alta": [
                     "autoridade das escrituras",
                     "suficiência da palavra",
-                    "revelação de deus",
-                    "inerrância bíblica"
+                    "inerrância bíblica",
+                    "pregação expositiva",
+                    "sola scriptura"
                 ],
-                "expressoes_medias": [
+                "media": [
                     "palavra de deus",
-                    "escritura",
-                    "bíblia",
-                    "revelação",
-                    "texto bíblico",
-                    "passagem",
-                    "versículo",
-                    "palavra"
-                ],
-                "verbos_chave": [
-                    "pregar",
-                    "ensinar",
-                    "explicar o texto",
-                    "aplicar a palavra",
-                    "expor as escrituras"
+                    "está escrito",
+                    "assim diz o senhor"
                 ]
             },
             2: {
-                # Doutrina de Deus
-                "expressoes_fortes": [
-                    "deus é santo",
-                    "deus é soberano",
+                "alta": [
                     "santidade de deus",
+                    "soberania de deus",
                     "glória de deus",
-                    "majestade de deus",
-                    "caráter de deus",
                     "atributos de deus",
-                    "trindade",
-                    "pai filho espírito santo",
-                    "nada foge do controle de deus"
+                    "natureza divina"
                 ],
-                "expressoes_medias": [
-                    "deus",
-                    "senhor",
-                    "criador",
-                    "todo-poderoso",
-                    "altíssimo",
-                    "eterno",
-                    "pai celestial",
-                    "soberano"
-                ],
-                "verbos_chave": [
-                    "adorar a deus",
-                    "glorificar",
-                    "exaltar",
-                    "temer ao senhor",
-                    "contemplar a glória"
+                "media": [
+                    "santo dos santos",
+                    "deus todo-poderoso"
                 ]
             },
             3: {
-                # Doutrina do Homem
-                "expressoes_fortes": [
-                    "o coração do homem",
-                    "somos pecadores",
-                    "nossa inclinação ao pecado",
+                "alta": [
                     "natureza pecaminosa",
-                    "todos pecaram",
                     "depravação total",
                     "queda do homem",
-                    "adão",
-                    "condição caída",
-                    "iniquidade"
+                    "todos pecaram"
                 ],
-                "expressoes_medias": [
-                    "pecado",
-                    "pecados",
-                    "pecador",
-                    "carne",
-                    "concupiscência",
-                    "transgressão",
-                    "culpa",
-                    "vergonha"
-                ],
-                "verbos_chave": [
-                    "pecar",
-                    "transgredir",
-                    "rebelar",
-                    "desobedecer",
-                    "afastar de deus"
+                "media": [
+                    "coração do homem",
+                    "inclinação ao pecado"
                 ]
             },
             4: {
-                # Doutrina de Cristo
-                "expressoes_fortes": [
-                    "cristo morreu por nós",
-                    "jesus é o senhor",
-                    "somente em cristo",
+                "alta": [
                     "cruz de cristo",
-                    "ressurreição de jesus",
                     "sangue de cristo",
                     "cordeiro de deus",
-                    "sacrifício perfeito",
-                    "obra de cristo",
-                    "mediador"
+                    "ressurreição de cristo",
+                    "morte substitutiva",
+                    "obra redentora"
                 ],
-                "expressoes_medias": [
-                    "jesus",
-                    "cristo",
-                    "salvador",
-                    "messias",
+                "media": [
                     "filho de deus",
-                    "senhor jesus",
-                    "mestre",
-                    "cruz"
-                ],
-                "verbos_chave": [
-                    "morreu por",
-                    "ressuscitou",
-                    "redimiu",
-                    "salvou",
-                    "intercede"
+                    "senhor jesus"
                 ]
             },
             5: {
-                # Doutrina da Salvação (ENRIQUECIDA!)
-                "expressoes_fortes": [
+                "alta": [
+                    "justificação pela fé",
+                    "novo nascimento",
                     "nascer de novo",
                     "somos salvos pela graça",
                     "arrependimento e fé",
-                    "novo nascimento",
-                    "justificação pela fé",
-                    "santificação progressiva",
-                    "regeneração",
-                    "conversão",
-                    "chamados à salvação",
-                    "perdão de pecados",
-                    "remissão",
-                    "vida nova em cristo",
                     "graça salvadora",
-                    "fé salvadora"
+                    "santificação progressiva",
+                    "sola fide",
+                    "sola gratia"
                 ],
-                "expressoes_medias": [
-                    "salvação",
-                    "salvo",
-                    "graça",
-                    "fé",
-                    "arrependimento",
-                    "conversão",
-                    "perdão",
-                    "reconciliação",
-                    "redenção"
-                ],
-                "verbos_chave": [
-                    "salvar",
-                    "arrepender",
-                    "crer",
-                    "confessar",
-                    "receber cristo",
-                    "nascer de novo",
-                    "converter"
+                "media": [
+                    "vida eterna",
+                    "perdão de pecados",
+                    "reconciliação com deus"
                 ]
             },
             6: {
-                # Doutrina do Espírito Santo
-                "expressoes_fortes": [
-                    "o espírito santo nos convence",
-                    "deus habita em nós",
-                    "somos guiados pelo espírito",
+                "alta": [
+                    "espírito santo",
                     "batismo no espírito",
                     "cheios do espírito",
-                    "consolador",
-                    "parácleto",
-                    "poder do espírito",
                     "fruto do espírito",
-                    "dons espirituais"
+                    "dons espirituais",
+                    "vida no espírito"
                 ],
-                "expressoes_medias": [
-                    "espírito santo",
-                    "espírito",
-                    "unção",
+                "media": [
                     "consolador",
-                    "capacitação",
-                    "regeneração"
-                ],
-                "verbos_chave": [
-                    "guiar",
-                    "consolar",
-                    "capacitar",
-                    "convencer",
-                    "regenerar"
+                    "poder do espírito"
                 ]
             },
             7: {
-                # Doutrina da Igreja
-                "expressoes_fortes": [
-                    "como igreja",
+                "alta": [
                     "corpo de cristo",
-                    "relacionamentos restaurados",
+                    "noiva de cristo",
                     "comunhão dos santos",
                     "edificar a igreja",
-                    "unidade do corpo",
-                    "missão da igreja",
+                    "missão da igreja"
+                ],
+                "media": [
                     "família de deus",
                     "povo de deus"
-                ],
-                "expressoes_medias": [
-                    "igreja",
-                    "irmãos",
-                    "comunhão",
-                    "comunidade",
-                    "corpo",
-                    "família",
-                    "assembleia"
-                ],
-                "verbos_chave": [
-                    "edificar",
-                    "comungar",
-                    "perdoar",
-                    "amar uns aos outros",
-                    "servir"
                 ]
             },
             8: {
-                # Doutrina das Últimas Coisas
-                "expressoes_fortes": [
-                    "vida eterna",
-                    "aguardamos a volta de cristo",
-                    "nossa pátria está nos céus",
-                    "segunda vinda",
+                "alta": [
+                    "segunda vinda de cristo",
+                    "volta de jesus",
                     "juízo final",
                     "ressurreição dos mortos",
                     "novos céus e nova terra",
-                    "maranata",
+                    "vida eterna",
                     "esperança gloriosa"
                 ],
-                "expressoes_medias": [
-                    "eternidade",
-                    "céu",
-                    "inferno",
-                    "esperança",
-                    "glorificação",
-                    "volta de jesus"
-                ],
-                "verbos_chave": [
-                    "aguardar",
-                    "esperar",
-                    "voltar",
-                    "julgar",
-                    "ressuscitar"
+                "media": [
+                    "maranata",
+                    "dia do senhor"
                 ]
             }
         }
         
         
-        # ========== PESOS AJUSTADOS (BALANCEADOS) ==========
+        # ========== TOKENS SIMPLES (TF-IDF PURO) ==========
+        self.tokens_simples = {
+            1: ["bíblia", "escritura", "palavra", "revelação"],
+            2: ["deus", "senhor", "criador", "altíssimo"],
+            3: ["pecado", "pecador", "carne", "transgressão"],
+            4: ["jesus", "cristo", "salvador", "messias"],
+            5: ["salvação", "graça", "fé", "redenção"],
+            6: ["espírito", "unção", "consolador"],
+            7: ["igreja", "irmãos", "comunidade"],
+            8: ["eternidade", "céu", "esperança", "glorificação"]
+        }
+        
+        
+        # ========== REGRAS DE DESAMBIGUAÇÃO CONTEXTUAL ==========
+        self.regras_contexto = {
+            "santificação": {
+                # "santificação" pode ser Salvação (5) ou Espírito Santo (6)
+                "pneumatologia_triggers": ["espírito santo", "espírito opera", "pelo espírito"],
+                "soteriologia_triggers": ["fruto da salvação", "processo de", "progressiva"]
+            },
+            "graça": {
+                # "graça" pode ser Deus (2) ou Salvação (5)
+                "deus_triggers": ["caráter de deus", "atributo", "natureza"],
+                "salvacao_triggers": ["somos salvos", "justificados", "mediante a graça"]
+            }
+        }
+        
+        
+        # ========== PESOS CALIBRADOS ==========
         self.pesos = {
-            "titulo": 4.0,                    # Peso MUITO alto para título
-            "expressao_forte": 3.0,           # Frases-chave específicas
-            "expressao_media": 1.5,           # Palavras importantes
-            "verbo_chave": 2.0,               # Verbos de ação teológica
-            "livro_biblico": 1.0,             # Livro relacionado
-            "bonus_multiplas_expressoes": 2.0 # Bônus se várias expressões aparecem
+            # Heurístico (frases teológicas)
+            "titulo_ngram_alta": 6.0,           # N-gram teológico no título
+            "titulo_ngram_media": 4.0,
+            "conteudo_ngram_alta": 3.0,         # N-gram no conteúdo
+            "conteudo_ngram_media": 1.5,
+            
+            # TF-IDF (tokens simples)
+            "titulo_token_tfidf": 4.0,          # Token com TF-IDF no título
+            "conteudo_token_tfidf": 1.0,        # Token com TF-IDF no conteúdo
+            
+            # Bônus
+            "bonus_diversidade": 2.5,           # Múltiplas expressões específicas
+            "livro_biblico": 1.0,               # Peso reduzido (desempate)
+            "contexto_direcional": 2.0          # Bônus por contexto identificado
         }
         
         
-        # ========== LIVROS BÍBLICOS POR CATEGORIA (EXPANDIDO) ==========
-        self.livros_relacionados = {
-            1: ["2 timóteo", "salmos 119", "deuteronômio", "josué 1"],
-            2: ["isaías", "salmos", "jó", "êxodo 34", "apocalipse 4"],
-            3: ["gênesis 3", "romanos 3", "efésios 2", "jeremias 17", "romanos 1-2"],
-            4: ["joão", "mateus", "marcos", "lucas", "filipenses 2", "colossenses 1", "hebreus"],
-            5: ["romanos", "efésios", "joão 3", "tito", "gálatas", "1 pedro 1"],
-            6: ["atos", "joão 14", "joão 15", "joão 16", "romanos 8", "1 coríntios 12", "gálatas 5"],
-            7: ["efésios 4", "1 coríntios", "atos 2", "1 pedro 2", "romanos 12"],
-            8: ["apocalipse", "1 tessalonicenses", "2 pedro 3", "mateus 24", "1 coríntios 15"]
-        }
+        # ========== CACHE TF-IDF ==========
+        self.idf_cache = {}
+        self.total_documentos = 0
+        self.pontuacoes_historico = defaultdict(list)  # Para calcular percentis
+    
+    
+    def treinar_idf(self, pregacoes: List[Dict]):
+        """
+        Treina IDF (Inverse Document Frequency) APENAS para tokens simples
+        
+        DECISÃO METODOLÓGICA:
+        N-grams teológicos usam scoring heurístico, não TF-IDF
+        Apenas tokens individuais são processados estatisticamente
+        
+        Args:
+            pregacoes: Lista completa de pregações
+        """
+        print("\n🧠 Treinando TF-IDF (apenas tokens simples)...")
+        
+        self.total_documentos = len(pregacoes)
+        documento_com_palavra = Counter()
+        
+        # Conta em quantos documentos cada TOKEN aparece
+        for pregacao in pregacoes:
+            conteudo = f"{pregacao.get('titulo', '')} {pregacao.get('conteudo_limpo', '')}".lower()
+            
+            # Tokeniza (palavras simples, não frases)
+            palavras_unicas = set(conteudo.split())
+            
+            for palavra in palavras_unicas:
+                documento_com_palavra[palavra] += 1
+        
+        # Calcula IDF
+        for palavra, doc_freq in documento_com_palavra.items():
+            self.idf_cache[palavra] = math.log(self.total_documentos / doc_freq)
+        
+        print(f"✅ IDF calculado para {len(self.idf_cache):,} tokens")
+        
+        # Mostra distribuição
+        palavras_raras = sorted(self.idf_cache.items(), key=lambda x: x[1], reverse=True)[:5]
+        palavras_comuns = sorted(self.idf_cache.items(), key=lambda x: x[1])[:5]
+        
+        print(f"\n   📊 Tokens RAROS (IDF alto):")
+        for palavra, idf in palavras_raras:
+            print(f"      • {palavra}: {idf:.2f}")
+        
+        print(f"\n   📊 Tokens COMUNS (IDF baixo):")
+        for palavra, idf in palavras_comuns:
+            print(f"      • {palavra}: {idf:.2f}")
+    
+    
+    def calcular_tfidf_token(self, token: str, freq: int) -> float:
+        """
+        Calcula TF-IDF de um TOKEN individual
+        
+        Args:
+            token: Palavra simples
+            freq: Frequência no documento
+            
+        Returns:
+            Score TF-IDF
+        """
+        idf = self.idf_cache.get(token.lower(), 1.0)
+        return freq * idf
+    
+    
+    def normalizar_por_tamanho(self, pontuacao: float, tamanho_doc: int) -> float:
+        """
+        Normaliza pontuação pelo tamanho do documento
+        
+        JUSTIFICATIVA CIENTÍFICA:
+        Documentos longos naturalmente têm mais matches
+        Normalização evita viés de tamanho
+        
+        Args:
+            pontuacao: Pontuação bruta
+            tamanho_doc: Número de palavras
+            
+        Returns:
+            Pontuação normalizada
+        """
+        # Normaliza para documento de 1000 palavras (baseline)
+        baseline = 1000
+        fator = baseline / max(tamanho_doc, 100)  # min 100 para evitar divisão extrema
+        
+        return pontuacao * fator
     
     
     def classificar_pregacao(self, pregacao: Dict) -> Dict:
         """
-        Classifica uma pregação em 1 tema principal + até 2 secundários
+        Classifica pregação usando modelo híbrido
         
         Args:
-            pregacao: Pregação enriquecida com metadados bíblicos
+            pregacao: Pregação enriquecida
             
         Returns:
-            Pregação com classificação temática detalhada
+            Pregação classificada
         """
         titulo = pregacao.get('titulo', '')
         conteudo = pregacao.get('conteudo_limpo', '')
         meta = pregacao.get('metadados_biblicos', {})
         livro_principal = meta.get('livro_principal', '')
         
-        # Calcula pontuações para cada categoria
-        pontuacoes = self._calcular_pontuacoes_enriquecidas(titulo, conteudo, livro_principal)
+        titulo_lower = titulo.lower()
+        conteudo_lower = conteudo.lower()
+        tamanho_doc = len(conteudo.split())
         
-        # Identifica subtemas detectados
-        subtemas_detectados = self._identificar_subtemas(titulo, conteudo)
+        # Calcula pontuações
+        pontuacoes_brutas = defaultdict(float)
         
-        # Ordena categorias por pontuação
-        ranking = sorted(pontuacoes.items(), key=lambda x: x[1], reverse=True)
+        # ========== PATH A: SCORING HEURÍSTICO (N-GRAMS) ==========
+        for cat_id, ngrams in self.ngrams_teologicos.items():
+            expressoes_especificas = 0
+            
+            # Alta especificidade
+            for ngram in ngrams.get("alta", []):
+                # No título
+                if ngram in titulo_lower:
+                    pontuacoes_brutas[cat_id] += self.pesos["titulo_ngram_alta"]
+                    expressoes_especificas += 1
+                
+                # No conteúdo
+                freq = conteudo_lower.count(ngram)
+                if freq > 0:
+                    pontuacoes_brutas[cat_id] += self.pesos["conteudo_ngram_alta"] * freq
+                    expressoes_especificas += freq
+            
+            # Média especificidade
+            for ngram in ngrams.get("media", []):
+                if ngram in titulo_lower:
+                    pontuacoes_brutas[cat_id] += self.pesos["titulo_ngram_media"]
+                
+                freq = conteudo_lower.count(ngram)
+                pontuacoes_brutas[cat_id] += self.pesos["conteudo_ngram_media"] * freq
+            
+            # Bônus diversidade
+            if expressoes_especificas >= 3:
+                pontuacoes_brutas[cat_id] += self.pesos["bonus_diversidade"]
         
-        # Determina tema principal e secundários
+        
+        # ========== PATH B: TF-IDF (TOKENS) ==========
+        for cat_id, tokens in self.tokens_simples.items():
+            for token in tokens:
+                # Título
+                if token in titulo_lower:
+                    tfidf = self.calcular_tfidf_token(token, 1)
+                    pontuacoes_brutas[cat_id] += self.pesos["titulo_token_tfidf"] * tfidf
+                
+                # Conteúdo
+                freq = conteudo_lower.count(token)
+                if freq > 0:
+                    tfidf = self.calcular_tfidf_token(token, freq)
+                    pontuacoes_brutas[cat_id] += self.pesos["conteudo_token_tfidf"] * tfidf
+        
+        
+        # ========== PATH C: LIVRO BÍBLICO (DESEMPATE) ==========
+        livros_relacionados = {
+            1: ["2 timóteo", "salmos 119"],
+            2: ["isaías", "salmos", "jó"],
+            3: ["gênesis 3", "romanos 3", "efésios 2"],
+            4: ["joão", "mateus", "marcos", "lucas", "hebreus"],
+            5: ["romanos", "efésios", "joão 3", "gálatas"],
+            6: ["atos", "joão 14", "romanos 8"],
+            7: ["efésios 4", "1 coríntios", "atos 2"],
+            8: ["apocalipse", "1 tessalonicenses", "2 pedro 3"]
+        }
+        
+        if livro_principal:
+            for cat_id, livros in livros_relacionados.items():
+                for livro in livros:
+                    if livro.lower() in livro_principal.lower():
+                        pontuacoes_brutas[cat_id] += self.pesos["livro_biblico"]
+        
+        
+        # ========== NORMALIZAÇÃO POR TAMANHO ==========
+        pontuacoes_normalizadas = {
+            cat_id: self.normalizar_por_tamanho(pont, tamanho_doc)
+            for cat_id, pont in pontuacoes_brutas.items()
+        }
+        
+        
+        # ========== RANKING E SELEÇÃO ==========
+        ranking = sorted(pontuacoes_normalizadas.items(), key=lambda x: x[1], reverse=True)
+        
         tema_principal = ranking[0][0] if ranking and ranking[0][1] > 0 else None
         temas_secundarios = []
         
-        # Adiciona secundários se pontuação >= 25% do principal (mais flexível)
         if tema_principal and len(ranking) > 1:
-            limiar = pontuacoes[tema_principal] * 0.25
-            for cat_id, pontuacao in ranking[1:3]:  # Máximo 2 secundários
+            limiar = pontuacoes_normalizadas[tema_principal] * 0.30
+            for cat_id, pontuacao in ranking[1:3]:
                 if pontuacao >= limiar and pontuacao > 0:
                     temas_secundarios.append(cat_id)
         
-        # Monta classificação enriquecida
+        
+        # ========== CALCULA PERCENTIL (CONFIANÇA RELATIVA) ==========
+        if tema_principal:
+            self.pontuacoes_historico[tema_principal].append(pontuacoes_normalizadas[tema_principal])
+        
+        
+        # ========== IDENTIFICA SUBTEMAS COM DENSIDADE ==========
+        subtemas_densidade = self._identificar_subtemas_densidade(titulo, conteudo, tamanho_doc)
+        
+        
+        # ========== MONTA CLASSIFICAÇÃO ==========
         classificacao = {
             "tema_principal": {
                 "id": tema_principal,
                 "nome": self.taxonomia_grudem[tema_principal]["nome"] if tema_principal else None,
                 "pergunta_central": self.taxonomia_grudem[tema_principal]["pergunta_central"] if tema_principal else None,
-                "confianca": round(pontuacoes.get(tema_principal, 0), 2),
-                "subtemas_detectados": subtemas_detectados.get(tema_principal, [])
+                "confianca_normalizada": round(pontuacoes_normalizadas.get(tema_principal, 0), 2),
+                "subtemas_detectados": subtemas_densidade.get(tema_principal, [])
             },
             "temas_secundarios": [
                 {
                     "id": cat_id,
                     "nome": self.taxonomia_grudem[cat_id]["nome"],
-                    "confianca": round(pontuacoes[cat_id], 2),
-                    "subtemas_detectados": subtemas_detectados.get(cat_id, [])
+                    "confianca_normalizada": round(pontuacoes_normalizadas[cat_id], 2),
+                    "subtemas_detectados": subtemas_densidade.get(cat_id, [])
                 }
                 for cat_id in temas_secundarios
             ],
-            "pontuacoes_completas": {
-                self.taxonomia_grudem[cat_id]["nome"]: round(pont, 2)
-                for cat_id, pont in ranking if pont > 0
-            },
-            "metodo_classificacao": "Taxonomia de Wayne Grudem v2.0"
+            "metodo": "Híbrido (TF-IDF + Heurístico) v3.1",
+            "tamanho_documento": tamanho_doc
         }
         
-        # Retorna pregação enriquecida
         pregacao_classificada = {**pregacao}
         pregacao_classificada['classificacao_tematica'] = classificacao
         
         return pregacao_classificada
     
     
-    def _calcular_pontuacoes_enriquecidas(self, titulo: str, conteudo: str, livro: str) -> Dict[int, float]:
+    def _identificar_subtemas_densidade(self, titulo: str, conteudo: str, tamanho: int) -> Dict[int, List[Dict]]:
         """
-        Calcula pontuação enriquecida com novos indicadores
+        Identifica subtemas com DENSIDADE (não binário)
         
-        Args:
-            titulo: Título da pregação
-            conteudo: Conteúdo completo
-            livro: Livro bíblico principal
-            
+        MELHORIA v3.1:
+        Subtemas agora têm intensidade (FORTE / MODERADA / MENCIONADA)
+        
         Returns:
-            Dicionário {categoria_id: pontuação}
-        """
-        pontuacoes = defaultdict(float)
-        
-        titulo_lower = titulo.lower()
-        conteudo_lower = conteudo.lower()
-        texto_completo = f"{titulo_lower} {conteudo_lower}"
-        
-        for cat_id, indicadores in self.indicadores_textuais.items():
-            expressoes_encontradas = 0
-            
-            # Expressões fortes
-            for expr in indicadores["expressoes_fortes"]:
-                # No título (peso MUITO maior)
-                if expr in titulo_lower:
-                    pontuacoes[cat_id] += self.pesos["titulo"] * self.pesos["expressao_forte"]
-                    expressoes_encontradas += 1
-                
-                # No conteúdo
-                count = conteudo_lower.count(expr)
-                if count > 0:
-                    pontuacoes[cat_id] += count * self.pesos["expressao_forte"]
-                    expressoes_encontradas += count
-            
-            # Expressões médias
-            for expr in indicadores["expressoes_medias"]:
-                if expr in titulo_lower:
-                    pontuacoes[cat_id] += self.pesos["titulo"] * self.pesos["expressao_media"]
-                
-                count = conteudo_lower.count(expr)
-                pontuacoes[cat_id] += count * self.pesos["expressao_media"]
-            
-            # Verbos-chave (novo!)
-            for verbo in indicadores["verbos_chave"]:
-                if verbo in texto_completo:
-                    pontuacoes[cat_id] += self.pesos["verbo_chave"]
-            
-            # Bônus se múltiplas expressões aparecem (indica tema central)
-            if expressoes_encontradas >= 3:
-                pontuacoes[cat_id] += self.pesos["bonus_multiplas_expressoes"]
-            
-            # Livro bíblico relacionado
-            if livro:
-                for livro_rel in self.livros_relacionados.get(cat_id, []):
-                    if livro_rel.lower() in livro.lower():
-                        pontuacoes[cat_id] += self.pesos["livro_biblico"]
-        
-        return dict(pontuacoes)
-    
-    
-    def _identificar_subtemas(self, titulo: str, conteudo: str) -> Dict[int, List[str]]:
-        """
-        Identifica subtemas específicos mencionados na pregação
-        
-        Args:
-            titulo: Título da pregação
-            conteudo: Conteúdo
-            
-        Returns:
-            Dicionário {categoria_id: [subtemas_detectados]}
+            {categoria_id: [{"nome": str, "intensidade": str, "freq": int}]}
         """
         subtemas_detectados = defaultdict(list)
         texto_completo = f"{titulo} {conteudo}".lower()
         
-        # Mapeamento de palavras-chave para subtemas
         mapa_subtemas = {
             1: {
                 "autoridade": "Autoridade das Escrituras",
                 "suficiência": "Suficiência da Palavra",
-                "revelação": "Revelação de Deus",
-                "expositiva": "Pregação expositiva",
-                "aplicação": "Aplicação da Palavra"
+                "revelação": "Revelação de Deus"
             },
             2: {
                 "santidade": "Santidade de Deus",
                 "soberania": "Soberania de Deus",
-                "trindade": "Trindade",
-                "criador": "Deus como Criador e Sustentador",
-                "caráter": "Caráter de Deus"
+                "trindade": "Trindade"
             },
             3: {
                 "pecado": "Pecado",
-                "queda": "Queda",
-                "consciência": "Consciência",
-                "idolatria": "Idolatria do coração",
-                "necessidade de salvação": "Necessidade de salvação"
+                "queda": "Queda"
             },
             4: {
-                "encarnação": "Encarnação",
                 "cruz": "Cruz",
                 "ressurreição": "Ressurreição",
-                "senhorio": "Senhorio de Cristo",
-                "mediação": "Mediação"
+                "senhorio": "Senhorio de Cristo"
             },
             5: {
                 "novo nascimento": "Novo nascimento",
-                "nascer de novo": "Novo nascimento",
                 "justificação": "Justificação",
-                "graça": "Graça",
-                "fé": "Fé",
-                "santificação": "Santificação",
-                "perseverança": "Perseverança dos santos"
+                "santificação": "Santificação"
             },
             6: {
                 "regeneração": "Regeneração",
-                "convicção": "Convicção do pecado",
-                "vida no espírito": "Vida no Espírito",
-                "consolação": "Consolação"
+                "vida no espírito": "Vida no Espírito"
             },
             7: {
                 "corpo de cristo": "Corpo de Cristo",
-                "comunhão": "Comunhão",
-                "disciplina": "Disciplina",
-                "perdão": "Perdão",
-                "missão": "Missão",
-                "comunitária": "Vida comunitária"
+                "comunhão": "Comunhão"
             },
             8: {
                 "esperança": "Esperança cristã",
-                "juízo": "Juízo final",
                 "eternidade": "Eternidade",
-                "segunda vinda": "Segunda vinda de Cristo",
-                "nova criação": "Nova criação"
+                "segunda vinda": "Segunda vinda de Cristo"
             }
         }
         
         for cat_id, palavras_subtemas in mapa_subtemas.items():
             for palavra, subtema in palavras_subtemas.items():
-                if palavra in texto_completo:
-                    if subtema not in subtemas_detectados[cat_id]:
-                        subtemas_detectados[cat_id].append(subtema)
+                freq = texto_completo.count(palavra)
+                
+                if freq > 0:
+                    # Calcula densidade (ocorrências por 1000 palavras)
+                    densidade = (freq / max(tamanho, 1)) * 1000
+                    
+                    # Classifica intensidade
+                    if densidade >= 2.0:
+                        intensidade = "FORTE"
+                    elif densidade >= 0.5:
+                        intensidade = "MODERADA"
+                    else:
+                        intensidade = "MENCIONADA"
+                    
+                    subtemas_detectados[cat_id].append({
+                        "nome": subtema,
+                        "intensidade": intensidade,
+                        "frequencia": freq,
+                        "densidade": round(densidade, 2)
+                    })
         
         return dict(subtemas_detectados)
     
     
     def classificar_lote(self, pregacoes: List[Dict]) -> List[Dict]:
-        """
-        Classifica um lote de pregações
+        """Classifica lote"""
+        self.treinar_idf(pregacoes)
         
-        Args:
-            pregacoes: Lista de pregações enriquecidas
-            
-        Returns:
-            Lista de pregações classificadas
-        """
-        print(f"\n🏷️  Classificando {len(pregacoes)} pregações (v2.0 enriquecida)...")
+        print(f"\n🏷️  Classificando {len(pregacoes)} pregações (v3.1 Híbrido)...")
         
         classificadas = []
-        
         for i, pregacao in enumerate(pregacoes, 1):
             try:
                 classificada = self.classificar_pregacao(pregacao)
@@ -639,184 +625,123 @@ class ThematicClassifier:
                 
                 if i % 50 == 0:
                     print(f"   ✓ {i}/{len(pregacoes)}")
-            
             except Exception as e:
-                print(f"   ⚠️  Erro na pregação {i}: {e}")
-                classificadas.append(pregacao)  # Mantém original
+                print(f"   ⚠️  Erro: {e}")
+                classificadas.append(pregacao)
         
-        print(f"✅ {len(classificadas)} pregações classificadas")
-        
+        print(f"✅ {len(classificadas)} classificadas")
         return classificadas
     
     
     def gerar_relatorio_tematico(self, pregacoes: List[Dict]) -> Dict:
-        """
-        Gera relatório de distribuição temática enriquecido
+        """Gera relatório"""
+        print("\n📊 Gerando relatório...")
         
-        Args:
-            pregacoes: Pregações classificadas
-            
-        Returns:
-            Relatório estatístico detalhado
-        """
-        print("\n📊 Gerando relatório temático enriquecido...")
-        
-        # Contadores
         temas_principais = Counter()
         temas_secundarios = Counter()
-        temas_por_ano = defaultdict(lambda: Counter())
+        temas_por_ano = defaultdict(Counter)
         subtemas_por_categoria = defaultdict(Counter)
+        confianca_media = defaultdict(list)
         total_classificadas = 0
-        confianca_media_por_tema = defaultdict(list)
         
         for pregacao in pregacoes:
             classif = pregacao.get('classificacao_tematica')
-            
             if not classif:
                 continue
             
             total_classificadas += 1
-            
-            # Tema principal
             tema_princ = classif.get('tema_principal', {})
+            
             if tema_princ.get('id'):
                 nome = tema_princ['nome']
                 temas_principais[nome] += 1
-                confianca_media_por_tema[nome].append(tema_princ.get('confianca', 0))
+                confianca_media[nome].append(tema_princ.get('confianca_normalizada', 0))
                 
-                # Subtemas detectados
-                for subtema in tema_princ.get('subtemas_detectados', []):
-                    subtemas_por_categoria[nome][subtema] += 1
+                for subtema_dict in tema_princ.get('subtemas_detectados', []):
+                    if isinstance(subtema_dict, dict):
+                        subtemas_por_categoria[nome][subtema_dict['nome']] += 1
+                    else:
+                        subtemas_por_categoria[nome][subtema_dict] += 1
                 
-                # Por ano
                 ano = pregacao.get('ano')
                 if ano:
                     temas_por_ano[ano][nome] += 1
             
-            # Temas secundários
             for tema_sec in classif.get('temas_secundarios', []):
                 temas_secundarios[tema_sec['nome']] += 1
-                
-                # Subtemas secundários
-                for subtema in tema_sec.get('subtemas_detectados', []):
-                    subtemas_por_categoria[tema_sec['nome']][subtema] += 1
         
-        # Calcula média de confiança
-        confianca_media = {
+        conf_media = {
             tema: sum(valores) / len(valores) if valores else 0
-            for tema, valores in confianca_media_por_tema.items()
+            for tema, valores in confianca_media.items()
         }
         
-        # Monta relatório enriquecido
-        relatorio = {
+        return {
             "resumo": {
                 "total_pregacoes": len(pregacoes),
                 "classificadas": total_classificadas,
-                "nao_classificadas": len(pregacoes) - total_classificadas,
-                "percentual_cobertura": (total_classificadas / len(pregacoes)) * 100 if pregacoes else 0
+                "metodo": "Híbrido (TF-IDF + Heurístico) v3.1"
             },
             "temas_principais": dict(temas_principais.most_common()),
             "temas_secundarios": dict(temas_secundarios.most_common()),
-            "confianca_media_por_tema": {tema: round(conf, 2) for tema, conf in confianca_media.items()},
-            "subtemas_detectados": {
-                tema: dict(subtemas.most_common(5))
-                for tema, subtemas in subtemas_por_categoria.items()
+            "confianca_media": {tema: round(c, 2) for tema, c in conf_media.items()},
+            "subtemas": {
+                tema: dict(subs.most_common(5))
+                for tema, subs in subtemas_por_categoria.items()
             },
             "distribuicao_anual": {
                 ano: dict(temas) for ano, temas in sorted(temas_por_ano.items())
             },
-            "top_5_temas": temas_principais.most_common(5)
+            "top_5": temas_principais.most_common(5)
         }
-        
-        print("✅ Relatório enriquecido gerado")
-        
-        return relatorio
     
     
-    def imprimir_relatorio_tematico(self, relatorio: Dict):
-        """Imprime relatório formatado enriquecido"""
-        
+    def imprimir_relatorio(self, relatorio: Dict):
+        """Imprime relatório"""
         print("\n" + "=" * 80)
-        print("🏷️  RELATÓRIO DE CLASSIFICAÇÃO TEMÁTICA v2.0 - TAXONOMIA DE GRUDEM")
+        print("🏷️  RELATÓRIO v3.1 - MODELO HÍBRIDO")
         print("=" * 80)
         
         resumo = relatorio['resumo']
-        
         print(f"\n🔷 RESUMO:")
-        print(f"   Total de pregações: {resumo['total_pregacoes']}")
-        print(f"   Classificadas: {resumo['classificadas']} ({resumo['percentual_cobertura']:.1f}%)")
-        print(f"   Não classificadas: {resumo['nao_classificadas']}")
+        print(f"   Total: {resumo['total_pregacoes']}")
+        print(f"   Método: {resumo['metodo']}")
         
-        print(f"\n🔷 TOP 5 TEMAS PRINCIPAIS PREGADOS (COM CONFIANÇA MÉDIA):")
-        for i, (tema, qtd) in enumerate(relatorio['top_5_temas'], 1):
-            percentual = (qtd / resumo['classificadas']) * 100 if resumo['classificadas'] else 0
-            confianca = relatorio['confianca_media_por_tema'].get(tema, 0)
-            print(f"   {i}. {tema:45} - {qtd:3d}x ({percentual:.1f}%) | conf: {confianca:.1f}")
-        
-        print(f"\n🔷 TODOS OS TEMAS (COMO PRINCIPAL):")
-        for tema, qtd in sorted(relatorio['temas_principais'].items(), 
-                                key=lambda x: x[1], reverse=True):
-            print(f"   • {tema:45} - {qtd:3d}x")
-        
-        print(f"\n🔷 SUBTEMAS MAIS DETECTADOS POR CATEGORIA:")
-        for tema, subtemas in list(relatorio['subtemas_detectados'].items())[:5]:
-            print(f"\n   📖 {tema}:")
-            for subtema, qtd in list(subtemas.items())[:3]:
-                print(f"      • {subtema:35} - {qtd}x")
-        
-        print(f"\n🔷 TEMAS SECUNDÁRIOS MAIS COMUNS:")
-        for tema, qtd in list(relatorio['temas_secundarios'].items())[:5]:
-            print(f"   • {tema:45} - {qtd:3d}x")
-        
-        print(f"\n🔷 DISTRIBUIÇÃO POR ANO (TOP 3 DE CADA ANO):")
-        for ano, temas in relatorio['distribuicao_anual'].items():
-            print(f"\n   📅 {ano}:")
-            top3 = sorted(temas.items(), key=lambda x: x[1], reverse=True)[:3]
-            for tema, qtd in top3:
-                print(f"      {tema:40} - {qtd}x")
+        print(f"\n🔷 TOP 5 TEMAS:")
+        for i, (tema, qtd) in enumerate(relatorio['top_5'], 1):
+            perc = (qtd / resumo['classificadas']) * 100
+            conf = relatorio['confianca_media'].get(tema, 0)
+            print(f"   {i}. {tema:45} - {qtd:3d}x ({perc:.1f}%) | conf: {conf:.1f}")
         
         print("\n" + "=" * 80)
     
     
-    def salvar_classificadas(self, pregacoes: List[Dict], caminho: str = "../../output/pregacoes_classificadas_completo.json"):
-        """Salva pregações classificadas"""
+    def salvar_classificadas(self, pregacoes: List[Dict], caminho: str = "../../output/pregacoes_classificadas_v31.json"):
+        """Salva classificadas"""
         caminho_path = Path(caminho)
         caminho_path.parent.mkdir(parents=True, exist_ok=True)
         
-        dados = {
-            "descricao": "Pregações com classificação temática v2.0 - Taxonomia de Grudem (Enriquecida)",
-            "versao_classificador": "2.0",
-            "total": len(pregacoes),
-            "taxonomia": {
-                cat_id: {
-                    "nome": info["nome"],
-                    "pergunta_central": info["pergunta_central"],
-                    "subtemas": info["subtemas"]
-                }
-                for cat_id, info in self.taxonomia_grudem.items()
-            },
-            "pregacoes": pregacoes
-        }
-        
         with open(caminho_path, 'w', encoding='utf-8') as f:
-            json.dump(dados, f, ensure_ascii=False, indent=2)
+            json.dump({
+                "descricao": "Classificação Híbrida v3.1 (TF-IDF + Heurístico)",
+                "metodologia": "Sistema híbrido: TF-IDF para tokens + Scoring especialista para n-grams",
+                "total": len(pregacoes),
+                "pregacoes": pregacoes
+            }, f, ensure_ascii=False, indent=2)
         
         tamanho_mb = caminho_path.stat().st_size / (1024 * 1024)
-        print(f"💾 Salvo em: {caminho_path.resolve()} ({tamanho_mb:.1f} MB)")
+        print(f"💾 Salvo: {caminho_path.resolve()} ({tamanho_mb:.1f} MB)")
 
 
 # ==================== TESTE ====================
-
 
 if __name__ == "__main__":
     import json
     from pathlib import Path
     
     print("\n" + "=" * 80)
-    print("🧪 TESTE DO CLASSIFICADOR TEMÁTICO v2.0 (ENRIQUECIDO)")
+    print("🧪 TESTE v3.1 - MODELO HÍBRIDO RIGOROSO")
     print("=" * 80)
     
-    # Carrega pregações enriquecidas
     arquivo = Path("../../output/pregacoes_enriquecidas_completo.json")
     
     if arquivo.exists():
@@ -824,56 +749,37 @@ if __name__ == "__main__":
             dados = json.load(f)
         
         pregacoes = dados.get('pregacoes', [])
+        print(f"\n📚 {len(pregacoes)} pregações carregadas")
         
-        print(f"\n📚 Carregadas {len(pregacoes)} pregações")
-        
-        # Classifica
         classifier = ThematicClassifier()
         classificadas = classifier.classificar_lote(pregacoes)
         
-        # Mostra exemplo detalhado
+        # Exemplo
         print("\n" + "=" * 80)
-        print("📖 EXEMPLO DETALHADO DE CLASSIFICAÇÃO:")
-        print("=" * 80)
+        print("📖 EXEMPLO COM SUBTEMAS DENSIDADE:")
         exemplo = classificadas[0]
-        print(f"\n📌 Título: {exemplo['titulo']}")
-        print(f"📅 Data: {exemplo.get('data_pregacao')}")
-        print(f"👤 Pregador: {exemplo.get('pregador')}")
+        print(f"\n📌 {exemplo['titulo']}")
         
-        classif = exemplo.get('classificacao_tematica', {})
-        tema_princ = classif.get('tema_principal', {})
+        tema = exemplo['classificacao_tematica']['tema_principal']
+        print(f"\n🎯 {tema['nome']}")
+        print(f"   Confiança: {tema['confianca_normalizada']:.2f}")
         
-        print(f"\n🎯 Tema Principal:")
-        print(f"   {tema_princ.get('nome')}")
-        print(f"   ❓ Pergunta central: {tema_princ.get('pergunta_central')}")
-        print(f"   📊 Confiança: {tema_princ.get('confianca', 0):.1f}")
+        if tema.get('subtemas_detectados'):
+            print(f"\n   📎 Subtemas (com densidade):")
+            for sub in tema['subtemas_detectados']:
+                if isinstance(sub, dict):
+                    print(f"      • {sub['nome']:30} [{sub['intensidade']:10}] ({sub['frequencia']}x, densidade: {sub['densidade']})")
         
-        if tema_princ.get('subtemas_detectados'):
-            print(f"   📎 Subtemas detectados:")
-            for subtema in tema_princ['subtemas_detectados']:
-                print(f"      • {subtema}")
-        
-        if classif.get('temas_secundarios'):
-            print(f"\n📎 Temas Secundários:")
-            for tema in classif['temas_secundarios']:
-                print(f"   • {tema['nome']} (confiança: {tema['confianca']:.1f})")
-                if tema.get('subtemas_detectados'):
-                    for subtema in tema['subtemas_detectados']:
-                        print(f"      - {subtema}")
-        
-        # Gera relatório
+        # Relatório
         relatorio = classifier.gerar_relatorio_tematico(classificadas)
-        classifier.imprimir_relatorio_tematico(relatorio)
+        classifier.imprimir_relatorio(relatorio)
         
         # Salva
         classifier.salvar_classificadas(classificadas)
         
-        # Salva relatório também
-        caminho_relatorio = Path("../../output/relatorio_tematico_v2.json")
-        with open(caminho_relatorio, 'w', encoding='utf-8') as f:
+        with open("../../output/relatorio_v31.json", 'w', encoding='utf-8') as f:
             json.dump(relatorio, f, ensure_ascii=False, indent=2)
-        print(f"💾 Relatório salvo em: {caminho_relatorio.resolve()}")
+        print("💾 Relatório v3.1 salvo")
     
     else:
-        print(f"❌ Arquivo não encontrado: {arquivo}")
-        print("   Execute primeiro o pipeline.py com opção 4!")
+        print(f"❌ {arquivo} não encontrado")

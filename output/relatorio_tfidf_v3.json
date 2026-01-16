@@ -1,0 +1,231 @@
+{
+  "resumo": {
+    "total_pregacoes": 956,
+    "classificadas": 956,
+    "percentual_cobertura": 100.0,
+    "metodo": "TF-IDF v3.0"
+  },
+  "temas_principais": {
+    "Doutrina das Últimas Coisas": 223,
+    "Doutrina de Cristo": 172,
+    "Doutrina da Igreja": 161,
+    "Doutrina da Salvação": 107,
+    "Doutrina do Espírito Santo": 81,
+    "Doutrina do Homem": 80,
+    "Doutrina da Palavra de Deus": 72,
+    "Doutrina de Deus": 60
+  },
+  "temas_secundarios": {
+    "Doutrina de Cristo": 235,
+    "Doutrina das Últimas Coisas": 215,
+    "Doutrina da Salvação": 203,
+    "Doutrina da Palavra de Deus": 173,
+    "Doutrina da Igreja": 167,
+    "Doutrina do Espírito Santo": 124,
+    "Doutrina do Homem": 108,
+    "Doutrina de Deus": 91
+  },
+  "confianca_media_tfidf": {
+    "Doutrina da Salvação": 30.57,
+    "Doutrina de Cristo": 39.95,
+    "Doutrina da Igreja": 26.6,
+    "Doutrina de Deus": 21.98,
+    "Doutrina das Últimas Coisas": 32.92,
+    "Doutrina da Palavra de Deus": 20.14,
+    "Doutrina do Homem": 28.48,
+    "Doutrina do Espírito Santo": 40.88
+  },
+  "subtemas_detectados": {
+    "Doutrina da Salvação": {
+      "Novo nascimento": 23,
+      "Santificação": 16,
+      "Perseverança dos santos": 9,
+      "Justificação": 7,
+      "Graça": 6
+    },
+    "Doutrina da Palavra de Deus": {
+      "Autoridade das Escrituras": 51,
+      "Revelação de Deus": 12,
+      "Aplicação da Palavra": 9,
+      "Suficiência da Palavra": 3
+    },
+    "Doutrina de Cristo": {
+      "Cruz": 256,
+      "Ressurreição": 87,
+      "Senhorio de Cristo": 15,
+      "Encarnação": 13,
+      "Mediação": 3
+    },
+    "Doutrina do Homem": {
+      "Pecado": 163,
+      "Consciência": 41,
+      "Queda": 34,
+      "Idolatria do coração": 25
+    },
+    "Doutrina das Últimas Coisas": {
+      "Esperança cristã": 263,
+      "Eternidade": 206,
+      "Juízo final": 63,
+      "Segunda vinda de Cristo": 10
+    },
+    "Doutrina de Deus": {
+      "Deus como Criador e Sustentador": 56,
+      "Soberania de Deus": 31,
+      "Santidade de Deus": 30,
+      "Caráter de Deus": 18,
+      "Trindade": 7
+    },
+    "Doutrina da Igreja": {
+      "Missão": 93,
+      "Comunhão": 63,
+      "Corpo de Cristo": 8
+    },
+    "Doutrina do Espírito Santo": {
+      "Convicção do pecado": 16,
+      "Regeneração": 4,
+      "Vida no Espírito": 2
+    }
+  },
+  "distribuicao_anual": {
+    "2012": {
+      "Doutrina da Palavra de Deus": 2,
+      "Doutrina das Últimas Coisas": 3,
+      "Doutrina do Homem": 2,
+      "Doutrina da Salvação": 2,
+      "Doutrina do Espírito Santo": 2,
+      "Doutrina de Cristo": 2,
+      "Doutrina de Deus": 1
+    },
+    "2014": {
+      "Doutrina do Espírito Santo": 2,
+      "Doutrina das Últimas Coisas": 1
+    },
+    "2016": {
+      "Doutrina da Salvação": 4,
+      "Doutrina de Cristo": 13,
+      "Doutrina da Igreja": 8,
+      "Doutrina de Deus": 8,
+      "Doutrina das Últimas Coisas": 17,
+      "Doutrina da Palavra de Deus": 4,
+      "Doutrina do Homem": 8,
+      "Doutrina do Espírito Santo": 8
+    },
+    "2017": {
+      "Doutrina das Últimas Coisas": 20,
+      "Doutrina da Igreja": 10,
+      "Doutrina do Homem": 7,
+      "Doutrina do Espírito Santo": 7,
+      "Doutrina de Cristo": 11,
+      "Doutrina da Palavra de Deus": 2,
+      "Doutrina de Deus": 7,
+      "Doutrina da Salvação": 6
+    },
+    "2018": {
+      "Doutrina de Cristo": 15,
+      "Doutrina do Homem": 9,
+      "Doutrina do Espírito Santo": 7,
+      "Doutrina da Palavra de Deus": 8,
+      "Doutrina das Últimas Coisas": 13,
+      "Doutrina da Salvação": 6,
+      "Doutrina da Igreja": 11,
+      "Doutrina de Deus": 1
+    },
+    "2019": {
+      "Doutrina das Últimas Coisas": 14,
+      "Doutrina de Deus": 6,
+      "Doutrina de Cristo": 12,
+      "Doutrina da Salvação": 5,
+      "Doutrina da Palavra de Deus": 3,
+      "Doutrina do Homem": 2,
+      "Doutrina da Igreja": 5,
+      "Doutrina do Espírito Santo": 2
+    },
+    "2020": {
+      "Doutrina das Últimas Coisas": 22,
+      "Doutrina de Deus": 8,
+      "Doutrina de Cristo": 15,
+      "Doutrina da Igreja": 26,
+      "Doutrina da Palavra de Deus": 6,
+      "Doutrina do Homem": 14,
+      "Doutrina da Salvação": 17,
+      "Doutrina do Espírito Santo": 6
+    },
+    "2021": {
+      "Doutrina de Cristo": 14,
+      "Doutrina da Salvação": 9,
+      "Doutrina das Últimas Coisas": 35,
+      "Doutrina da Igreja": 23,
+      "Doutrina da Palavra de Deus": 8,
+      "Doutrina do Homem": 9,
+      "Doutrina do Espírito Santo": 7,
+      "Doutrina de Deus": 6
+    },
+    "2022": {
+      "Doutrina da Salvação": 17,
+      "Doutrina das Últimas Coisas": 20,
+      "Doutrina da Igreja": 25,
+      "Doutrina do Homem": 6,
+      "Doutrina de Cristo": 16,
+      "Doutrina da Palavra de Deus": 8,
+      "Doutrina do Espírito Santo": 7,
+      "Doutrina de Deus": 3
+    },
+    "2023": {
+      "Doutrina da Palavra de Deus": 11,
+      "Doutrina de Cristo": 18,
+      "Doutrina das Últimas Coisas": 18,
+      "Doutrina do Homem": 9,
+      "Doutrina de Deus": 6,
+      "Doutrina da Igreja": 11,
+      "Doutrina da Salvação": 8,
+      "Doutrina do Espírito Santo": 5
+    },
+    "2024": {
+      "Doutrina das Últimas Coisas": 27,
+      "Doutrina da Igreja": 24,
+      "Doutrina de Deus": 7,
+      "Doutrina de Cristo": 26,
+      "Doutrina da Salvação": 21,
+      "Doutrina da Palavra de Deus": 10,
+      "Doutrina do Espírito Santo": 12,
+      "Doutrina do Homem": 6
+    },
+    "2025": {
+      "Doutrina da Palavra de Deus": 10,
+      "Doutrina de Cristo": 27,
+      "Doutrina das Últimas Coisas": 32,
+      "Doutrina da Igreja": 18,
+      "Doutrina da Salvação": 12,
+      "Doutrina do Espírito Santo": 16,
+      "Doutrina do Homem": 7,
+      "Doutrina de Deus": 7
+    },
+    "2026": {
+      "Doutrina de Cristo": 3,
+      "Doutrina das Últimas Coisas": 1,
+      "Doutrina do Homem": 1
+    }
+  },
+  "top_5_temas": [
+    [
+      "Doutrina das Últimas Coisas",
+      223
+    ],
+    [
+      "Doutrina de Cristo",
+      172
+    ],
+    [
+      "Doutrina da Igreja",
+      161
+    ],
+    [
+      "Doutrina da Salvação",
+      107
+    ],
+    [
+      "Doutrina do Espírito Santo",
+      81
+    ]
+  ]
+}
