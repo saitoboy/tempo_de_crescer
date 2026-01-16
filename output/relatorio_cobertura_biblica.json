@@ -1,0 +1,489 @@
+{
+  "resumo": {
+    "total_livros_biblia": 66,
+    "livros_pregados": 44,
+    "livros_nao_pregados": 22,
+    "percentual_cobertura": 66.66666666666666,
+    "total_capitulos_biblia": 1189,
+    "capitulos_cobertos": 277,
+    "percentual_capitulos": 23.296888141295206
+  },
+  "por_testamento": {
+    "vt": {
+      "total": 39,
+      "pregados": 30,
+      "percentual": 76.92307692307693
+    },
+    "nt": {
+      "total": 27,
+      "pregados": 14,
+      "percentual": 51.85185185185185
+    }
+  },
+  "livros_pregados": [
+    {
+      "livro": "João",
+      "testamento": "NT",
+      "vezes": 124,
+      "capitulos_cobertos": 20,
+      "total_capitulos": 21,
+      "percentual_caps": 95.23809523809523
+    },
+    {
+      "livro": "Mateus",
+      "testamento": "NT",
+      "vezes": 100,
+      "capitulos_cobertos": 22,
+      "total_capitulos": 28,
+      "percentual_caps": 78.57142857142857
+    },
+    {
+      "livro": "Atos",
+      "testamento": "NT",
+      "vezes": 87,
+      "capitulos_cobertos": 21,
+      "total_capitulos": 28,
+      "percentual_caps": 75.0
+    },
+    {
+      "livro": "Lucas",
+      "testamento": "NT",
+      "vezes": 67,
+      "capitulos_cobertos": 21,
+      "total_capitulos": 24,
+      "percentual_caps": 87.5
+    },
+    {
+      "livro": "Salmos",
+      "testamento": "VT",
+      "vezes": 66,
+      "capitulos_cobertos": 17,
+      "total_capitulos": 150,
+      "percentual_caps": 11.333333333333332
+    },
+    {
+      "livro": "Hebreus",
+      "testamento": "NT",
+      "vezes": 58,
+      "capitulos_cobertos": 13,
+      "total_capitulos": 13,
+      "percentual_caps": 100.0
+    },
+    {
+      "livro": "Romanos",
+      "testamento": "NT",
+      "vezes": 44,
+      "capitulos_cobertos": 12,
+      "total_capitulos": 16,
+      "percentual_caps": 75.0
+    },
+    {
+      "livro": "Gênesis",
+      "testamento": "VT",
+      "vezes": 35,
+      "capitulos_cobertos": 19,
+      "total_capitulos": 50,
+      "percentual_caps": 38.0
+    },
+    {
+      "livro": "Isaías",
+      "testamento": "VT",
+      "vezes": 32,
+      "capitulos_cobertos": 4,
+      "total_capitulos": 66,
+      "percentual_caps": 6.0606060606060606
+    },
+    {
+      "livro": "Marcos",
+      "testamento": "NT",
+      "vezes": 30,
+      "capitulos_cobertos": 9,
+      "total_capitulos": 16,
+      "percentual_caps": 56.25
+    },
+    {
+      "livro": "Efésios",
+      "testamento": "NT",
+      "vezes": 26,
+      "capitulos_cobertos": 6,
+      "total_capitulos": 6,
+      "percentual_caps": 100.0
+    },
+    {
+      "livro": "Êxodo",
+      "testamento": "VT",
+      "vezes": 22,
+      "capitulos_cobertos": 12,
+      "total_capitulos": 40,
+      "percentual_caps": 30.0
+    },
+    {
+      "livro": "Apocalipse",
+      "testamento": "NT",
+      "vezes": 22,
+      "capitulos_cobertos": 7,
+      "total_capitulos": 22,
+      "percentual_caps": 31.818181818181817
+    },
+    {
+      "livro": "Filipenses",
+      "testamento": "NT",
+      "vezes": 19,
+      "capitulos_cobertos": 4,
+      "total_capitulos": 4,
+      "percentual_caps": 100.0
+    },
+    {
+      "livro": "Gálatas",
+      "testamento": "NT",
+      "vezes": 18,
+      "capitulos_cobertos": 5,
+      "total_capitulos": 6,
+      "percentual_caps": 83.33333333333334
+    },
+    {
+      "livro": "Colossenses",
+      "testamento": "NT",
+      "vezes": 14,
+      "capitulos_cobertos": 3,
+      "total_capitulos": 4,
+      "percentual_caps": 75.0
+    },
+    {
+      "livro": "Jeremias",
+      "testamento": "VT",
+      "vezes": 13,
+      "capitulos_cobertos": 9,
+      "total_capitulos": 52,
+      "percentual_caps": 17.307692307692307
+    },
+    {
+      "livro": "Deuteronômio",
+      "testamento": "VT",
+      "vezes": 13,
+      "capitulos_cobertos": 7,
+      "total_capitulos": 34,
+      "percentual_caps": 20.588235294117645
+    },
+    {
+      "livro": "Daniel",
+      "testamento": "VT",
+      "vezes": 13,
+      "capitulos_cobertos": 7,
+      "total_capitulos": 12,
+      "percentual_caps": 58.333333333333336
+    },
+    {
+      "livro": "Provérbios",
+      "testamento": "VT",
+      "vezes": 12,
+      "capitulos_cobertos": 6,
+      "total_capitulos": 31,
+      "percentual_caps": 19.35483870967742
+    },
+    {
+      "livro": "Tiago",
+      "testamento": "NT",
+      "vezes": 10,
+      "capitulos_cobertos": 3,
+      "total_capitulos": 5,
+      "percentual_caps": 60.0
+    },
+    {
+      "livro": "Jonas",
+      "testamento": "VT",
+      "vezes": 8,
+      "capitulos_cobertos": 3,
+      "total_capitulos": 4,
+      "percentual_caps": 75.0
+    },
+    {
+      "livro": "Josué",
+      "testamento": "VT",
+      "vezes": 8,
+      "capitulos_cobertos": 6,
+      "total_capitulos": 24,
+      "percentual_caps": 25.0
+    },
+    {
+      "livro": "Jó",
+      "testamento": "VT",
+      "vezes": 8,
+      "capitulos_cobertos": 6,
+      "total_capitulos": 42,
+      "percentual_caps": 14.285714285714285
+    },
+    {
+      "livro": "Ezequiel",
+      "testamento": "VT",
+      "vezes": 7,
+      "capitulos_cobertos": 5,
+      "total_capitulos": 48,
+      "percentual_caps": 10.416666666666668
+    },
+    {
+      "livro": "Neemias",
+      "testamento": "VT",
+      "vezes": 7,
+      "capitulos_cobertos": 3,
+      "total_capitulos": 13,
+      "percentual_caps": 23.076923076923077
+    },
+    {
+      "livro": "Eclesiastes",
+      "testamento": "VT",
+      "vezes": 7,
+      "capitulos_cobertos": 3,
+      "total_capitulos": 12,
+      "percentual_caps": 25.0
+    },
+    {
+      "livro": "Números",
+      "testamento": "VT",
+      "vezes": 5,
+      "capitulos_cobertos": 3,
+      "total_capitulos": 36,
+      "percentual_caps": 8.333333333333332
+    },
+    {
+      "livro": "Lamentações",
+      "testamento": "VT",
+      "vezes": 4,
+      "capitulos_cobertos": 2,
+      "total_capitulos": 5,
+      "percentual_caps": 40.0
+    },
+    {
+      "livro": "Zacarias",
+      "testamento": "VT",
+      "vezes": 4,
+      "capitulos_cobertos": 3,
+      "total_capitulos": 14,
+      "percentual_caps": 21.428571428571427
+    },
+    {
+      "livro": "Ageu",
+      "testamento": "VT",
+      "vezes": 4,
+      "capitulos_cobertos": 2,
+      "total_capitulos": 2,
+      "percentual_caps": 100.0
+    },
+    {
+      "livro": "Rute",
+      "testamento": "VT",
+      "vezes": 3,
+      "capitulos_cobertos": 1,
+      "total_capitulos": 4,
+      "percentual_caps": 25.0
+    },
+    {
+      "livro": "Oséias",
+      "testamento": "VT",
+      "vezes": 3,
+      "capitulos_cobertos": 2,
+      "total_capitulos": 14,
+      "percentual_caps": 14.285714285714285
+    },
+    {
+      "livro": "Sofonias",
+      "testamento": "VT",
+      "vezes": 2,
+      "capitulos_cobertos": 2,
+      "total_capitulos": 3,
+      "percentual_caps": 66.66666666666666
+    },
+    {
+      "livro": "Habacuque",
+      "testamento": "VT",
+      "vezes": 2,
+      "capitulos_cobertos": 1,
+      "total_capitulos": 3,
+      "percentual_caps": 33.33333333333333
+    },
+    {
+      "livro": "Juízes",
+      "testamento": "VT",
+      "vezes": 2,
+      "capitulos_cobertos": 2,
+      "total_capitulos": 21,
+      "percentual_caps": 9.523809523809524
+    },
+    {
+      "livro": "Joel",
+      "testamento": "VT",
+      "vezes": 2,
+      "capitulos_cobertos": 1,
+      "total_capitulos": 3,
+      "percentual_caps": 33.33333333333333
+    },
+    {
+      "livro": "Naum",
+      "testamento": "VT",
+      "vezes": 2,
+      "capitulos_cobertos": 1,
+      "total_capitulos": 3,
+      "percentual_caps": 33.33333333333333
+    },
+    {
+      "livro": "Levítico",
+      "testamento": "VT",
+      "vezes": 1,
+      "capitulos_cobertos": 0,
+      "total_capitulos": 27,
+      "percentual_caps": 0.0
+    },
+    {
+      "livro": "Tito",
+      "testamento": "NT",
+      "vezes": 1,
+      "capitulos_cobertos": 1,
+      "total_capitulos": 3,
+      "percentual_caps": 33.33333333333333
+    },
+    {
+      "livro": "Cântico dos Cânticos",
+      "testamento": "VT",
+      "vezes": 1,
+      "capitulos_cobertos": 0,
+      "total_capitulos": 8,
+      "percentual_caps": 0.0
+    },
+    {
+      "livro": "Miquéias",
+      "testamento": "VT",
+      "vezes": 1,
+      "capitulos_cobertos": 1,
+      "total_capitulos": 7,
+      "percentual_caps": 14.285714285714285
+    },
+    {
+      "livro": "Ester",
+      "testamento": "VT",
+      "vezes": 1,
+      "capitulos_cobertos": 1,
+      "total_capitulos": 10,
+      "percentual_caps": 10.0
+    },
+    {
+      "livro": "Malaquias",
+      "testamento": "VT",
+      "vezes": 1,
+      "capitulos_cobertos": 1,
+      "total_capitulos": 4,
+      "percentual_caps": 25.0
+    }
+  ],
+  "livros_nao_pregados": [
+    {
+      "livro": "1 Coríntios",
+      "testamento": "NT",
+      "capitulos": 16
+    },
+    {
+      "livro": "1 Crônicas",
+      "testamento": "VT",
+      "capitulos": 29
+    },
+    {
+      "livro": "1 João",
+      "testamento": "NT",
+      "capitulos": 5
+    },
+    {
+      "livro": "1 Pedro",
+      "testamento": "NT",
+      "capitulos": 5
+    },
+    {
+      "livro": "1 Reis",
+      "testamento": "VT",
+      "capitulos": 22
+    },
+    {
+      "livro": "1 Samuel",
+      "testamento": "VT",
+      "capitulos": 31
+    },
+    {
+      "livro": "1 Tessalonicenses",
+      "testamento": "NT",
+      "capitulos": 5
+    },
+    {
+      "livro": "1 Timóteo",
+      "testamento": "NT",
+      "capitulos": 6
+    },
+    {
+      "livro": "2 Coríntios",
+      "testamento": "NT",
+      "capitulos": 13
+    },
+    {
+      "livro": "2 Crônicas",
+      "testamento": "VT",
+      "capitulos": 36
+    },
+    {
+      "livro": "2 João",
+      "testamento": "NT",
+      "capitulos": 1
+    },
+    {
+      "livro": "2 Pedro",
+      "testamento": "NT",
+      "capitulos": 3
+    },
+    {
+      "livro": "2 Reis",
+      "testamento": "VT",
+      "capitulos": 25
+    },
+    {
+      "livro": "2 Samuel",
+      "testamento": "VT",
+      "capitulos": 24
+    },
+    {
+      "livro": "2 Tessalonicenses",
+      "testamento": "NT",
+      "capitulos": 3
+    },
+    {
+      "livro": "2 Timóteo",
+      "testamento": "NT",
+      "capitulos": 4
+    },
+    {
+      "livro": "3 João",
+      "testamento": "NT",
+      "capitulos": 1
+    },
+    {
+      "livro": "Amós",
+      "testamento": "VT",
+      "capitulos": 9
+    },
+    {
+      "livro": "Esdras",
+      "testamento": "VT",
+      "capitulos": 10
+    },
+    {
+      "livro": "Filemom",
+      "testamento": "NT",
+      "capitulos": 1
+    },
+    {
+      "livro": "Judas",
+      "testamento": "NT",
+      "capitulos": 1
+    },
+    {
+      "livro": "Obadias",
+      "testamento": "VT",
+      "capitulos": 1
+    }
+  ]
+}

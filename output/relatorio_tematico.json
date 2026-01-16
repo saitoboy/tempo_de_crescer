@@ -1,0 +1,146 @@
+{
+  "resumo": {
+    "total_pregacoes": 956,
+    "classificadas": 956,
+    "nao_classificadas": 0,
+    "percentual_cobertura": 100.0
+  },
+  "temas_principais": {
+    "Doutrina de Deus": 570,
+    "Doutrina de Cristo": 254,
+    "Doutrina da Igreja": 51,
+    "Doutrina da Palavra de Deus": 36,
+    "Doutrina do Homem": 28,
+    "Doutrina do Espírito Santo": 10,
+    "Doutrina da Salvação": 4,
+    "Doutrina das Últimas Coisas": 3
+  },
+  "temas_secundarios": {
+    "Doutrina de Deus": 310,
+    "Doutrina de Cristo": 287,
+    "Doutrina da Palavra de Deus": 185,
+    "Doutrina do Homem": 144,
+    "Doutrina da Igreja": 108,
+    "Doutrina das Últimas Coisas": 86,
+    "Doutrina da Salvação": 37,
+    "Doutrina do Espírito Santo": 35
+  },
+  "distribuicao_anual": {
+    "2012": {
+      "Doutrina de Deus": 8,
+      "Doutrina da Salvação": 1,
+      "Doutrina do Homem": 2,
+      "Doutrina de Cristo": 3
+    },
+    "2014": {
+      "Doutrina de Deus": 3
+    },
+    "2016": {
+      "Doutrina de Deus": 48,
+      "Doutrina de Cristo": 12,
+      "Doutrina da Igreja": 3,
+      "Doutrina da Palavra de Deus": 4,
+      "Doutrina do Homem": 2,
+      "Doutrina das Últimas Coisas": 1
+    },
+    "2017": {
+      "Doutrina de Deus": 44,
+      "Doutrina de Cristo": 14,
+      "Doutrina da Palavra de Deus": 2,
+      "Doutrina da Igreja": 5,
+      "Doutrina do Homem": 3,
+      "Doutrina das Últimas Coisas": 1,
+      "Doutrina da Salvação": 1
+    },
+    "2018": {
+      "Doutrina de Cristo": 18,
+      "Doutrina de Deus": 41,
+      "Doutrina do Homem": 2,
+      "Doutrina da Palavra de Deus": 2,
+      "Doutrina da Igreja": 5,
+      "Doutrina do Espírito Santo": 2
+    },
+    "2019": {
+      "Doutrina de Deus": 28,
+      "Doutrina de Cristo": 17,
+      "Doutrina do Homem": 2,
+      "Doutrina da Igreja": 1,
+      "Doutrina do Espírito Santo": 1
+    },
+    "2020": {
+      "Doutrina de Cristo": 28,
+      "Doutrina de Deus": 66,
+      "Doutrina da Palavra de Deus": 5,
+      "Doutrina da Igreja": 9,
+      "Doutrina do Homem": 5,
+      "Doutrina da Salvação": 1
+    },
+    "2021": {
+      "Doutrina da Palavra de Deus": 7,
+      "Doutrina de Cristo": 27,
+      "Doutrina de Deus": 72,
+      "Doutrina da Igreja": 3,
+      "Doutrina do Homem": 1,
+      "Doutrina do Espírito Santo": 1
+    },
+    "2022": {
+      "Doutrina de Deus": 57,
+      "Doutrina de Cristo": 31,
+      "Doutrina da Palavra de Deus": 5,
+      "Doutrina da Igreja": 6,
+      "Doutrina do Homem": 2,
+      "Doutrina do Espírito Santo": 1
+    },
+    "2023": {
+      "Doutrina de Deus": 50,
+      "Doutrina de Cristo": 28,
+      "Doutrina da Igreja": 4,
+      "Doutrina do Homem": 3,
+      "Doutrina do Espírito Santo": 1
+    },
+    "2024": {
+      "Doutrina de Cristo": 39,
+      "Doutrina da Palavra de Deus": 6,
+      "Doutrina de Deus": 77,
+      "Doutrina da Igreja": 5,
+      "Doutrina do Homem": 3,
+      "Doutrina do Espírito Santo": 3
+    },
+    "2025": {
+      "Doutrina de Deus": 74,
+      "Doutrina de Cristo": 35,
+      "Doutrina da Igreja": 10,
+      "Doutrina do Homem": 3,
+      "Doutrina da Palavra de Deus": 5,
+      "Doutrina do Espírito Santo": 1,
+      "Doutrina das Últimas Coisas": 1
+    },
+    "2026": {
+      "Doutrina de Cristo": 2,
+      "Doutrina da Salvação": 1,
+      "Doutrina de Deus": 2
+    }
+  },
+  "top_5_temas": [
+    [
+      "Doutrina de Deus",
+      570
+    ],
+    [
+      "Doutrina de Cristo",
+      254
+    ],
+    [
+      "Doutrina da Igreja",
+      51
+    ],
+    [
+      "Doutrina da Palavra de Deus",
+      36
+    ],
+    [
+      "Doutrina do Homem",
+      28
+    ]
+  ]
+}
