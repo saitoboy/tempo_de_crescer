@@ -1,15 +1,18 @@
-
 #!/usr/bin/env python3
 """
-Conversor em Batch de Pregações para Devocionais usando Groq API
-Processa um arquivo JSON completo e gera um único arquivo Markdown
+Conversor INTELIGENTE de Pregações para Devocionais usando Groq API
+✅ Sistema de CHECKPOINT: salva progresso e retoma de onde parou
+✅ Filtragem por ANO e MÊS
+✅ Não reprocessa o que já foi feito
+✅ Salva automaticamente quando atinge limite de tokens
 """
 
 import json
 import os
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 import sys
+import hashlib
 
 # ==================== CONFIGURAÇÃO ====================
 
@@ -43,6 +46,54 @@ except ImportError:
     from groq import Groq
     import httpx
     HAS_GROQ = True
+
+# ==================== CACHE E CHECKPOINT ====================
+
+PASTA_CACHE = ".cache_devocionais"
+ARQUIVO_CHECKPOINT = os.path.join(PASTA_CACHE, "checkpoint.json")
+
+def criar_pasta_cache():
+    """Cria pasta para cache se não existir"""
+    os.makedirs(PASTA_CACHE, exist_ok=True)
+
+def gerar_hash_pregacao(pregacao: Dict) -> str:
+    """Gera hash único para uma pregação"""
+    conteudo = f"{pregacao.get('titulo', '')}{pregacao.get('data_pregacao', '')}{pregacao.get('conteudo_completo', '')}"
+    return hashlib.md5(conteudo.encode()).hexdigest()
+
+def carregar_checkpoint() -> Dict:
+    """Carrega checkpoint salvo"""
+    if os.path.exists(ARQUIVO_CHECKPOINT):
+        try:
+            with open(ARQUIVO_CHECKPOINT, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            return {}
+    return {}
+
+def salvar_checkpoint(checkpoint: Dict):
+    """Salva checkpoint atual"""
+    criar_pasta_cache()
+    with open(ARQUIVO_CHECKPOINT, 'w', encoding='utf-8') as f:
+        json.dump(checkpoint, f, ensure_ascii=False, indent=2)
+
+def cache_existe(hash_pregacao: str, checkpoint: Dict) -> bool:
+    """Verifica se devocional já foi gerado"""
+    return hash_pregacao in checkpoint.get('devocionais', {})
+
+def obter_do_cache(hash_pregacao: str, checkpoint: Dict) -> Optional[str]:
+    """Obtém devocional do cache"""
+    return checkpoint.get('devocionais', {}).get(hash_pregacao)
+
+def salvar_no_cache(hash_pregacao: str, devocional: str, checkpoint: Dict):
+    """Salva devocional no cache"""
+    if 'devocionais' not in checkpoint:
+        checkpoint['devocionais'] = {}
+
+    checkpoint['devocionais'][hash_pregacao] = devocional
+    checkpoint['ultima_atualizacao'] = datetime.now().isoformat()
+
+    salvar_checkpoint(checkpoint)
 
 # ==================== PROMPT ====================
 
@@ -87,63 +138,152 @@ RESENHA DA PREGAÇÃO:
 
 Agora, transforme esta resenha em um devocional seguindo exatamente a estrutura acima."""
 
-# ==================== FUNÇÕES ====================
+# ==================== FILTROS ====================
+
+def extrair_data_pregacao(pregacao: Dict) -> Optional[datetime]:
+    """Extrai data da pregação em vários formatos"""
+    data_str = pregacao.get('data_pregacao', '')
+
+    if not data_str:
+        return None
+
+    # Formatos possíveis
+    formatos = [
+        "%d/%m/%Y",
+        "%d-%m-%Y",
+        "%Y-%m-%d",
+        "%d %B %Y",
+        "%B %d, %Y"
+    ]
+
+    for formato in formatos:
+        try:
+            return datetime.strptime(data_str, formato)
+        except:
+            continue
+
+    return None
+
+def filtrar_pregacoes_por_periodo(pregacoes: List[Dict], ano: Optional[int] = None, mes: Optional[int] = None) -> List[Dict]:
+    """Filtra pregações por ano e/ou mês"""
+    if not ano and not mes:
+        return pregacoes
+
+    filtradas = []
+
+    for pregacao in pregacoes:
+        data = extrair_data_pregacao(pregacao)
+
+        if not data:
+            continue
+
+        if ano and data.year != ano:
+            continue
+
+        if mes and data.month != mes:
+            continue
+
+        filtradas.append(pregacao)
+
+    return filtradas
+
+def listar_anos_disponiveis(pregacoes: List[Dict]) -> List[int]:
+    """Lista anos disponíveis nas pregações"""
+    anos = set()
+
+    for pregacao in pregacoes:
+        data = extrair_data_pregacao(pregacao)
+        if data:
+            anos.add(data.year)
+
+    return sorted(list(anos))
+
+def menu_filtro_periodo(pregacoes: List[Dict]) -> List[Dict]:
+    """Menu interativo para filtrar período"""
+    anos = listar_anos_disponiveis(pregacoes)
+
+    print("\n" + "=" * 80)
+    print("📅 FILTRO DE PERÍODO")
+    print("=" * 80)
+
+    if not anos:
+        print("⚠️  Nenhuma data válida encontrada. Processando todas as pregações.")
+        return pregacoes
+
+    print(f"\nAnos disponíveis: {', '.join(map(str, anos))}")
+    print("\nOpções:")
+    print("  1. Processar TODAS as pregações")
+    print("  2. Filtrar por ANO")
+    print("  3. Filtrar por ANO e MÊS")
+
+    escolha = input("\n👉 Sua escolha (1-3): ").strip()
+
+    if escolha == '1':
+        return pregacoes
+
+    elif escolha == '2':
+        ano = input(f"\n   Digite o ano ({min(anos)}-{max(anos)}): ").strip()
+        try:
+            ano = int(ano)
+            filtradas = filtrar_pregacoes_por_periodo(pregacoes, ano=ano)
+            print(f"   ✅ {len(filtradas)} pregações encontradas em {ano}")
+            return filtradas
+        except:
+            print("   ❌ Ano inválido!")
+            return pregacoes
+
+    elif escolha == '3':
+        ano = input(f"\n   Digite o ano ({min(anos)}-{max(anos)}): ").strip()
+        mes = input("   Digite o mês (1-12): ").strip()
+        try:
+            ano = int(ano)
+            mes = int(mes)
+            filtradas = filtrar_pregacoes_por_periodo(pregacoes, ano=ano, mes=mes)
+            meses_nomes = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+            mes_nome = meses_nomes[mes-1] if 1 <= mes <= 12 else str(mes)
+            print(f"   ✅ {len(filtradas)} pregações encontradas em {mes_nome}/{ano}")
+            return filtradas
+        except:
+            print("   ❌ Período inválido!")
+            return pregacoes
+
+    return pregacoes
+
+# ==================== API GROQ ====================
 
 def obter_api_key() -> str:
     """Obtém a chave da API Groq"""
     api_key = os.getenv('GROQ_API_KEY')
-    
+
     if api_key:
         print("✅ Chave GROQ_API_KEY encontrada no .env\n")
         return api_key
-    
+
     print("\n🔑 Chave GROQ_API_KEY não encontrada!")
     print("   📌 Groq é GRATUITO e muito rápido!")
     print("   🌐 Acesse: https://console.groq.com/keys")
     api_key = input("\n   Cole sua chave API aqui: ").strip()
-    
+
     if api_key:
         os.environ['GROQ_API_KEY'] = api_key
         print("   ✅ Chave salva para esta sessão\n")
-    
-    return api_key
 
+    return api_key
 
 def configurar_proxy():
     """Configura proxy se necessário"""
     proxy_url = os.getenv('HTTP_PROXY') or os.getenv('HTTPS_PROXY')
-    
+
     if proxy_url:
         print(f"🌐 Proxy detectado: {proxy_url}")
         return proxy_url
-    
-    # Perguntar se precisa de proxy
-    usar_proxy = input("\n❓ Você está atrás de um proxy corporativo? (s/n): ").strip().lower()
-    
-    if usar_proxy == 's':
-        host = input("   Host do proxy (ex: 10.10.30.9): ").strip()
-        porta = input("   Porta (ex: 3128): ").strip()
-        usuario = input("   Usuário (ou Enter para pular): ").strip()
-        
-        if usuario:
-            senha = input("   Senha: ").strip()
-            proxy_url = f"http://{usuario}:{senha}@{host}:{porta}"
-        else:
-            proxy_url = f"http://{host}:{porta}"
-        
-        os.environ['HTTP_PROXY'] = proxy_url
-        os.environ['HTTPS_PROXY'] = proxy_url
-        print(f"   ✅ Proxy configurado: {host}:{porta}\n")
-        return proxy_url
-    
-    return None
 
+    return None
 
 def criar_cliente_groq(api_key: str, proxy_url: str = None):
     """Cria cliente Groq com ou sem proxy"""
     try:
         if proxy_url:
-            # Cliente com proxy
             http_client = httpx.Client(
                 proxy=proxy_url,
                 verify=False,
@@ -152,30 +292,19 @@ def criar_cliente_groq(api_key: str, proxy_url: str = None):
             client = Groq(api_key=api_key, http_client=http_client)
             print("✅ Cliente Groq criado com proxy\n")
         else:
-            # Cliente sem proxy
             client = Groq(api_key=api_key)
             print("✅ Cliente Groq criado\n")
-        
+
         return client
     except Exception as e:
         print(f"❌ Erro ao criar cliente: {e}")
         return None
 
-
-def gerar_devocional_groq(client, resenha: str, modelo: str = "llama-3.3-70b-versatile") -> str:
-    """
-    Gera devocional usando Groq API
-    
-    Modelos disponíveis:
-    - llama-3.3-70b-versatile (recomendado - rápido e preciso)
-    - llama-3.1-70b-versatile
-    - mixtral-8x7b-32768
-    """
+def gerar_devocional_groq(client, resenha: str, modelo: str = "llama-3.3-70b-versatile") -> Optional[str]:
+    """Gera devocional usando Groq API"""
     try:
         prompt = PROMPT_DEVOCIONAL.format(resenha=resenha)
-        
-        print(f"      🤖 Gerando com {modelo}...")
-        
+
         chat_completion = client.chat.completions.create(
             messages=[
                 {
@@ -192,13 +321,21 @@ def gerar_devocional_groq(client, resenha: str, modelo: str = "llama-3.3-70b-ver
             max_tokens=2048,
             top_p=0.9
         )
-        
+
         return chat_completion.choices[0].message.content
-        
+
     except Exception as e:
+        erro_str = str(e).lower()
+
+        # Detecta erro de limite de taxa
+        if 'rate_limit' in erro_str or '429' in erro_str or 'limit' in erro_str:
+            print(f"      ⚠️  LIMITE DE TOKENS ATINGIDO!")
+            return "RATE_LIMIT"
+
         print(f"      ❌ Erro: {e}")
         return None
 
+# ==================== FUNÇÕES AUXILIARES ====================
 
 def carregar_json(caminho: str) -> Dict:
     """Carrega o arquivo JSON de pregações"""
@@ -212,24 +349,22 @@ def carregar_json(caminho: str) -> Dict:
         print(f"❌ Erro ao decodificar JSON: {caminho}")
         return None
 
-
 def formatar_titulo_md(titulo: str) -> str:
     """Formata título para Markdown"""
     return titulo.upper().strip()
 
-
-def gerar_markdown_completo(dados: Dict, devocionais: List[Dict], nome_arquivo: str):
+def gerar_markdown_completo(dados: Dict, devocionais: List[Dict], nome_arquivo: str, periodo_filtrado: str = ""):
     """Gera arquivo Markdown completo com todos os devocionais"""
-    
-    # Extrai metadados
+
     mes_ano = extrair_mes_ano(nome_arquivo)
     igreja = dados.get('igreja', 'Igreja')
     pastores = ', '.join(dados.get('pastores', ['Pastor']))
     total = len(devocionais)
     data_geracao = datetime.now().strftime("%d/%m/%Y às %H:%M")
-    
-    # Monta conteúdo
-    conteudo = f"""# Devocionais – {mes_ano}
+
+    titulo_periodo = f"{mes_ano} {periodo_filtrado}" if periodo_filtrado else mes_ano
+
+    conteudo = f"""# Devocionais – {titulo_periodo}
 {igreja} · {pastores}  
 Compilado em: {data_geracao}
 
@@ -238,227 +373,244 @@ Compilado em: {data_geracao}
 ## 📋 Índice
 
 """
-    
-    # Adiciona índice
+
     for i, dev in enumerate(devocionais, 1):
         pregacao = dev['pregacao']
         titulo = pregacao.get('titulo', 'Sem título')
         conteudo += f"{i}. {formatar_titulo_md(titulo)}\n"
-    
+
     conteudo += "\n---\n\n"
-    
-    # Adiciona devocionais
+
     for i, dev in enumerate(devocionais, 1):
         pregacao = dev['pregacao']
         devocional = dev['devocional']
-        
+
         titulo = pregacao.get('titulo', 'Sem título')
         data = pregacao.get('data_pregacao', 'Data não informada')
         url_blog = pregacao.get('url_blog', '')
         url_youtube = pregacao.get('url_youtube', '')
         pastor = pregacao.get('pastor', dados.get('pastores', [''])[0] if dados.get('pastores') else '')
-        
+
         conteudo += f"""## {i}. {formatar_titulo_md(titulo)}
 
 - **Data:** {data}
 """
-        
+
         if pastor:
             conteudo += f"- **Pastor:** {pastor}\n"
-        
+
         if url_blog:
             conteudo += f"- **Blog:** {url_blog}\n"
-        
+
         if url_youtube:
             conteudo += f"- **YouTube:** {url_youtube}\n"
-        
+
         conteudo += f"\n### Devocional\n\n{devocional}\n\n---\n\n"
-    
-    # Rodapé
+
     conteudo += f"""---
 
 *Devocionais gerados automaticamente usando IA (Groq API)*  
 *Baseados nas pregações da {igreja}*  
 *Total: {total} devocionais*
 """
-    
-    return conteudo
 
+    return conteudo
 
 def extrair_mes_ano(nome_arquivo: str) -> str:
     """Extrai mês e ano do nome do arquivo"""
     nome = nome_arquivo.replace('.json', '').replace('pregacoes_', '')
-    
+
     if nome.isdigit():
         return nome
-    
+
     partes = nome.split('_')
     if len(partes) >= 2:
         mes = partes[0].capitalize()
         ano = partes[1]
         return f"{mes} {ano}"
-    
-    return nome.capitalize()
 
+    return nome.capitalize()
 
 def salvar_markdown(conteudo: str, nome_saida: str):
     """Salva o arquivo Markdown"""
     with open(nome_saida, 'w', encoding='utf-8') as f:
         f.write(conteudo)
-    
+
     print(f"\n✅ Arquivo salvo: {nome_saida}")
     print(f"   📄 {len(conteudo)} caracteres")
 
-
 # ==================== PROCESSAMENTO PRINCIPAL ====================
 
-def processar_json_completo():
-    """Processa um arquivo JSON completo e gera Markdown"""
-    
+def processar_json_com_checkpoint():
+    """Processa JSON com sistema de checkpoint"""
+
     print("\n" + "=" * 80)
-    print("🙏 CONVERSOR EM BATCH: PREGAÇÕES → DEVOCIONAIS (GROQ API)")
+    print("🙏 CONVERSOR INTELIGENTE: PREGAÇÕES → DEVOCIONAIS")
+    print("   ✅ Sistema de Checkpoint Ativo")
     print("=" * 80)
-    
-    # Configurar proxy
+
+    criar_pasta_cache()
+    checkpoint = carregar_checkpoint()
+
+    if checkpoint.get('devocionais'):
+        total_cache = len(checkpoint['devocionais'])
+        print(f"\n📦 {total_cache} devocionais já processados encontrados no cache")
+
     proxy_url = configurar_proxy()
-    
-    # Obter API key
     api_key = obter_api_key()
+
     if not api_key:
         print("❌ Chave API necessária!")
         return
-    
-    # Criar cliente Groq
+
     client = criar_cliente_groq(api_key, proxy_url)
     if not client:
-        print("❌ Não foi possível criar o cliente Groq!")
         return
-    
-    # Testar conexão
-    print("🧪 Testando conexão com Groq API...")
-    try:
-        test = client.chat.completions.create(
-            messages=[{"role": "user", "content": "Olá"}],
-            model="llama-3.3-70b-versatile",
-            max_tokens=10
-        )
-        print("✅ Conexão com Groq OK!\n")
-    except Exception as e:
-        print(f"❌ Falha no teste de conexão: {e}")
-        print("   Verifique sua chave API e configurações de proxy\n")
-        return
-    
-    # Buscar arquivos JSON
+
     print("📂 Buscando arquivos JSON...")
     arquivos_json = [f for f in os.listdir('.') if f.endswith('.json') and 'pregacoes' in f.lower()]
-    
+
     if not arquivos_json:
-        print("❌ Nenhum arquivo JSON encontrado!")
         caminho_json = input("\n   Digite o caminho do arquivo JSON: ").strip()
     else:
         print("\nArquivos encontrados:")
         for i, arq in enumerate(arquivos_json, 1):
             print(f"  {i}. {arq}")
-        
+
         escolha = input("\n👉 Escolha o número do arquivo: ").strip()
-        
+
         if escolha.isdigit() and 1 <= int(escolha) <= len(arquivos_json):
             caminho_json = arquivos_json[int(escolha) - 1]
         else:
             caminho_json = escolha
-    
-    # Carregar JSON
+
     print(f"\n📖 Carregando {caminho_json}...")
     dados = carregar_json(caminho_json)
-    
+
     if not dados:
         return
-    
-    pregacoes = dados.get('pregacoes', [])
+
+    pregacoes_originais = dados.get('pregacoes', [])
+
+    # FILTRO DE PERÍODO
+    pregacoes = menu_filtro_periodo(pregacoes_originais)
+
     total = len(pregacoes)
-    
+
     if total == 0:
-        print("❌ Nenhuma pregação encontrada no JSON!")
+        print("❌ Nenhuma pregação encontrada no período!")
         return
-    
-    print(f"✅ {total} pregações encontradas\n")
-    
-    # Confirmar processamento
+
+    print(f"\n✅ {total} pregações selecionadas\n")
+
     print("=" * 80)
     print(f"🚀 PRONTO PARA PROCESSAR {total} PREGAÇÕES")
     print("=" * 80)
     confirma = input("\n❓ Continuar? (s/n): ").strip().lower()
-    
+
     if confirma != 's':
         print("⏭️  Cancelado pelo usuário")
         return
-    
-    # Processar cada pregação
+
     print("\n" + "=" * 80)
     print("⚙️  PROCESSANDO PREGAÇÕES...")
     print("=" * 80 + "\n")
-    
+
     devocionais = []
     erros = 0
-    
+    cache_hits = 0
+    novos = 0
+    limite_atingido = False
+
     for i, pregacao in enumerate(pregacoes, 1):
         titulo = pregacao.get('titulo', 'Sem título')
         resenha = pregacao.get('conteudo_completo', '')
-        
+        hash_preg = gerar_hash_pregacao(pregacao)
+
         print(f"[{i}/{total}] {titulo}")
-        
+
         if not resenha:
             print(f"      ⚠️  Sem conteúdo - pulando\n")
             erros += 1
             continue
-        
-        # Gerar devocional
-        devocional = gerar_devocional_groq(client, resenha)
-        
-        if devocional:
+
+        # VERIFICA CACHE
+        if cache_existe(hash_preg, checkpoint):
+            devocional = obter_do_cache(hash_preg, checkpoint)
             devocionais.append({
                 'pregacao': pregacao,
                 'devocional': devocional
             })
-            print(f"      ✅ Devocional gerado\n")
+            print(f"      ♻️  Recuperado do cache\n")
+            cache_hits += 1
+            continue
+
+        # GERA NOVO
+        devocional = gerar_devocional_groq(client, resenha)
+
+        if devocional == "RATE_LIMIT":
+            print(f"      🛑 Limite de tokens atingido!")
+            print(f"      💾 Salvando progresso atual...\n")
+            limite_atingido = True
+            break
+
+        if devocional:
+            # SALVA NO CACHE
+            salvar_no_cache(hash_preg, devocional, checkpoint)
+
+            devocionais.append({
+                'pregacao': pregacao,
+                'devocional': devocional
+            })
+            print(f"      ✅ Devocional gerado e salvo no cache\n")
+            novos += 1
         else:
             print(f"      ❌ Erro ao gerar\n")
             erros += 1
-    
-    # Resumo
+
     sucesso = len(devocionais)
+
     print("\n" + "=" * 80)
     print("📊 RESUMO DO PROCESSAMENTO")
     print("=" * 80)
-    print(f"   ✅ Sucesso: {sucesso}")
+    print(f"   ✅ Total processado: {sucesso}")
+    print(f"   🆕 Novos gerados: {novos}")
+    print(f"   ♻️  Do cache: {cache_hits}")
     print(f"   ❌ Erros: {erros}")
-    print(f"   📝 Total: {total}")
+    print(f"   📝 Total no período: {total}")
+
+    if limite_atingido:
+        print(f"\n   ⚠️  LIMITE DE TOKENS ATINGIDO")
+        print(f"   💡 Execute o script novamente para continuar de onde parou!")
+
     print("=" * 80 + "\n")
-    
+
     if sucesso == 0:
-        print("❌ Nenhum devocional foi gerado!")
+        print("❌ Nenhum devocional para salvar!")
         return
-    
-    # Gerar Markdown
+
     print("📝 Gerando arquivo Markdown...\n")
-    
+
     nome_base = caminho_json.replace('.json', '')
     nome_saida = f"devocionais_{nome_base.replace('pregacoes_', '')}.md"
-    
+
     conteudo_md = gerar_markdown_completo(dados, devocionais, caminho_json)
     salvar_markdown(conteudo_md, nome_saida)
-    
+
     print("\n🎉 PROCESSAMENTO CONCLUÍDO!")
     print(f"   📂 Arquivo: {nome_saida}")
 
+    if limite_atingido:
+        print(f"\n💡 DICA: Execute novamente para processar o restante!")
 
 # ==================== EXECUÇÃO ====================
 
 if __name__ == "__main__":
     try:
-        processar_json_completo()
+        processar_json_com_checkpoint()
     except KeyboardInterrupt:
         print("\n\n👋 Programa interrompido pelo usuário")
+        print("   💾 Progresso salvo no checkpoint!")
     except Exception as e:
         print(f"\n❌ Erro inesperado: {e}")
         import traceback
