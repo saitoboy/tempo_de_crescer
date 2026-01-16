@@ -24,7 +24,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.391039",
+        "processado_em": "2026-01-16T15:51:35.796926",
         "data_fonte": "texto"
       },
       "id_unico": "2024_001",
@@ -36,11 +36,11 @@
         "referencias_conteudo": 13,
         "livros_mencionados": [
           "Romanos",
-          "Hebreus",
-          "Mateus",
           "João",
+          "Hebreus",
+          "Zacarias",
           "Miquéias",
-          "Zacarias"
+          "Mateus"
         ],
         "todas_referencias": [
           "Zacarias 9:9-12",
@@ -72,7 +72,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.391581",
+        "processado_em": "2026-01-16T15:51:35.797474",
         "data_fonte": "texto"
       },
       "id_unico": "2024_002",
@@ -83,11 +83,11 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "Isaías",
-          "Atos",
-          "João",
           "Levítico",
-          "Gálatas"
+          "Gálatas",
+          "Isaías",
+          "João",
+          "Atos"
         ],
         "todas_referencias": [
           "João 13:34-35",
@@ -115,7 +115,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.392177",
+        "processado_em": "2026-01-16T15:51:35.798378",
         "data_fonte": "texto"
       },
       "id_unico": "2024_003",
@@ -126,12 +126,12 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 10,
         "livros_mencionados": [
-          "Isaías",
-          "Filipenses",
+          "Salmos",
           "Hebreus",
+          "Isaías",
           "João",
-          "Mateus",
-          "Salmos"
+          "Filipenses",
+          "Mateus"
         ],
         "todas_referencias": [
           "Salmos 8",
@@ -163,7 +163,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.392856",
+        "processado_em": "2026-01-16T15:51:35.799716",
         "data_fonte": "texto"
       },
       "id_unico": "2024_004",
@@ -174,10 +174,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 7,
         "livros_mencionados": [
-          "João",
-          "Isaías",
+          "Ageu",
           "Gênesis",
-          "Ageu"
+          "Isaías",
+          "João"
         ],
         "todas_referencias": [
           "Ageu 2:7-8",
@@ -207,7 +207,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.393426",
+        "processado_em": "2026-01-16T15:51:35.800370",
         "data_fonte": "texto"
       },
       "id_unico": "2024_005",
@@ -219,11 +219,11 @@
         "referencias_conteudo": 11,
         "livros_mencionados": [
           "Romanos",
-          "Isaías",
           "Gênesis",
-          "Lucas",
+          "Isaías",
+          "João",
           "Mateus",
-          "João"
+          "Lucas"
         ],
         "todas_referencias": [
           "Mateus 2:1-12",
@@ -255,7 +255,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.393742",
+        "processado_em": "2026-01-16T15:51:35.800793",
         "data_fonte": "texto"
       },
       "id_unico": "2024_006",
@@ -290,7 +290,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.394143",
+        "processado_em": "2026-01-16T15:51:35.801227",
         "data_fonte": "texto"
       },
       "id_unico": "2024_007",
@@ -301,10 +301,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 7,
         "livros_mencionados": [
-          "João",
-          "Isaías",
+          "Gálatas",
           "Filipenses",
-          "Gálatas"
+          "Isaías",
+          "João"
         ],
         "todas_referencias": [
           "Gálatas 4:1-7",
@@ -334,7 +334,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.394863",
+        "processado_em": "2026-01-16T15:51:35.801977",
         "data_fonte": "texto"
       },
       "id_unico": "2024_008",
@@ -345,13 +345,13 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 15,
         "livros_mencionados": [
-          "Isaías",
-          "Filipenses",
-          "João",
-          "Mateus",
-          "Apocalipse",
           "Salmos",
-          "Zacarias"
+          "Isaías",
+          "Zacarias",
+          "João",
+          "Filipenses",
+          "Mateus",
+          "Apocalipse"
         ],
         "todas_referencias": [
           "Salmos 22:27-31",
@@ -383,7 +383,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.395408",
+        "processado_em": "2026-01-16T15:51:35.802553",
         "data_fonte": "texto"
       },
       "id_unico": "2024_009",
@@ -394,11 +394,11 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 12,
         "livros_mencionados": [
+          "Apocalipse",
           "Romanos",
           "Isaías",
-          "Lucas",
           "João",
-          "Apocalipse",
+          "Lucas",
           "Tiago"
         ],
         "todas_referencias": [
@@ -431,7 +431,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.395729",
+        "processado_em": "2026-01-16T15:51:35.802886",
         "data_fonte": "texto"
       },
       "id_unico": "2024_010",
@@ -467,7 +467,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.396549",
+        "processado_em": "2026-01-16T15:51:35.803865",
         "data_fonte": "texto"
       },
       "id_unico": "2024_011",
@@ -510,7 +510,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.397190",
+        "processado_em": "2026-01-16T15:51:35.804524",
         "data_fonte": "texto"
       },
       "id_unico": "2024_012",
@@ -521,10 +521,10 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 9,
         "livros_mencionados": [
-          "Mateus",
-          "Isaías",
+          "Hebreus",
           "Efésios",
-          "Hebreus"
+          "Isaías",
+          "Mateus"
         ],
         "todas_referencias": [
           "Isaías 42:6-7",
@@ -555,7 +555,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.397647",
+        "processado_em": "2026-01-16T15:51:35.804985",
         "data_fonte": "texto"
       },
       "id_unico": "2024_013",
@@ -594,7 +594,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.398142",
+        "processado_em": "2026-01-16T15:51:35.805480",
         "data_fonte": "texto"
       },
       "id_unico": "2024_014",
@@ -636,7 +636,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.398684",
+        "processado_em": "2026-01-16T15:51:35.806023",
         "data_fonte": "texto"
       },
       "id_unico": "2024_015",
@@ -648,10 +648,10 @@
         "referencias_conteudo": 7,
         "livros_mencionados": [
           "Romanos",
-          "Filipenses",
           "Marcos",
-          "Mateus",
-          "João"
+          "João",
+          "Filipenses",
+          "Mateus"
         ],
         "todas_referencias": [
           "Mateus 13:44-46",
@@ -681,7 +681,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.399209",
+        "processado_em": "2026-01-16T15:51:35.806548",
         "data_fonte": "texto"
       },
       "id_unico": "2024_016",
@@ -692,14 +692,14 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 8,
         "livros_mencionados": [
-          "Deuteronômio",
-          "Romanos",
-          "Atos",
           "Lucas",
+          "Romanos",
+          "Levítico",
+          "Atos",
+          "Jeremias",
           "João",
           "Mateus",
-          "Levítico",
-          "Jeremias"
+          "Deuteronômio"
         ],
         "todas_referencias": [
           "João 13:34-35",
@@ -730,7 +730,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.399716",
+        "processado_em": "2026-01-16T15:51:35.807058",
         "data_fonte": "texto"
       },
       "id_unico": "2024_017",
@@ -741,10 +741,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 8,
         "livros_mencionados": [
-          "Salmos",
           "João",
-          "Apocalipse",
-          "Gênesis"
+          "Gênesis",
+          "Salmos",
+          "Apocalipse"
         ],
         "todas_referencias": [
           "Salmos 100",
@@ -775,7 +775,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.400300",
+        "processado_em": "2026-01-16T15:51:35.807649",
         "data_fonte": "texto"
       },
       "id_unico": "2024_018",
@@ -816,7 +816,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.400854",
+        "processado_em": "2026-01-16T15:51:35.808095",
         "data_fonte": "texto"
       },
       "id_unico": "2024_019",
@@ -856,7 +856,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.401569",
+        "processado_em": "2026-01-16T15:51:35.808777",
         "data_fonte": "texto"
       },
       "id_unico": "2024_020",
@@ -867,8 +867,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 7,
         "livros_mencionados": [
-          "Mateus",
-          "Hebreus"
+          "Hebreus",
+          "Mateus"
         ],
         "todas_referencias": [
           "Hebreus 12:14",
@@ -898,7 +898,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.402417",
+        "processado_em": "2026-01-16T15:51:35.809298",
         "data_fonte": "texto"
       },
       "id_unico": "2024_021",
@@ -909,8 +909,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 4,
         "livros_mencionados": [
-          "Romanos",
-          "Atos"
+          "Atos",
+          "Romanos"
         ],
         "todas_referencias": [
           "Atos 8:26-40",
@@ -937,7 +937,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.403646",
+        "processado_em": "2026-01-16T15:51:35.810003",
         "data_fonte": "texto"
       },
       "id_unico": "2024_022",
@@ -982,7 +982,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.404703",
+        "processado_em": "2026-01-16T15:51:35.810603",
         "data_fonte": "texto"
       },
       "id_unico": "2024_023",
@@ -995,10 +995,10 @@
         "livros_mencionados": [
           "Jó",
           "Eclesiastes",
-          "Gênesis",
+          "Salmos",
           "Hebreus",
-          "João",
-          "Salmos"
+          "Gênesis",
+          "João"
         ],
         "todas_referencias": [
           "Jó 14:1-14",
@@ -1030,7 +1030,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.405249",
+        "processado_em": "2026-01-16T15:51:35.810911",
         "data_fonte": "texto"
       },
       "id_unico": "2024_024",
@@ -1066,7 +1066,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.406517",
+        "processado_em": "2026-01-16T15:51:35.811638",
         "data_fonte": "texto"
       },
       "id_unico": "2024_025",
@@ -1077,9 +1077,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 9,
         "livros_mencionados": [
+          "Colossenses",
           "Mateus",
           "Deuteronômio",
-          "Colossenses",
           "Efésios"
         ],
         "todas_referencias": [
@@ -1112,7 +1112,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.407393",
+        "processado_em": "2026-01-16T15:51:35.812125",
         "data_fonte": "texto"
       },
       "id_unico": "2024_026",
@@ -1123,8 +1123,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 2,
         "livros_mencionados": [
-          "Jó",
-          "Gênesis"
+          "Gênesis",
+          "Jó"
         ],
         "todas_referencias": [
           "Gênesis 18:14",
@@ -1149,7 +1149,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.408585",
+        "processado_em": "2026-01-16T15:51:35.812806",
         "data_fonte": "texto"
       },
       "id_unico": "2024_027",
@@ -1160,9 +1160,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
+          "Filipenses",
           "Hebreus",
-          "Êxodo",
-          "Filipenses"
+          "Êxodo"
         ],
         "todas_referencias": [
           "Hebreus 11:23-28",
@@ -1190,7 +1190,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.409606",
+        "processado_em": "2026-01-16T15:51:35.813413",
         "data_fonte": "texto"
       },
       "id_unico": "2024_028",
@@ -1201,8 +1201,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 9,
         "livros_mencionados": [
-          "Salmos",
           "Jó",
+          "Salmos",
           "Oséias",
           "Mateus"
         ],
@@ -1236,7 +1236,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.410514",
+        "processado_em": "2026-01-16T15:51:35.813917",
         "data_fonte": "texto"
       },
       "id_unico": "2024_029",
@@ -1277,7 +1277,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.411688",
+        "processado_em": "2026-01-16T15:51:35.814668",
         "data_fonte": "texto"
       },
       "id_unico": "2024_030",
@@ -1288,8 +1288,8 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "Hebreus",
-          "Gálatas"
+          "Gálatas",
+          "Hebreus"
         ],
         "todas_referencias": [
           "Hebreus 11:11-12",
@@ -1316,7 +1316,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.412537",
+        "processado_em": "2026-01-16T15:51:35.815555",
         "data_fonte": "texto"
       },
       "id_unico": "2024_031",
@@ -1327,12 +1327,12 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 16,
         "livros_mencionados": [
-          "Isaías",
           "Gênesis",
+          "Isaías",
           "Êxodo",
           "João",
-          "Apocalipse",
-          "Ezequiel"
+          "Ezequiel",
+          "Apocalipse"
         ],
         "todas_referencias": [
           "Apocalipse 22:1-5",
@@ -1364,7 +1364,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.412979",
+        "processado_em": "2026-01-16T15:51:35.816026",
         "data_fonte": "texto"
       },
       "id_unico": "2024_032",
@@ -1394,7 +1394,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.413567",
+        "processado_em": "2026-01-16T15:51:35.816631",
         "data_fonte": "texto"
       },
       "id_unico": "2024_033",
@@ -1405,8 +1405,8 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 4,
         "livros_mencionados": [
-          "João",
-          "Hebreus"
+          "Hebreus",
+          "João"
         ],
         "todas_referencias": [
           "Hebreus 11:8-10",
@@ -1432,7 +1432,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.414198",
+        "processado_em": "2026-01-16T15:51:35.817272",
         "data_fonte": "texto"
       },
       "id_unico": "2024_034",
@@ -1472,7 +1472,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.414506",
+        "processado_em": "2026-01-16T15:51:35.817593",
         "data_fonte": "texto"
       },
       "id_unico": "2024_035",
@@ -1508,7 +1508,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.415069",
+        "processado_em": "2026-01-16T15:51:35.818177",
         "data_fonte": "texto"
       },
       "id_unico": "2024_036",
@@ -1519,9 +1519,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "Salmos",
           "Hebreus",
-          "Gênesis"
+          "Gênesis",
+          "Salmos"
         ],
         "todas_referencias": [
           "Gênesis 6:5-9",
@@ -1549,7 +1549,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.415816",
+        "processado_em": "2026-01-16T15:51:35.818960",
         "data_fonte": "texto"
       },
       "id_unico": "2024_037",
@@ -1561,9 +1561,9 @@
         "referencias_conteudo": 11,
         "livros_mencionados": [
           "Efésios",
+          "João",
           "Atos",
           "Lucas",
-          "João",
           "Mateus"
         ],
         "todas_referencias": [
@@ -1596,7 +1596,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.416343",
+        "processado_em": "2026-01-16T15:51:35.819517",
         "data_fonte": "texto"
       },
       "id_unico": "2024_038",
@@ -1630,7 +1630,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.416869",
+        "processado_em": "2026-01-16T15:51:35.820074",
         "data_fonte": "texto"
       },
       "id_unico": "2024_039",
@@ -1641,10 +1641,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "João",
-          "Romanos",
           "Hebreus",
-          "Gênesis"
+          "Gênesis",
+          "Romanos",
+          "João"
         ],
         "todas_referencias": [
           "Hebreus 11:5",
@@ -1672,7 +1672,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.417476",
+        "processado_em": "2026-01-16T15:51:35.820735",
         "data_fonte": "texto"
       },
       "id_unico": "2024_040",
@@ -1683,9 +1683,9 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 6,
         "livros_mencionados": [
-          "João",
+          "Isaías",
           "Romanos",
-          "Isaías"
+          "João"
         ],
         "todas_referencias": [
           "João 8:1-11",
@@ -1713,7 +1713,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.418254",
+        "processado_em": "2026-01-16T15:51:35.821511",
         "data_fonte": "texto"
       },
       "id_unico": "2024_041",
@@ -1725,8 +1725,8 @@
         "referencias_conteudo": 6,
         "livros_mencionados": [
           "Hebreus",
-          "Apocalipse",
-          "Gênesis"
+          "Gênesis",
+          "Apocalipse"
         ],
         "todas_referencias": [
           "Hebreus 11:4",
@@ -1755,7 +1755,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.419181",
+        "processado_em": "2026-01-16T15:51:35.822321",
         "data_fonte": "texto"
       },
       "id_unico": "2024_042",
@@ -1767,10 +1767,10 @@
         "referencias_conteudo": 9,
         "livros_mencionados": [
           "Jó",
-          "Colossenses",
           "Judas",
-          "Mateus",
-          "Apocalipse"
+          "Apocalipse",
+          "Colossenses",
+          "Mateus"
         ],
         "todas_referencias": [
           "Mateus 6:19-24",
@@ -1802,7 +1802,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.419900",
+        "processado_em": "2026-01-16T15:51:35.822890",
         "data_fonte": "texto"
       },
       "id_unico": "2024_043",
@@ -1813,9 +1813,9 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 3,
         "livros_mencionados": [
-          "João",
+          "Mateus",
           "Isaías",
-          "Mateus"
+          "João"
         ],
         "todas_referencias": [
           "João 10:14",
@@ -1840,7 +1840,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.420717",
+        "processado_em": "2026-01-16T15:51:35.823696",
         "data_fonte": "texto"
       },
       "id_unico": "2024_044",
@@ -1852,10 +1852,10 @@
         "referencias_conteudo": 10,
         "livros_mencionados": [
           "Romanos",
-          "Efésios",
+          "Gálatas",
           "Hebreus",
-          "João",
-          "Gálatas"
+          "Efésios",
+          "João"
         ],
         "todas_referencias": [
           "Hebreus 11:1-3",
@@ -1887,7 +1887,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.421353",
+        "processado_em": "2026-01-16T15:51:35.824304",
         "data_fonte": "texto"
       },
       "id_unico": "2024_045",
@@ -1899,8 +1899,8 @@
         "referencias_conteudo": 8,
         "livros_mencionados": [
           "Levítico",
-          "Marcos",
-          "Lucas"
+          "Lucas",
+          "Marcos"
         ],
         "todas_referencias": [
           "Marcos 6:21-28",
@@ -1931,7 +1931,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.421643",
+        "processado_em": "2026-01-16T15:51:35.824591",
         "data_fonte": "texto"
       },
       "id_unico": "2024_046",
@@ -1966,7 +1966,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.422332",
+        "processado_em": "2026-01-16T15:51:35.825318",
         "data_fonte": "texto"
       },
       "id_unico": "2024_047",
@@ -1977,8 +1977,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 4,
         "livros_mencionados": [
-          "Mateus",
           "Colossenses",
+          "Mateus",
           "Salmos",
           "Daniel"
         ],
@@ -2007,7 +2007,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.422850",
+        "processado_em": "2026-01-16T15:51:35.825832",
         "data_fonte": "texto"
       },
       "id_unico": "2024_048",
@@ -2018,8 +2018,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 8,
         "livros_mencionados": [
-          "Êxodo",
-          "Gênesis"
+          "Gênesis",
+          "Êxodo"
         ],
         "todas_referencias": [
           "Gênesis 37",
@@ -2050,7 +2050,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.423489",
+        "processado_em": "2026-01-16T15:51:35.826473",
         "data_fonte": "texto"
       },
       "id_unico": "2024_049",
@@ -2061,8 +2061,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "João",
-          "Lucas"
+          "Lucas",
+          "João"
         ],
         "todas_referencias": [
           "Lucas 5:27-32",
@@ -2090,7 +2090,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.424041",
+        "processado_em": "2026-01-16T15:51:35.827022",
         "data_fonte": "texto"
       },
       "id_unico": "2024_050",
@@ -2101,8 +2101,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 8,
         "livros_mencionados": [
-          "João",
-          "Salmos"
+          "Salmos",
+          "João"
         ],
         "todas_referencias": [
           "João 2:6",
@@ -2133,7 +2133,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.425056",
+        "processado_em": "2026-01-16T15:51:35.828013",
         "data_fonte": "texto"
       },
       "id_unico": "2024_051",
@@ -2145,9 +2145,9 @@
         "referencias_conteudo": 6,
         "livros_mencionados": [
           "João",
-          "Judas",
           "Isaías",
-          "Êxodo"
+          "Êxodo",
+          "Judas"
         ],
         "todas_referencias": [
           "Êxodo 10:21-24",
@@ -2176,7 +2176,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.425456",
+        "processado_em": "2026-01-16T15:51:35.828409",
         "data_fonte": "texto"
       },
       "id_unico": "2024_052",
@@ -2187,9 +2187,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 4,
         "livros_mencionados": [
-          "Apocalipse",
           "Colossenses",
-          "Lucas"
+          "Lucas",
+          "Apocalipse"
         ],
         "todas_referencias": [
           "Lucas 22:14-20",
@@ -2216,7 +2216,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.425940",
+        "processado_em": "2026-01-16T15:51:35.828888",
         "data_fonte": "texto"
       },
       "id_unico": "2024_053",
@@ -2227,9 +2227,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "João",
+          "Hebreus",
           "Isaías",
-          "Hebreus"
+          "João"
         ],
         "todas_referencias": [
           "Hebreus 9:11-28",
@@ -2257,7 +2257,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.426626",
+        "processado_em": "2026-01-16T15:51:35.829574",
         "data_fonte": "texto"
       },
       "id_unico": "2024_054",
@@ -2269,8 +2269,8 @@
         "referencias_conteudo": 6,
         "livros_mencionados": [
           "Mateus",
-          "Isaías",
-          "Lucas"
+          "Lucas",
+          "Isaías"
         ],
         "todas_referencias": [
           "Lucas 19:1-10",
@@ -2299,7 +2299,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.427124",
+        "processado_em": "2026-01-16T15:51:35.830072",
         "data_fonte": "texto"
       },
       "id_unico": "2024_055",
@@ -2338,7 +2338,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.427667",
+        "processado_em": "2026-01-16T15:51:35.830608",
         "data_fonte": "texto"
       },
       "id_unico": "2024_056",
@@ -2375,7 +2375,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.428346",
+        "processado_em": "2026-01-16T15:51:35.833725",
         "data_fonte": "texto"
       },
       "id_unico": "2024_057",
@@ -2413,7 +2413,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.428743",
+        "processado_em": "2026-01-16T15:51:35.834257",
         "data_fonte": "texto"
       },
       "id_unico": "2024_058",
@@ -2450,7 +2450,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.429431",
+        "processado_em": "2026-01-16T15:51:35.834970",
         "data_fonte": "texto"
       },
       "id_unico": "2024_059",
@@ -2461,8 +2461,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "João",
-          "Números"
+          "Números",
+          "João"
         ],
         "todas_referencias": [
           "Números 21",
@@ -2490,7 +2490,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.430124",
+        "processado_em": "2026-01-16T15:51:35.835671",
         "data_fonte": "texto"
       },
       "id_unico": "2024_060",
@@ -2528,7 +2528,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.430681",
+        "processado_em": "2026-01-16T15:51:35.836294",
         "data_fonte": "texto"
       },
       "id_unico": "2024_061",
@@ -2563,7 +2563,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.431331",
+        "processado_em": "2026-01-16T15:51:35.836955",
         "data_fonte": "texto"
       },
       "id_unico": "2024_062",
@@ -2574,10 +2574,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 8,
         "livros_mencionados": [
-          "João",
-          "Isaías",
           "Hebreus",
-          "Apocalipse"
+          "Isaías",
+          "Apocalipse",
+          "João"
         ],
         "todas_referencias": [
           "Hebreus 6:1-12",
@@ -2608,7 +2608,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.431952",
+        "processado_em": "2026-01-16T15:51:35.837591",
         "data_fonte": "texto"
       },
       "id_unico": "2024_063",
@@ -2620,10 +2620,10 @@
         "referencias_conteudo": 6,
         "livros_mencionados": [
           "Romanos",
+          "Salmos",
           "Isaías",
-          "Mateus",
           "Apocalipse",
-          "Salmos"
+          "Mateus"
         ],
         "todas_referencias": [
           "Mateus 24:3-5",
@@ -2651,7 +2651,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.432396",
+        "processado_em": "2026-01-16T15:51:35.838052",
         "data_fonte": "texto"
       },
       "id_unico": "2024_064",
@@ -2662,8 +2662,8 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 2,
         "livros_mencionados": [
-          "Mateus",
-          "Gálatas"
+          "Gálatas",
+          "Mateus"
         ],
         "todas_referencias": [
           "Gálatas 1:11-12",
@@ -2687,7 +2687,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.433005",
+        "processado_em": "2026-01-16T15:51:35.838663",
         "data_fonte": "texto"
       },
       "id_unico": "2024_065",
@@ -2724,7 +2724,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.433478",
+        "processado_em": "2026-01-16T15:51:35.839143",
         "data_fonte": "texto"
       },
       "id_unico": "2024_066",
@@ -2765,7 +2765,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.434126",
+        "processado_em": "2026-01-16T15:51:35.839766",
         "data_fonte": "texto"
       },
       "id_unico": "2024_067",
@@ -2776,8 +2776,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 8,
         "livros_mencionados": [
-          "Judas",
-          "Gálatas"
+          "Gálatas",
+          "Judas"
         ],
         "todas_referencias": [
           "Gálatas 1:13-24",
@@ -2808,7 +2808,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.434630",
+        "processado_em": "2026-01-16T15:51:35.840231",
         "data_fonte": "texto"
       },
       "id_unico": "2024_068",
@@ -2819,10 +2819,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 10,
         "livros_mencionados": [
-          "Salmos",
           "João",
-          "Apocalipse",
-          "Provérbios"
+          "Salmos",
+          "Provérbios",
+          "Apocalipse"
         ],
         "todas_referencias": [
           "Salmos 1",
@@ -2854,7 +2854,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.435185",
+        "processado_em": "2026-01-16T15:51:35.840760",
         "data_fonte": "texto"
       },
       "id_unico": "2024_069",
@@ -2892,7 +2892,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.435771",
+        "processado_em": "2026-01-16T15:51:35.841323",
         "data_fonte": "texto"
       },
       "id_unico": "2024_070",
@@ -2931,7 +2931,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.436886",
+        "processado_em": "2026-01-16T15:51:35.842180",
         "data_fonte": "texto"
       },
       "id_unico": "2024_071",
@@ -2975,7 +2975,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.437469",
+        "processado_em": "2026-01-16T15:51:35.842724",
         "data_fonte": "texto"
       },
       "id_unico": "2024_072",
@@ -2986,8 +2986,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 3,
         "livros_mencionados": [
-          "Salmos",
           "Ezequiel",
+          "Salmos",
           "Gálatas"
         ],
         "todas_referencias": [
@@ -3014,7 +3014,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.438003",
+        "processado_em": "2026-01-16T15:51:35.843246",
         "data_fonte": "texto"
       },
       "id_unico": "2024_073",
@@ -3050,7 +3050,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.438673",
+        "processado_em": "2026-01-16T15:51:35.843890",
         "data_fonte": "texto"
       },
       "id_unico": "2024_074",
@@ -3061,10 +3061,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 7,
         "livros_mencionados": [
-          "Salmos",
-          "Isaías",
+          "Números",
           "Hebreus",
-          "Números"
+          "Salmos",
+          "Isaías"
         ],
         "todas_referencias": [
           "Hebreus 6:13-20",
@@ -3094,7 +3094,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.439217",
+        "processado_em": "2026-01-16T15:51:35.844459",
         "data_fonte": "texto"
       },
       "id_unico": "2024_075",
@@ -3128,7 +3128,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.439691",
+        "processado_em": "2026-01-16T15:51:35.844871",
         "data_fonte": "texto"
       },
       "id_unico": "2024_076",
@@ -3167,7 +3167,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.440386",
+        "processado_em": "2026-01-16T15:51:35.845548",
         "data_fonte": "texto"
       },
       "id_unico": "2024_077",
@@ -3178,10 +3178,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 12,
         "livros_mencionados": [
-          "João",
           "Deuteronômio",
+          "Apocalipse",
           "Romanos",
-          "Apocalipse"
+          "João"
         ],
         "todas_referencias": [
           "João 3:14-21",
@@ -3213,7 +3213,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.440881",
+        "processado_em": "2026-01-16T15:51:35.846035",
         "data_fonte": "texto"
       },
       "id_unico": "2024_078",
@@ -3224,8 +3224,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 2,
         "livros_mencionados": [
-          "Romanos",
-          "Lucas"
+          "Lucas",
+          "Romanos"
         ],
         "todas_referencias": [
           "Lucas 9:23",
@@ -3250,7 +3250,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.441391",
+        "processado_em": "2026-01-16T15:51:35.846525",
         "data_fonte": "texto"
       },
       "id_unico": "2024_079",
@@ -3262,9 +3262,9 @@
         "referencias_conteudo": 8,
         "livros_mencionados": [
           "Salmos",
+          "Jeremias",
           "Romanos",
-          "João",
-          "Jeremias"
+          "João"
         ],
         "todas_referencias": [
           "Salmos 90",
@@ -3295,7 +3295,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.441957",
+        "processado_em": "2026-01-16T15:51:35.847071",
         "data_fonte": "texto"
       },
       "id_unico": "2024_080",
@@ -3330,7 +3330,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.442711",
+        "processado_em": "2026-01-16T15:51:35.847886",
         "data_fonte": "texto"
       },
       "id_unico": "2024_081",
@@ -3341,8 +3341,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 3,
         "livros_mencionados": [
-          "Salmos",
-          "Hebreus"
+          "Hebreus",
+          "Salmos"
         ],
         "todas_referencias": [
           "Hebreus 11:33-40",
@@ -3368,7 +3368,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.443290",
+        "processado_em": "2026-01-16T15:51:35.848524",
         "data_fonte": "texto"
       },
       "id_unico": "2024_082",
@@ -3379,8 +3379,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "João",
-          "Lucas"
+          "Lucas",
+          "João"
         ],
         "todas_referencias": [
           "João 19:25",
@@ -3408,7 +3408,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.443953",
+        "processado_em": "2026-01-16T15:51:35.849299",
         "data_fonte": "texto"
       },
       "id_unico": "2024_083",
@@ -3421,9 +3421,9 @@
         "livros_mencionados": [
           "Romanos",
           "Isaías",
+          "Apocalipse",
           "Atos",
-          "Lucas",
-          "Apocalipse"
+          "Lucas"
         ],
         "todas_referencias": [
           "Isaías 11:1-10",
@@ -3455,7 +3455,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.444445",
+        "processado_em": "2026-01-16T15:51:35.849782",
         "data_fonte": "texto"
       },
       "id_unico": "2024_084",
@@ -3466,8 +3466,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 3,
         "livros_mencionados": [
-          "Mateus",
-          "Ageu"
+          "Ageu",
+          "Mateus"
         ],
         "todas_referencias": [
           "Ageu 2:10-13",
@@ -3493,7 +3493,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.445019",
+        "processado_em": "2026-01-16T15:51:35.850359",
         "data_fonte": "texto"
       },
       "id_unico": "2024_085",
@@ -3533,7 +3533,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.445623",
+        "processado_em": "2026-01-16T15:51:35.850968",
         "data_fonte": "texto"
       },
       "id_unico": "2024_086",
@@ -3569,7 +3569,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.446134",
+        "processado_em": "2026-01-16T15:51:35.851479",
         "data_fonte": "texto"
       },
       "id_unico": "2024_087",
@@ -3580,8 +3580,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 4,
         "livros_mencionados": [
-          "Mateus",
-          "Atos"
+          "Atos",
+          "Mateus"
         ],
         "todas_referencias": [
           "Atos 1:8",
@@ -3608,7 +3608,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.446659",
+        "processado_em": "2026-01-16T15:51:35.851998",
         "data_fonte": "texto"
       },
       "id_unico": "2024_088",
@@ -3619,10 +3619,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 7,
         "livros_mencionados": [
-          "Salmos",
+          "Filipenses",
           "Hebreus",
           "Lucas",
-          "Filipenses"
+          "Salmos"
         ],
         "todas_referencias": [
           "Hebreus 4:11-13",
@@ -3652,7 +3652,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.447379",
+        "processado_em": "2026-01-16T15:51:35.852709",
         "data_fonte": "texto"
       },
       "id_unico": "2024_089",
@@ -3689,7 +3689,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.447809",
+        "processado_em": "2026-01-16T15:51:35.853137",
         "data_fonte": "texto"
       },
       "id_unico": "2024_090",
@@ -3728,7 +3728,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.448525",
+        "processado_em": "2026-01-16T15:51:35.853937",
         "data_fonte": "texto"
       },
       "id_unico": "2024_091",
@@ -3739,10 +3739,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 6,
         "livros_mencionados": [
-          "João",
-          "Rute",
+          "Provérbios",
           "Tiago",
-          "Provérbios"
+          "Rute",
+          "João"
         ],
         "todas_referencias": [
           "Rute 1:14-17",
@@ -3771,7 +3771,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.449089",
+        "processado_em": "2026-01-16T15:51:35.854494",
         "data_fonte": "texto"
       },
       "id_unico": "2024_092",
@@ -3782,10 +3782,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 7,
         "livros_mencionados": [
-          "João",
-          "Efésios",
           "Gênesis",
-          "Atos"
+          "Atos",
+          "Efésios",
+          "João"
         ],
         "todas_referencias": [
           "Atos 1:1-11",
@@ -3815,7 +3815,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.449995",
+        "processado_em": "2026-01-16T15:51:35.855293",
         "data_fonte": "texto"
       },
       "id_unico": "2024_093",
@@ -3855,7 +3855,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.451164",
+        "processado_em": "2026-01-16T15:51:35.855998",
         "data_fonte": "texto"
       },
       "id_unico": "2024_094",
@@ -3866,9 +3866,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 4,
         "livros_mencionados": [
+          "Hebreus",
           "Mateus",
-          "Jonas",
-          "Hebreus"
+          "Jonas"
         ],
         "todas_referencias": [
           "Jonas 3:1-9",
@@ -3895,7 +3895,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.452083",
+        "processado_em": "2026-01-16T15:51:35.856527",
         "data_fonte": "texto"
       },
       "id_unico": "2024_095",
@@ -3931,7 +3931,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.453092",
+        "processado_em": "2026-01-16T15:51:35.857109",
         "data_fonte": "texto"
       },
       "id_unico": "2024_096",
@@ -3943,8 +3943,8 @@
         "referencias_conteudo": 4,
         "livros_mencionados": [
           "Números",
-          "João",
-          "Hebreus"
+          "Hebreus",
+          "João"
         ],
         "todas_referencias": [
           "Hebreus 3:1-6",
@@ -3971,7 +3971,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.453930",
+        "processado_em": "2026-01-16T15:51:35.857583",
         "data_fonte": "texto"
       },
       "id_unico": "2024_097",
@@ -3982,9 +3982,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 4,
         "livros_mencionados": [
-          "João",
+          "Isaías",
           "Romanos",
-          "Isaías"
+          "João"
         ],
         "todas_referencias": [
           "João 20:24-28",
@@ -4011,7 +4011,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.454983",
+        "processado_em": "2026-01-16T15:51:35.858193",
         "data_fonte": "texto"
       },
       "id_unico": "2024_098",
@@ -4022,9 +4022,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 9,
         "livros_mencionados": [
-          "João",
+          "Gálatas",
           "Romanos",
-          "Gálatas"
+          "João"
         ],
         "todas_referencias": [
           "Romanos 7:18-20",
@@ -4056,7 +4056,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.455882",
+        "processado_em": "2026-01-16T15:51:35.858695",
         "data_fonte": "texto"
       },
       "id_unico": "2024_099",
@@ -4067,9 +4067,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 4,
         "livros_mencionados": [
-          "Romanos",
           "Hebreus",
-          "Gênesis"
+          "Gênesis",
+          "Romanos"
         ],
         "todas_referencias": [
           "Hebreus 2:14-18",
@@ -4096,7 +4096,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.457129",
+        "processado_em": "2026-01-16T15:51:35.859414",
         "data_fonte": "texto"
       },
       "id_unico": "2024_100",
@@ -4107,9 +4107,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 7,
         "livros_mencionados": [
+          "Hebreus",
           "Mateus",
-          "João",
-          "Hebreus"
+          "João"
         ],
         "todas_referencias": [
           "Mateus 26:20-25",
@@ -4139,7 +4139,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.457882",
+        "processado_em": "2026-01-16T15:51:35.860110",
         "data_fonte": "texto"
       },
       "id_unico": "2024_101",
@@ -4180,7 +4180,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.458516",
+        "processado_em": "2026-01-16T15:51:35.860729",
         "data_fonte": "texto"
       },
       "id_unico": "2024_102",
@@ -4191,9 +4191,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "Salmos",
           "Hebreus",
-          "Gênesis"
+          "Gênesis",
+          "Salmos"
         ],
         "todas_referencias": [
           "Hebreus 2:5-9",
@@ -4221,7 +4221,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.459118",
+        "processado_em": "2026-01-16T15:51:35.861311",
         "data_fonte": "texto"
       },
       "id_unico": "2024_103",
@@ -4259,7 +4259,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.459800",
+        "processado_em": "2026-01-16T15:51:35.861989",
         "data_fonte": "texto"
       },
       "id_unico": "2024_104",
@@ -4270,11 +4270,11 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 6,
         "livros_mencionados": [
+          "João",
           "Atos",
           "Marcos",
-          "Mateus",
-          "João",
-          "Apocalipse"
+          "Apocalipse",
+          "Mateus"
         ],
         "todas_referencias": [
           "Mateus 26:3-4",
@@ -4302,7 +4302,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.460532",
+        "processado_em": "2026-01-16T15:51:35.862712",
         "data_fonte": "texto"
       },
       "id_unico": "2024_105",
@@ -4313,9 +4313,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 8,
         "livros_mencionados": [
-          "João",
           "Mateus",
-          "Êxodo"
+          "Êxodo",
+          "João"
         ],
         "todas_referencias": [
           "João 11:45-55",
@@ -4346,7 +4346,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.461072",
+        "processado_em": "2026-01-16T15:51:35.863233",
         "data_fonte": "texto"
       },
       "id_unico": "2024_106",
@@ -4381,7 +4381,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.461756",
+        "processado_em": "2026-01-16T15:51:35.863928",
         "data_fonte": "texto"
       },
       "id_unico": "2024_107",
@@ -4392,10 +4392,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 4,
         "livros_mencionados": [
-          "João",
-          "Isaías",
           "Hebreus",
-          "Apocalipse"
+          "Isaías",
+          "Apocalipse",
+          "João"
         ],
         "todas_referencias": [
           "Hebreus 1:1-3",
@@ -4422,7 +4422,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.462385",
+        "processado_em": "2026-01-16T15:51:35.864704",
         "data_fonte": "texto"
       },
       "id_unico": "2024_108",
@@ -4434,10 +4434,10 @@
         "referencias_conteudo": 7,
         "livros_mencionados": [
           "Romanos",
-          "Gênesis",
-          "Lucas",
           "João",
-          "Apocalipse"
+          "Gênesis",
+          "Apocalipse",
+          "Lucas"
         ],
         "todas_referencias": [
           "João 1:29-34",
@@ -4467,7 +4467,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.463144",
+        "processado_em": "2026-01-16T15:51:35.865497",
         "data_fonte": "texto"
       },
       "id_unico": "2024_109",
@@ -4478,8 +4478,8 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 7,
         "livros_mencionados": [
-          "Provérbios",
-          "Êxodo"
+          "Êxodo",
+          "Provérbios"
         ],
         "todas_referencias": [
           "Êxodo 15:22-26",
@@ -4508,7 +4508,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.463677",
+        "processado_em": "2026-01-16T15:51:35.866058",
         "data_fonte": "texto"
       },
       "id_unico": "2024_110",
@@ -4543,7 +4543,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.464443",
+        "processado_em": "2026-01-16T15:51:35.866905",
         "data_fonte": "texto"
       },
       "id_unico": "2024_111",
@@ -4587,7 +4587,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.465291",
+        "processado_em": "2026-01-16T15:51:35.867784",
         "data_fonte": "texto"
       },
       "id_unico": "2024_112",
@@ -4598,10 +4598,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 8,
         "livros_mencionados": [
+          "Gálatas",
           "Mateus",
           "Apocalipse",
-          "Daniel",
-          "Gálatas"
+          "Daniel"
         ],
         "todas_referencias": [
           "Daniel 5:1-9",
@@ -4632,7 +4632,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.465969",
+        "processado_em": "2026-01-16T15:51:35.868468",
         "data_fonte": "texto"
       },
       "id_unico": "2024_113",
@@ -4670,7 +4670,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.466618",
+        "processado_em": "2026-01-16T15:51:35.869127",
         "data_fonte": "texto"
       },
       "id_unico": "2024_114",
@@ -4681,9 +4681,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 9,
         "livros_mencionados": [
-          "Apocalipse",
+          "Daniel",
           "Jeremias",
-          "Daniel"
+          "Apocalipse"
         ],
         "todas_referencias": [
           "Apocalipse 6:1-8",
@@ -4715,7 +4715,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.467253",
+        "processado_em": "2026-01-16T15:51:35.869778",
         "data_fonte": "texto"
       },
       "id_unico": "2024_115",
@@ -4726,9 +4726,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 7,
         "livros_mencionados": [
-          "João",
+          "Marcos",
           "Romanos",
-          "Marcos"
+          "João"
         ],
         "todas_referencias": [
           "João 5:39-40",
@@ -4758,7 +4758,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.467807",
+        "processado_em": "2026-01-16T15:51:35.870265",
         "data_fonte": "texto"
       },
       "id_unico": "2024_116",
@@ -4792,7 +4792,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.468396",
+        "processado_em": "2026-01-16T15:51:35.870850",
         "data_fonte": "texto"
       },
       "id_unico": "2024_117",
@@ -4804,10 +4804,10 @@
         "referencias_conteudo": 8,
         "livros_mencionados": [
           "Jó",
-          "Gênesis",
-          "Filipenses",
           "Hebreus",
-          "João"
+          "Gênesis",
+          "João",
+          "Filipenses"
         ],
         "todas_referencias": [
           "Hebreus 11:1-7",
@@ -4838,7 +4838,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.468862",
+        "processado_em": "2026-01-16T15:51:35.871307",
         "data_fonte": "texto"
       },
       "id_unico": "2024_118",
@@ -4850,9 +4850,9 @@
         "referencias_conteudo": 6,
         "livros_mencionados": [
           "João",
+          "Atos",
           "Efésios",
-          "Apocalipse",
-          "Atos"
+          "Apocalipse"
         ],
         "todas_referencias": [
           "Apocalipse 2:1-7",
@@ -4881,7 +4881,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.469619",
+        "processado_em": "2026-01-16T15:51:35.872021",
         "data_fonte": "texto"
       },
       "id_unico": "2024_119",
@@ -4892,9 +4892,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
+          "Mateus",
           "Salmos",
           "Marcos",
-          "Mateus",
           "Judas"
         ],
         "todas_referencias": [
@@ -4923,7 +4923,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.470385",
+        "processado_em": "2026-01-16T15:51:35.872763",
         "data_fonte": "texto"
       },
       "id_unico": "2024_120",
@@ -4934,9 +4934,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
+          "Atos",
           "Mateus",
-          "Apocalipse",
-          "Atos"
+          "Apocalipse"
         ],
         "todas_referencias": [
           "Atos 4:1-13",
@@ -4964,7 +4964,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.471242",
+        "processado_em": "2026-01-16T15:51:35.873571",
         "data_fonte": "texto"
       },
       "id_unico": "2024_121",
@@ -5003,7 +5003,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.472099",
+        "processado_em": "2026-01-16T15:51:35.874375",
         "data_fonte": "texto"
       },
       "id_unico": "2024_122",
@@ -5014,9 +5014,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 7,
         "livros_mencionados": [
+          "Mateus",
           "Salmos",
-          "Lamentações",
-          "Mateus"
+          "Lamentações"
         ],
         "todas_referencias": [
           "Salmos 103",
@@ -5046,7 +5046,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.472815",
+        "processado_em": "2026-01-16T15:51:35.875082",
         "data_fonte": "texto"
       },
       "id_unico": "2024_123",
@@ -5057,8 +5057,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 10,
         "livros_mencionados": [
-          "Mateus",
           "João",
+          "Mateus",
           "Apocalipse"
         ],
         "todas_referencias": [
@@ -5091,7 +5091,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.473518",
+        "processado_em": "2026-01-16T15:51:35.875841",
         "data_fonte": "texto"
       },
       "id_unico": "2024_124",
@@ -5102,8 +5102,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 8,
         "livros_mencionados": [
-          "Efésios",
           "Hebreus",
+          "Efésios",
           "João",
           "Mateus",
           "Apocalipse"
@@ -5137,7 +5137,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.474330",
+        "processado_em": "2026-01-16T15:51:35.876663",
         "data_fonte": "texto"
       },
       "id_unico": "2024_125",
@@ -5176,7 +5176,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.475136",
+        "processado_em": "2026-01-16T15:51:35.877469",
         "data_fonte": "texto"
       },
       "id_unico": "2023_126",
@@ -5188,10 +5188,10 @@
         "referencias_conteudo": 8,
         "livros_mencionados": [
           "Malaquias",
-          "Isaías",
           "Efésios",
-          "Atos",
-          "João"
+          "Isaías",
+          "João",
+          "Atos"
         ],
         "todas_referencias": [
           "Isaías 60:1",
@@ -5221,7 +5221,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.475595",
+        "processado_em": "2026-01-16T15:51:35.877926",
         "data_fonte": "fallback"
       },
       "id_unico": "2024_127",
@@ -5232,12 +5232,12 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 8,
         "livros_mencionados": [
-          "Deuteronômio",
-          "Atos",
+          "Salmos",
           "Hebreus",
-          "Mateus",
           "Apocalipse",
-          "Salmos"
+          "Atos",
+          "Deuteronômio",
+          "Mateus"
         ],
         "todas_referencias": [
           "Hebreus 1:4-14",
@@ -5268,7 +5268,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.476166",
+        "processado_em": "2026-01-16T15:51:35.878495",
         "data_fonte": "fallback"
       },
       "id_unico": "2024_128",
@@ -5279,9 +5279,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 7,
         "livros_mencionados": [
+          "Hebreus",
           "João",
           "Romanos",
-          "Hebreus",
           "Apocalipse"
         ],
         "todas_referencias": [
@@ -5312,7 +5312,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.476742",
+        "processado_em": "2026-01-16T15:51:35.879074",
         "data_fonte": "fallback"
       },
       "id_unico": "2024_129",
@@ -5323,9 +5323,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 9,
         "livros_mencionados": [
-          "João",
           "Gênesis",
-          "Atos"
+          "Atos",
+          "João"
         ],
         "todas_referencias": [
           "João 1:51",
@@ -5357,7 +5357,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.477487",
+        "processado_em": "2026-01-16T15:51:35.879805",
         "data_fonte": "fallback"
       },
       "id_unico": "2024_130",
@@ -5368,10 +5368,10 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "João",
-          "Romanos",
           "Efésios",
-          "Êxodo"
+          "Êxodo",
+          "Romanos",
+          "João"
         ],
         "todas_referencias": [
           "Efésios 5:25-27",
@@ -5398,7 +5398,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.478363",
+        "processado_em": "2026-01-16T15:51:35.880643",
         "data_fonte": "fallback"
       },
       "id_unico": "2024_131",
@@ -5410,10 +5410,10 @@
         "referencias_conteudo": 7,
         "livros_mencionados": [
           "Romanos",
-          "Filipenses",
-          "João",
           "Salmos",
-          "Jeremias"
+          "Jeremias",
+          "João",
+          "Filipenses"
         ],
         "todas_referencias": [
           "João 4:16",
@@ -5442,7 +5442,7 @@
       "_metadados": {
         "ano_arquivo": 2024,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:16.478984",
+        "processado_em": "2026-01-16T15:51:35.881264",
         "data_fonte": "fallback"
       },
       "id_unico": "2024_132",
@@ -5453,8 +5453,8 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 2,
         "livros_mencionados": [
-          "João",
-          "Atos"
+          "Atos",
+          "João"
         ],
         "todas_referencias": [
           "Atos 9:1-5",

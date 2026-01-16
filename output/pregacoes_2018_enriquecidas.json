@@ -24,7 +24,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.686269",
+        "processado_em": "2026-01-16T15:51:34.005708",
         "data_fonte": "texto"
       },
       "id_unico": "2018_001",
@@ -59,7 +59,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.686945",
+        "processado_em": "2026-01-16T15:51:34.006308",
         "data_fonte": "texto"
       },
       "id_unico": "2018_002",
@@ -94,7 +94,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.687483",
+        "processado_em": "2026-01-16T15:51:34.006697",
         "data_fonte": "texto"
       },
       "id_unico": "2018_003",
@@ -105,8 +105,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 1,
         "livros_mencionados": [
-          "João",
-          "Lucas"
+          "Lucas",
+          "João"
         ],
         "todas_referencias": [
           "Lucas 2",
@@ -130,7 +130,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.687881",
+        "processado_em": "2026-01-16T15:51:34.006989",
         "data_fonte": "texto"
       },
       "id_unico": "2018_004",
@@ -164,7 +164,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.688599",
+        "processado_em": "2026-01-16T15:51:34.007609",
         "data_fonte": "texto"
       },
       "id_unico": "2018_005",
@@ -194,7 +194,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.689163",
+        "processado_em": "2026-01-16T15:51:34.008153",
         "data_fonte": "texto"
       },
       "id_unico": "2018_006",
@@ -224,7 +224,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.689614",
+        "processado_em": "2026-01-16T15:51:34.008580",
         "data_fonte": "texto"
       },
       "id_unico": "2018_007",
@@ -259,7 +259,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.690270",
+        "processado_em": "2026-01-16T15:51:34.009215",
         "data_fonte": "texto"
       },
       "id_unico": "2018_008",
@@ -270,8 +270,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 3,
         "livros_mencionados": [
-          "Romanos",
-          "Eclesiastes"
+          "Eclesiastes",
+          "Romanos"
         ],
         "todas_referencias": [
           "Eclesiastes 3:1-2",
@@ -297,7 +297,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.690727",
+        "processado_em": "2026-01-16T15:51:34.009838",
         "data_fonte": "texto"
       },
       "id_unico": "2018_009",
@@ -327,7 +327,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.691347",
+        "processado_em": "2026-01-16T15:51:34.010459",
         "data_fonte": "texto"
       },
       "id_unico": "2018_010",
@@ -338,9 +338,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 3,
         "livros_mencionados": [
+          "Atos",
           "Deuteronômio",
-          "Romanos",
-          "Atos"
+          "Romanos"
         ],
         "todas_referencias": [
           "Atos 8:26-39",
@@ -366,7 +366,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.691883",
+        "processado_em": "2026-01-16T15:51:34.010995",
         "data_fonte": "texto"
       },
       "id_unico": "2018_011",
@@ -377,8 +377,8 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 2,
         "livros_mencionados": [
-          "Romanos",
-          "Jeremias"
+          "Jeremias",
+          "Romanos"
         ],
         "todas_referencias": [
           "Romanos 1:16",
@@ -402,7 +402,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.692589",
+        "processado_em": "2026-01-16T15:51:34.011694",
         "data_fonte": "texto"
       },
       "id_unico": "2018_012",
@@ -439,7 +439,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.692862",
+        "processado_em": "2026-01-16T15:51:34.011965",
         "data_fonte": "texto"
       },
       "id_unico": "2018_013",
@@ -469,7 +469,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.693527",
+        "processado_em": "2026-01-16T15:51:34.012842",
         "data_fonte": "texto"
       },
       "id_unico": "2018_014",
@@ -480,9 +480,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 3,
         "livros_mencionados": [
-          "João",
           "Lucas",
-          "Provérbios"
+          "Provérbios",
+          "João"
         ],
         "todas_referencias": [
           "Lucas 10:38-42",
@@ -508,7 +508,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.694129",
+        "processado_em": "2026-01-16T15:51:34.013601",
         "data_fonte": "texto"
       },
       "id_unico": "2018_015",
@@ -544,7 +544,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.694606",
+        "processado_em": "2026-01-16T15:51:34.014298",
         "data_fonte": "texto"
       },
       "id_unico": "2018_016",
@@ -578,7 +578,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.695310",
+        "processado_em": "2026-01-16T15:51:34.015158",
         "data_fonte": "texto"
       },
       "id_unico": "2018_017",
@@ -613,7 +613,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.695875",
+        "processado_em": "2026-01-16T15:51:34.015782",
         "data_fonte": "texto"
       },
       "id_unico": "2018_018",
@@ -649,7 +649,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.696296",
+        "processado_em": "2026-01-16T15:51:34.016212",
         "data_fonte": "texto"
       },
       "id_unico": "2018_019",
@@ -660,8 +660,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 1,
         "livros_mencionados": [
-          "Mateus",
-          "Atos"
+          "Atos",
+          "Mateus"
         ],
         "todas_referencias": [
           "Atos 20:35",
@@ -685,7 +685,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.696815",
+        "processado_em": "2026-01-16T15:51:34.016738",
         "data_fonte": "texto"
       },
       "id_unico": "2018_020",
@@ -696,8 +696,8 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 2,
         "livros_mencionados": [
-          "Salmos",
-          "Atos"
+          "Atos",
+          "Salmos"
         ],
         "todas_referencias": [
           "Salmos 115:2-3",
@@ -721,7 +721,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.697631",
+        "processado_em": "2026-01-16T15:51:34.017698",
         "data_fonte": "texto"
       },
       "id_unico": "2018_021",
@@ -756,7 +756,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.698276",
+        "processado_em": "2026-01-16T15:51:34.018609",
         "data_fonte": "texto"
       },
       "id_unico": "2018_022",
@@ -768,8 +768,8 @@
         "referencias_conteudo": 5,
         "livros_mencionados": [
           "Salmos",
-          "Isaías",
-          "Atos"
+          "Atos",
+          "Isaías"
         ],
         "todas_referencias": [
           "Atos 2:22-36",
@@ -797,7 +797,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.698735",
+        "processado_em": "2026-01-16T15:51:34.019201",
         "data_fonte": "texto"
       },
       "id_unico": "2018_023",
@@ -808,9 +808,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "João",
           "Gênesis",
-          "Atos"
+          "Atos",
+          "João"
         ],
         "todas_referencias": [
           "Atos 2:1-13",
@@ -838,7 +838,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.699164",
+        "processado_em": "2026-01-16T15:51:34.019647",
         "data_fonte": "texto"
       },
       "id_unico": "2018_024",
@@ -873,7 +873,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.699535",
+        "processado_em": "2026-01-16T15:51:34.020024",
         "data_fonte": "texto"
       },
       "id_unico": "2018_025",
@@ -903,7 +903,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.700135",
+        "processado_em": "2026-01-16T15:51:34.020677",
         "data_fonte": "texto"
       },
       "id_unico": "2018_026",
@@ -938,7 +938,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.700739",
+        "processado_em": "2026-01-16T15:51:34.021295",
         "data_fonte": "texto"
       },
       "id_unico": "2018_027",
@@ -973,7 +973,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.701228",
+        "processado_em": "2026-01-16T15:51:34.021787",
         "data_fonte": "texto"
       },
       "id_unico": "2018_028",
@@ -1008,7 +1008,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.701691",
+        "processado_em": "2026-01-16T15:51:34.022250",
         "data_fonte": "texto"
       },
       "id_unico": "2018_029",
@@ -1045,7 +1045,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.702214",
+        "processado_em": "2026-01-16T15:51:34.022777",
         "data_fonte": "texto"
       },
       "id_unico": "2018_030",
@@ -1056,9 +1056,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 3,
         "livros_mencionados": [
-          "Romanos",
           "Hebreus",
-          "Gênesis"
+          "Gênesis",
+          "Romanos"
         ],
         "todas_referencias": [
           "Gênesis 5:21-24",
@@ -1084,7 +1084,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.702812",
+        "processado_em": "2026-01-16T15:51:34.023335",
         "data_fonte": "texto"
       },
       "id_unico": "2018_031",
@@ -1095,8 +1095,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 2,
         "livros_mencionados": [
-          "Romanos",
-          "Gênesis"
+          "Gênesis",
+          "Romanos"
         ],
         "todas_referencias": [
           "Gênesis 17:1-10",
@@ -1121,7 +1121,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.703492",
+        "processado_em": "2026-01-16T15:51:34.023797",
         "data_fonte": "texto"
       },
       "id_unico": "2018_032",
@@ -1156,7 +1156,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.704240",
+        "processado_em": "2026-01-16T15:51:34.024414",
         "data_fonte": "texto"
       },
       "id_unico": "2018_033",
@@ -1193,7 +1193,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.704632",
+        "processado_em": "2026-01-16T15:51:34.024801",
         "data_fonte": "texto"
       },
       "id_unico": "2018_034",
@@ -1228,7 +1228,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.705256",
+        "processado_em": "2026-01-16T15:51:34.025425",
         "data_fonte": "texto"
       },
       "id_unico": "2018_035",
@@ -1263,7 +1263,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.705700",
+        "processado_em": "2026-01-16T15:51:34.025865",
         "data_fonte": "texto"
       },
       "id_unico": "2018_036",
@@ -1274,8 +1274,8 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 2,
         "livros_mencionados": [
-          "João",
-          "Romanos"
+          "Romanos",
+          "João"
         ],
         "todas_referencias": [
           "João 3:2",
@@ -1299,7 +1299,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.706278",
+        "processado_em": "2026-01-16T15:51:34.026603",
         "data_fonte": "texto"
       },
       "id_unico": "2018_037",
@@ -1329,7 +1329,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.707445",
+        "processado_em": "2026-01-16T15:51:34.027772",
         "data_fonte": "texto"
       },
       "id_unico": "2018_038",
@@ -1340,9 +1340,9 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 8,
         "livros_mencionados": [
-          "João",
+          "Ezequiel",
           "Hebreus",
-          "Ezequiel"
+          "João"
         ],
         "todas_referencias": [
           "Hebreus 11:1",
@@ -1372,7 +1372,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.707874",
+        "processado_em": "2026-01-16T15:51:34.028201",
         "data_fonte": "texto"
       },
       "id_unico": "2018_039",
@@ -1402,7 +1402,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.708245",
+        "processado_em": "2026-01-16T15:51:34.028574",
         "data_fonte": "texto"
       },
       "id_unico": "2018_040",
@@ -1437,7 +1437,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.708946",
+        "processado_em": "2026-01-16T15:51:34.029656",
         "data_fonte": "texto"
       },
       "id_unico": "2018_041",
@@ -1472,7 +1472,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.709349",
+        "processado_em": "2026-01-16T15:51:34.030375",
         "data_fonte": "texto"
       },
       "id_unico": "2018_042",
@@ -1507,7 +1507,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.709899",
+        "processado_em": "2026-01-16T15:51:34.031330",
         "data_fonte": "texto"
       },
       "id_unico": "2018_043",
@@ -1518,8 +1518,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 2,
         "livros_mencionados": [
-          "Efésios",
-          "Atos"
+          "Atos",
+          "Efésios"
         ],
         "todas_referencias": [
           "Atos 1:1-11",
@@ -1544,7 +1544,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.710428",
+        "processado_em": "2026-01-16T15:51:34.031970",
         "data_fonte": "texto"
       },
       "id_unico": "2018_044",
@@ -1555,8 +1555,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 2,
         "livros_mencionados": [
-          "Salmos",
-          "Gênesis"
+          "Gênesis",
+          "Salmos"
         ],
         "todas_referencias": [
           "Gênesis 14:13-20",
@@ -1581,7 +1581,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.710802",
+        "processado_em": "2026-01-16T15:51:34.032450",
         "data_fonte": "texto"
       },
       "id_unico": "2018_045",
@@ -1615,7 +1615,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.711183",
+        "processado_em": "2026-01-16T15:51:34.032860",
         "data_fonte": "texto"
       },
       "id_unico": "2018_046",
@@ -1650,7 +1650,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.711848",
+        "processado_em": "2026-01-16T15:51:34.033551",
         "data_fonte": "texto"
       },
       "id_unico": "2018_047",
@@ -1661,8 +1661,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 1,
         "livros_mencionados": [
-          "João",
-          "Jeremias"
+          "Jeremias",
+          "João"
         ],
         "todas_referencias": [
           "Jeremias 5:29-31",
@@ -1686,7 +1686,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.712384",
+        "processado_em": "2026-01-16T15:51:34.034150",
         "data_fonte": "texto"
       },
       "id_unico": "2018_048",
@@ -1721,7 +1721,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.713170",
+        "processado_em": "2026-01-16T15:51:34.035186",
         "data_fonte": "texto"
       },
       "id_unico": "2018_049",
@@ -1755,7 +1755,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.713897",
+        "processado_em": "2026-01-16T15:51:34.036018",
         "data_fonte": "texto"
       },
       "id_unico": "2018_050",
@@ -1766,9 +1766,9 @@
         "referencias_titulo": 0,
         "referencias_conteudo": 3,
         "livros_mencionados": [
+          "Atos",
           "Isaías",
-          "Efésios",
-          "Atos"
+          "Efésios"
         ],
         "todas_referencias": [
           "Atos 11:25-26",
@@ -1793,7 +1793,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.714849",
+        "processado_em": "2026-01-16T15:51:34.037031",
         "data_fonte": "texto"
       },
       "id_unico": "2018_051",
@@ -1804,10 +1804,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 6,
         "livros_mencionados": [
-          "Mateus",
-          "João",
           "Hebreus",
-          "Apocalipse"
+          "Mateus",
+          "Apocalipse",
+          "João"
         ],
         "todas_referencias": [
           "Mateus 26:20-30",
@@ -1836,7 +1836,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.715634",
+        "processado_em": "2026-01-16T15:51:34.037824",
         "data_fonte": "texto"
       },
       "id_unico": "2018_052",
@@ -1847,10 +1847,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 3,
         "livros_mencionados": [
-          "Romanos",
+          "Tiago",
           "Oséias",
           "Jeremias",
-          "Tiago"
+          "Romanos"
         ],
         "todas_referencias": [
           "Jeremias 3:15-25",
@@ -1876,7 +1876,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.715900",
+        "processado_em": "2026-01-16T15:51:34.038091",
         "data_fonte": "texto"
       },
       "id_unico": "2018_053",
@@ -1910,7 +1910,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.716507",
+        "processado_em": "2026-01-16T15:51:34.038705",
         "data_fonte": "texto"
       },
       "id_unico": "2018_054",
@@ -1921,8 +1921,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 1,
         "livros_mencionados": [
-          "Atos",
-          "Gálatas"
+          "Gálatas",
+          "Atos"
         ],
         "todas_referencias": [
           "Gálatas 1:1-5",
@@ -1946,7 +1946,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.717075",
+        "processado_em": "2026-01-16T15:51:34.039258",
         "data_fonte": "texto"
       },
       "id_unico": "2018_055",
@@ -1957,9 +1957,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 2,
         "livros_mencionados": [
-          "João",
+          "Gênesis",
           "Deuteronômio",
-          "Gênesis"
+          "João"
         ],
         "todas_referencias": [
           "Gênesis 4:3-7",
@@ -1984,7 +1984,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.717925",
+        "processado_em": "2026-01-16T15:51:34.040189",
         "data_fonte": "texto"
       },
       "id_unico": "2018_056",
@@ -2019,7 +2019,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.718504",
+        "processado_em": "2026-01-16T15:51:34.040782",
         "data_fonte": "texto"
       },
       "id_unico": "2018_057",
@@ -2053,7 +2053,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.718843",
+        "processado_em": "2026-01-16T15:51:34.041040",
         "data_fonte": "texto"
       },
       "id_unico": "2018_058",
@@ -2087,7 +2087,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.719702",
+        "processado_em": "2026-01-16T15:51:34.041774",
         "data_fonte": "texto"
       },
       "id_unico": "2018_059",
@@ -2098,9 +2098,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 3,
         "livros_mencionados": [
+          "Gálatas",
           "Salmos",
-          "Jeremias",
-          "Gálatas"
+          "Jeremias"
         ],
         "todas_referencias": [
           "Jeremias 2:5-9",
@@ -2126,7 +2126,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.720789",
+        "processado_em": "2026-01-16T15:51:34.042549",
         "data_fonte": "texto"
       },
       "id_unico": "2018_060",
@@ -2160,7 +2160,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.722243",
+        "processado_em": "2026-01-16T15:51:34.043262",
         "data_fonte": "texto"
       },
       "id_unico": "2018_061",
@@ -2171,10 +2171,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 3,
         "livros_mencionados": [
-          "Mateus",
           "Salmos",
-          "Marcos",
-          "Lucas"
+          "Mateus",
+          "Lucas",
+          "Marcos"
         ],
         "todas_referencias": [
           "Lucas 9:62",
@@ -2200,7 +2200,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.724252",
+        "processado_em": "2026-01-16T15:51:34.043998",
         "data_fonte": "texto"
       },
       "id_unico": "2018_062",
@@ -2211,9 +2211,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 2,
         "livros_mencionados": [
-          "João",
+          "Êxodo",
           "Jeremias",
-          "Êxodo"
+          "João"
         ],
         "todas_referencias": [
           "Jeremias 1:4-10",
@@ -2238,7 +2238,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.725110",
+        "processado_em": "2026-01-16T15:51:34.044545",
         "data_fonte": "texto"
       },
       "id_unico": "2018_063",
@@ -2249,8 +2249,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 1,
         "livros_mencionados": [
-          "João",
-          "Provérbios"
+          "Provérbios",
+          "João"
         ],
         "todas_referencias": [
           "João 13:34",
@@ -2274,7 +2274,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.726234",
+        "processado_em": "2026-01-16T15:51:34.045196",
         "data_fonte": "texto"
       },
       "id_unico": "2018_064",
@@ -2285,9 +2285,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "João",
+          "Jeremias",
           "Romanos",
-          "Jeremias"
+          "João"
         ],
         "todas_referencias": [
           "Jeremias 1:1-5",
@@ -2315,7 +2315,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.727273",
+        "processado_em": "2026-01-16T15:51:34.045921",
         "data_fonte": "texto"
       },
       "id_unico": "2018_065",
@@ -2326,8 +2326,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 3,
         "livros_mencionados": [
-          "Romanos",
-          "Hebreus"
+          "Hebreus",
+          "Romanos"
         ],
         "todas_referencias": [
           "Hebreus 11:1-3",
@@ -2353,7 +2353,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.728395",
+        "processado_em": "2026-01-16T15:51:34.046836",
         "data_fonte": "texto"
       },
       "id_unico": "2018_066",
@@ -2365,9 +2365,9 @@
         "referencias_conteudo": 3,
         "livros_mencionados": [
           "Hebreus",
-          "Apocalipse",
+          "Atos",
           "Tiago",
-          "Atos"
+          "Apocalipse"
         ],
         "todas_referencias": [
           "Tiago 5:7-11",
@@ -2393,7 +2393,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.729369",
+        "processado_em": "2026-01-16T15:51:34.047802",
         "data_fonte": "texto"
       },
       "id_unico": "2018_067",
@@ -2427,7 +2427,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.730120",
+        "processado_em": "2026-01-16T15:51:34.048402",
         "data_fonte": "fallback"
       },
       "id_unico": "2018_068",
@@ -2438,9 +2438,9 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 4,
         "livros_mencionados": [
-          "Romanos",
           "Efésios",
-          "Tiago"
+          "Tiago",
+          "Romanos"
         ],
         "todas_referencias": [
           "Efésios 1:1-14",
@@ -2467,7 +2467,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.730825",
+        "processado_em": "2026-01-16T15:51:34.048986",
         "data_fonte": "fallback"
       },
       "id_unico": "2018_069",
@@ -2478,10 +2478,10 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 5,
         "livros_mencionados": [
-          "Deuteronômio",
-          "Romanos",
+          "Gênesis",
           "Lucas",
-          "Gênesis"
+          "Romanos",
+          "Deuteronômio"
         ],
         "todas_referencias": [
           "Gênesis 1:27-28",
@@ -2509,7 +2509,7 @@
       "_metadados": {
         "ano_arquivo": 2018,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:14.731900",
+        "processado_em": "2026-01-16T15:51:34.049731",
         "data_fonte": "fallback"
       },
       "id_unico": "2018_070",
@@ -2521,8 +2521,8 @@
         "referencias_conteudo": 3,
         "livros_mencionados": [
           "Mateus",
-          "João",
-          "Isaías"
+          "Isaías",
+          "João"
         ],
         "todas_referencias": [
           "Mateus 4:16",

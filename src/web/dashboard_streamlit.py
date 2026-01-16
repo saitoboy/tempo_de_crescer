@@ -39,14 +39,12 @@ def limpar_nome_doutrina(nome):
     if not isinstance(nome, str):
         return nome
     
-    # Remove variações de "Doutrina"
     nome = nome.replace('Doutrina de ', '')
     nome = nome.replace('Doutrina da ', '')
     nome = nome.replace('Doutrina do ', '')
     nome = nome.replace('Doutrina das ', '')
     nome = nome.replace('Doutrina d', '')
     
-    # Remove artigos soltos no início (a, o, as, os, e)
     nome = nome.strip()
     if nome.startswith('a '):
         nome = nome[2:]
@@ -72,9 +70,14 @@ def carregar_dados():
     with open(base_path / 'relatorio_cobertura_biblica.json', 'r', encoding='utf-8') as f:
         cobertura_biblica = json.load(f)
     
+    # 🆕 CARREGA RELATÓRIO V3.1 (PARA SUBTEMAS E CONFIANÇA)
+    with open(base_path / 'relatorio_v31.json', 'r', encoding='utf-8') as f:
+        relatorio_v31 = json.load(f)
+    
     return {
         'pregacoes': classificadas['pregacoes'],
-        'biblica': cobertura_biblica
+        'biblica': cobertura_biblica,
+        'relatorio_v31': relatorio_v31
     }
 
 @st.cache_data
@@ -106,7 +109,6 @@ def criar_dataframe(pregacoes_raw):
             else:
                 continue
         
-        # Extrai livro do título se necessário
         livro_biblico = p.get('livro_biblico', 'Não identificado')
         titulo = p.get('titulo', 'Sem título')
         
@@ -154,7 +156,6 @@ df = criar_dataframe(dados['pregacoes'])
 with st.sidebar:
     st.title("🎛️ Filtros")
     
-    # SLIDER DE ANO (INTERVALO)
     st.markdown("**📅 Período (Anos)**")
     anos_disponiveis = sorted(df['ano'].unique())
     ano_min = int(min(anos_disponiveis))
@@ -200,7 +201,6 @@ with st.sidebar:
     - **Framework:** CRISP-DM
     """)
     
-    # 🆕 EXPLICAÇÃO DOS CONCEITOS
     with st.expander("💡 O que é TF-IDF?"):
         st.markdown("""
         **TF-IDF (Term Frequency - Inverse Document Frequency)**
@@ -261,7 +261,6 @@ with st.sidebar:
 
 # ========== APLICA FILTROS ==========
 df_filtrado = df.copy()
-
 df_filtrado = df_filtrado[(df_filtrado['ano'] >= ano_range[0]) & (df_filtrado['ano'] <= ano_range[1])]
 
 if pregador_sel != "Todos":
@@ -350,6 +349,32 @@ with col4:
     else:
         st.metric("📖 Cobertura Bíblica", "0 de 66")
 
+# 🆕 QUALIDADE DOS DADOS (CRÍTICO 1/3)
+with st.expander("📊 Qualidade dos Dados (Metodologia CRISP-DM)"):
+    st.markdown("### Integridade dos Metadados")
+    
+    col_q1, col_q2, col_q3 = st.columns(3)
+    
+    with col_q1:
+        com_data = len(df[df['data'] != 'Sem data'])
+        perc_data = (com_data / len(df) * 100) if len(df) > 0 else 0
+        st.metric("✅ Com Data Identificada", f"{com_data}", f"{perc_data:.1f}%")
+    
+    with col_q2:
+        com_pregador = len(df[df['pregador'] != 'Desconhecido'])
+        perc_preg = (com_pregador / len(df) * 100) if len(df) > 0 else 0
+        st.metric("✅ Com Pregador Identificado", f"{com_pregador}", f"{perc_preg:.1f}%")
+    
+    with col_q3:
+        com_livro = len(df[df['livro_biblico'] != 'Não identificado'])
+        perc_livro = (com_livro / len(df) * 100) if len(df) > 0 else 0
+        st.metric("✅ Com Livro Bíblico", f"{com_livro}", f"{perc_livro:.1f}%")
+    
+    st.caption("""
+    **Interpretação:** Quanto maior a % de metadados identificados, maior a confiabilidade das análises. 
+    Valores acima de 85% indicam alta qualidade metodológica.
+    """)
+
 st.markdown("---")
 
 # ========== DISTRIBUIÇÃO TEMÁTICA ==========
@@ -400,7 +425,7 @@ with col_right:
     else:
         st.info("Nenhum dado disponível")
 
-# Explicação da Confiança
+# 🆕 CONFIANÇA POR DOUTRINA (CRÍTICO 2/3)
 if not df_filtrado.empty:
     st.markdown("### 📊 Confiança Estatística")
     
@@ -417,7 +442,7 @@ if not df_filtrado.empty:
     
     with col_conf1:
         confianca_media = df_filtrado['confianca'].mean()
-        st.metric("Confiança Média", f"{confianca_media:.1f}%")
+        st.metric("Confiança Média Geral", f"{confianca_media:.1f}%")
     
     with col_conf2:
         alta_confianca = len(df_filtrado[df_filtrado['confianca'] >= 20])
@@ -426,6 +451,95 @@ if not df_filtrado.empty:
     with col_conf3:
         baixa_confianca = len(df_filtrado[df_filtrado['confianca'] < 10])
         st.metric("Baixa Confiança (<10%)", f"{baixa_confianca} pregações")
+    
+    # GRÁFICO DE CONFIANÇA POR DOUTRINA
+    st.markdown("#### Confiança Média por Doutrina")
+    
+    conf_por_doutrina = dados['relatorio_v31']['confianca_media']
+    df_conf = pd.DataFrame(list(conf_por_doutrina.items()), columns=['Doutrina', 'Confiança (%)'])
+    df_conf['Doutrina'] = df_conf['Doutrina'].apply(limpar_nome_doutrina)
+    df_conf = df_conf.sort_values('Confiança (%)', ascending=False)
+    
+    fig_conf = px.bar(
+        df_conf, 
+        x='Confiança (%)', 
+        y='Doutrina', 
+        orientation='h',
+        title="Facilidade de Classificação por Doutrina",
+        text='Confiança (%)',
+        color='Confiança (%)',
+        color_continuous_scale='RdYlGn'
+    )
+    fig_conf.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+    fig_conf.update_layout(height=400, showlegend=False)
+    
+    st.plotly_chart(fig_conf, width='stretch')
+    
+    st.caption("""
+    **Interpretação:** Doutrinas com maior confiança possuem vocabulário teológico mais distinto e específico. 
+    Confiança baixa pode indicar pregações multitemáticas ou temas com vocabulário sobreposto.
+    """)
+
+# 🆕 SUBTEMAS DETALHADOS (CRÍTICO 3/3)
+st.markdown("### 🎯 Análise de Subtemas (Segundo Nível)")
+
+subtemas_data = dados['relatorio_v31']['subtemas']
+
+# Cria lista global de subtemas
+all_subtemas = []
+for doutrina, subs in subtemas_data.items():
+    for sub_nome, qtd in subs.items():
+        all_subtemas.append({
+            'Doutrina': limpar_nome_doutrina(doutrina), 
+            'Subtema': sub_nome, 
+            'Quantidade': qtd
+        })
+
+df_subtemas = pd.DataFrame(all_subtemas).sort_values('Quantidade', ascending=False).head(15)
+
+fig_subtemas = px.bar(
+    df_subtemas, 
+    x='Quantidade', 
+    y='Subtema', 
+    color='Doutrina',
+    orientation='h',
+    title="Top 15 Subtemas Mais Pregados (Análise Granular)",
+    text='Quantidade',
+    labels={'Quantidade': 'Número de Pregações'}
+)
+fig_subtemas.update_traces(textposition='outside')
+fig_subtemas.update_layout(height=600, showlegend=True, legend_title_text='Doutrina Principal')
+
+st.plotly_chart(fig_subtemas, width='stretch')
+
+# Detalhamento por doutrina
+with st.expander("📋 Subtemas Detalhados por Doutrina"):
+    doutrina_selecionada = st.selectbox(
+        "Selecione uma doutrina para ver seus subtemas:",
+        sorted([limpar_nome_doutrina(d) for d in subtemas_data.keys()])
+    )
+    
+    # Encontra doutrina original
+    doutrina_original = None
+    for d in subtemas_data.keys():
+        if limpar_nome_doutrina(d) == doutrina_selecionada:
+            doutrina_original = d
+            break
+    
+    if doutrina_original and subtemas_data[doutrina_original]:
+        df_sub_det = pd.DataFrame(
+            list(subtemas_data[doutrina_original].items()), 
+            columns=['Subtema', 'Quantidade']
+        ).sort_values('Quantidade', ascending=False)
+        
+        st.dataframe(df_sub_det, hide_index=True, width='stretch')
+        
+        st.caption(f"""
+        **Interpretação:** Estes são os aspectos específicos mais abordados dentro de **{doutrina_selecionada}**. 
+        Subtemas com alta frequência indicam ênfase pastoral naquele tópico.
+        """)
+    else:
+        st.warning("Nenhum subtema identificado para esta doutrina.")
 
 st.markdown("---")
 

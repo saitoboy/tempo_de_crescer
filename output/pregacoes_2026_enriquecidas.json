@@ -24,7 +24,7 @@
       "_metadados": {
         "ano_arquivo": 2026,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:17.383370",
+        "processado_em": "2026-01-16T15:51:36.788353",
         "data_fonte": "texto"
       },
       "id_unico": "2026_001",
@@ -61,7 +61,7 @@
       "_metadados": {
         "ano_arquivo": 2026,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:17.383889",
+        "processado_em": "2026-01-16T15:51:36.788981",
         "data_fonte": "texto"
       },
       "id_unico": "2026_002",
@@ -103,7 +103,7 @@
       "_metadados": {
         "ano_arquivo": 2026,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:17.384515",
+        "processado_em": "2026-01-16T15:51:36.789603",
         "data_fonte": "texto"
       },
       "id_unico": "2026_003",
@@ -141,7 +141,7 @@
       "_metadados": {
         "ano_arquivo": 2026,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:17.385280",
+        "processado_em": "2026-01-16T15:51:36.790153",
         "data_fonte": "texto"
       },
       "id_unico": "2026_004",
@@ -152,8 +152,8 @@
         "referencias_titulo": 1,
         "referencias_conteudo": 4,
         "livros_mencionados": [
-          "Mateus",
           "Salmos",
+          "Mateus",
           "Isaías"
         ],
         "todas_referencias": [
@@ -181,7 +181,7 @@
       "_metadados": {
         "ano_arquivo": 2026,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:17.385991",
+        "processado_em": "2026-01-16T15:51:36.790806",
         "data_fonte": "texto"
       },
       "id_unico": "2025_005",
@@ -215,7 +215,7 @@
       "_metadados": {
         "ano_arquivo": 2026,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:17.386737",
+        "processado_em": "2026-01-16T15:51:36.791366",
         "data_fonte": "texto"
       },
       "id_unico": "2025_006",
@@ -252,7 +252,7 @@
       "_metadados": {
         "ano_arquivo": 2026,
         "igreja": "",
-        "processado_em": "2026-01-16T13:57:17.387072",
+        "processado_em": "2026-01-16T15:51:36.791637",
         "data_fonte": "fallback"
       },
       "id_unico": "2026_007",

@@ -150,12 +150,12 @@
       "percentual_caps": 75.0
     },
     {
-      "livro": "Jeremias",
+      "livro": "Daniel",
       "testamento": "VT",
       "vezes": 13,
-      "capitulos_cobertos": 9,
-      "total_capitulos": 52,
-      "percentual_caps": 17.307692307692307
+      "capitulos_cobertos": 7,
+      "total_capitulos": 12,
+      "percentual_caps": 58.333333333333336
     },
     {
       "livro": "Deuteronômio",
@@ -166,12 +166,12 @@
       "percentual_caps": 20.588235294117645
     },
     {
-      "livro": "Daniel",
+      "livro": "Jeremias",
       "testamento": "VT",
       "vezes": 13,
-      "capitulos_cobertos": 7,
-      "total_capitulos": 12,
-      "percentual_caps": 58.333333333333336
+      "capitulos_cobertos": 9,
+      "total_capitulos": 52,
+      "percentual_caps": 17.307692307692307
     },
     {
       "livro": "Provérbios",
@@ -190,14 +190,6 @@
       "percentual_caps": 60.0
     },
     {
-      "livro": "Jonas",
-      "testamento": "VT",
-      "vezes": 8,
-      "capitulos_cobertos": 3,
-      "total_capitulos": 4,
-      "percentual_caps": 75.0
-    },
-    {
       "livro": "Josué",
       "testamento": "VT",
       "vezes": 8,
@@ -214,6 +206,14 @@
       "percentual_caps": 14.285714285714285
     },
     {
+      "livro": "Jonas",
+      "testamento": "VT",
+      "vezes": 8,
+      "capitulos_cobertos": 3,
+      "total_capitulos": 4,
+      "percentual_caps": 75.0
+    },
+    {
       "livro": "Ezequiel",
       "testamento": "VT",
       "vezes": 7,
@@ -222,20 +222,20 @@
       "percentual_caps": 10.416666666666668
     },
     {
-      "livro": "Neemias",
-      "testamento": "VT",
-      "vezes": 7,
-      "capitulos_cobertos": 3,
-      "total_capitulos": 13,
-      "percentual_caps": 23.076923076923077
-    },
-    {
       "livro": "Eclesiastes",
       "testamento": "VT",
       "vezes": 7,
       "capitulos_cobertos": 3,
       "total_capitulos": 12,
       "percentual_caps": 25.0
+    },
+    {
+      "livro": "Neemias",
+      "testamento": "VT",
+      "vezes": 7,
+      "capitulos_cobertos": 3,
+      "total_capitulos": 13,
+      "percentual_caps": 23.076923076923077
     },
     {
       "livro": "Números",
@@ -286,6 +286,14 @@
       "percentual_caps": 14.285714285714285
     },
     {
+      "livro": "Naum",
+      "testamento": "VT",
+      "vezes": 2,
+      "capitulos_cobertos": 1,
+      "total_capitulos": 3,
+      "percentual_caps": 33.33333333333333
+    },
+    {
       "livro": "Sofonias",
       "testamento": "VT",
       "vezes": 2,
@@ -318,9 +326,9 @@
       "percentual_caps": 33.33333333333333
     },
     {
-      "livro": "Naum",
-      "testamento": "VT",
-      "vezes": 2,
+      "livro": "Tito",
+      "testamento": "NT",
+      "vezes": 1,
       "capitulos_cobertos": 1,
       "total_capitulos": 3,
       "percentual_caps": 33.33333333333333
@@ -334,20 +342,12 @@
       "percentual_caps": 0.0
     },
     {
-      "livro": "Tito",
-      "testamento": "NT",
-      "vezes": 1,
-      "capitulos_cobertos": 1,
-      "total_capitulos": 3,
-      "percentual_caps": 33.33333333333333
-    },
-    {
-      "livro": "Cântico dos Cânticos",
+      "livro": "Malaquias",
       "testamento": "VT",
       "vezes": 1,
-      "capitulos_cobertos": 0,
-      "total_capitulos": 8,
-      "percentual_caps": 0.0
+      "capitulos_cobertos": 1,
+      "total_capitulos": 4,
+      "percentual_caps": 25.0
     },
     {
       "livro": "Miquéias",
@@ -366,12 +366,12 @@
       "percentual_caps": 10.0
     },
     {
-      "livro": "Malaquias",
+      "livro": "Cântico dos Cânticos",
       "testamento": "VT",
       "vezes": 1,
-      "capitulos_cobertos": 1,
-      "total_capitulos": 4,
-      "percentual_caps": 25.0
+      "capitulos_cobertos": 0,
+      "total_capitulos": 8,
+      "percentual_caps": 0.0
     }
   ],
   "livros_nao_pregados": [
