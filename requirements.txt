@@ -7,3 +7,6 @@ dotenv
 Groq
 unidecode
 certifi
+flask
+streamlit
+plotly
