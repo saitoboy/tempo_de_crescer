@@ -11,3 +11,4 @@ flask
 streamlit
 plotly
 pandas
+reportlab
