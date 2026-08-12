@@ -65,7 +65,8 @@ npm run ingerir               # busca o acervo no blog
 npm run dev                   # http://localhost:3003
 ```
 
-O `GET /health` responde com a contagem do que está no banco.
+Pronto: a API sobe em `/api/v1` e a documentação interativa fica em
+**http://localhost:3003/api/v1/docs**.
 
 ---
 
@@ -120,7 +121,7 @@ em vez de receber um chute que depois vira estatística.
 |---|---|
 | [docs/plano.md](docs/plano.md) | as 8 fases, o que está pronto e o que falta |
 | [docs/dados.md](docs/dados.md) | o que o acervo ensinou — e as armadilhas |
-| [docs/api.md](docs/api.md) | as rotas |
+| [docs/api.md](docs/api.md) | as rotas — ou abra `/api/v1/docs` |
 | [docs/operacao.md](docs/operacao.md) | deploy no EasyPanel, variáveis, proxy |
 | [CLAUDE.md](CLAUDE.md) | contexto para agentes de IA |
 

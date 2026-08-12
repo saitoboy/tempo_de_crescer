@@ -28,7 +28,7 @@ rotasPregadores.get(
   }),
 );
 
-const novoPregador = z.object({
+export const novoPregador = z.object({
   nomeCanonico: z.string().trim().min(2).max(120),
   tipo: z.enum(['PASTOR', 'SEMINARISTA', 'CONVIDADO', 'IRMAO']).default('CONVIDADO'),
   aliases: z.array(z.string().trim().min(2)).default([]),
@@ -63,7 +63,7 @@ rotasPregadores.post(
   }),
 );
 
-const fusao = z.object({ deId: z.uuid() });
+export const fusaoPregador = z.object({ deId: z.uuid() });
 
 /**
  * Funde dois cadastros que são a mesma pessoa.
@@ -77,7 +77,7 @@ rotasPregadores.post(
   exigirToken,
   assincrono(async (req, res) => {
     const { id } = z.object({ id: z.uuid() }).parse(req.params);
-    const { deId } = fusao.parse(req.body);
+    const { deId } = fusaoPregador.parse(req.body);
 
     if (id === deId) {
       throw new ValidationError('Um pregador não se funde consigo mesmo', [

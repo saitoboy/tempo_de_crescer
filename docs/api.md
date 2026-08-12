@@ -1,6 +1,13 @@
 # API
 
-Base local: `http://localhost:3003`
+**Documentação interativa: [`/api/v1/docs`](http://localhost:3003/api/v1/docs)**
+Especificação crua: `/api/v1/openapi.json`
+
+Base: `http://localhost:3003/api/v1`
+
+> O Swagger é gerado a partir dos mesmos esquemas Zod que as rotas usam para
+> validar, via `z.toJSONSchema()` — não há anotação duplicada, e a documentação
+> não tem como divergir do que a API aceita.
 
 **Leitura é aberta** — o conteúdo já é público no blog da igreja.
 **Escrita exige token**: `Authorization: Bearer $API_TOKEN`.
@@ -12,7 +19,10 @@ Base local: `http://localhost:3003`
 
 ## Saúde
 
-### `GET /health`
+### `GET /health` · `GET /api/v1/health`
+
+O sem prefixo fica fora da versão de propósito: é o endereço que o EasyPanel
+consulta para saber se o contêiner está vivo.
 
 ```json
 { "ok": true, "resenhas": 1409, "cultos": 1026, "pregadores": 51 }
@@ -22,7 +32,7 @@ Base local: `http://localhost:3003`
 
 ## Resenhas
 
-### `GET /resenhas/pendentes`
+### `GET /api/v1/resenhas/pendentes`
 
 A fila de revisão: o que a ingestão não conseguiu completar sozinha.
 
@@ -38,7 +48,7 @@ Sem filtro, devolve tudo que tem **alguma** lacuna. Com `semPregador` e
 `semData` juntos, devolve só as que têm **as duas**.
 
 ```bash
-curl "http://localhost:3003/resenhas/pendentes?semPregador=true&porPagina=5"
+curl "http://localhost:3003/api/v1/resenhas/pendentes?semPregador=true&porPagina=5"
 ```
 
 ```json
@@ -65,16 +75,16 @@ curl "http://localhost:3003/resenhas/pendentes?semPregador=true&porPagina=5"
 }
 ```
 
-### `GET /resenhas`
+### `GET /api/v1/resenhas`
 
 Listagem geral. Filtros: `ano`, `pregadorId`, `pagina`, `porPagina`.
 
-### `GET /resenhas/:id`
+### `GET /api/v1/resenhas/:id`
 
 Uma resenha completa, com `culto`, `pregador`, `classificacoes` (com a
 doutrina) e `devocional`.
 
-### `PATCH /resenhas/:id` 🔒
+### `PATCH /api/v1/resenhas/:id` 🔒
 
 Correção manual. Tudo que passa por aqui é marcado **`MANUAL`**, separado do
 que o parser extraiu do texto (`TEXTO`).
@@ -92,7 +102,7 @@ que o parser extraiu do texto (`TEXTO`).
 obrigatório. O `Culto` é reconstruído quando data, turno ou natureza mudam.
 
 ```bash
-curl -X PATCH "http://localhost:3003/resenhas/$ID" \
+curl -X PATCH "http://localhost:3003/api/v1/resenhas/$ID" \
   -H "Authorization: Bearer $API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"pregadorNome":"Nélio","turno":"NOITE"}'
@@ -121,7 +131,7 @@ Sem essa trava, um erro de digitação recria o problema que encheu o banco de
 
 ## Pregadores
 
-### `GET /pregadores`
+### `GET /api/v1/pregadores`
 
 ```json
 [
@@ -132,7 +142,7 @@ Sem essa trava, um erro de digitação recria o problema que encheu o banco de
 
 Tipos: `PASTOR`, `SEMINARISTA`, `CONVIDADO`, `IRMAO`.
 
-### `POST /pregadores` 🔒
+### `POST /api/v1/pregadores` 🔒
 
 ```json
 { "nomeCanonico": "João da Silva", "tipo": "CONVIDADO", "aliases": ["joao silva"] }
@@ -140,7 +150,7 @@ Tipos: `PASTOR`, `SEMINARISTA`, `CONVIDADO`, `IRMAO`.
 
 O nome canônico entra automaticamente como alias.
 
-### `POST /pregadores/:id/fundir` 🔒
+### `POST /api/v1/pregadores/:id/fundir` 🔒
 
 Funde dois cadastros que são a mesma pessoa. As resenhas do absorvido passam
 para o que fica, e as grafias dele viram aliases — para a próxima ingestão não

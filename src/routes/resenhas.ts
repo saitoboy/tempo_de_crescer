@@ -13,7 +13,7 @@ const booleano = z
   .optional()
   .transform((v) => v === 'true');
 
-const filtroPendentes = z.object({
+export const filtroPendentes = z.object({
   semPregador: booleano,
   semData: booleano,
   ano: z.coerce.number().int().min(2000).max(2100).optional(),
@@ -30,7 +30,7 @@ rotasResenhas.get(
   }),
 );
 
-const listagem = z.object({
+export const filtroListagem = z.object({
   ano: z.coerce.number().int().min(2000).max(2100).optional(),
   pregadorId: z.uuid().optional(),
   pagina: z.coerce.number().int().min(1).default(1),
@@ -40,7 +40,7 @@ const listagem = z.object({
 rotasResenhas.get(
   '/',
   assincrono(async (req, res) => {
-    const { ano, pregadorId, pagina, porPagina } = listagem.parse(req.query);
+    const { ano, pregadorId, pagina, porPagina } = filtroListagem.parse(req.query);
     const where = { ...(ano ? { ano } : {}), ...(pregadorId ? { pregadorId } : {}) };
 
     const [total, resenhas] = await Promise.all([
@@ -87,7 +87,7 @@ rotasResenhas.get(
   }),
 );
 
-const correcao = z
+export const correcaoResenha = z
   .object({
     pregadorId: z.uuid().optional(),
     pregadorNome: z.string().trim().min(2).max(120).optional(),
@@ -107,6 +107,6 @@ rotasResenhas.patch(
   exigirToken,
   assincrono(async (req, res) => {
     const { id } = z.object({ id: z.uuid() }).parse(req.params);
-    res.json(await corrigirResenha(id, correcao.parse(req.body)));
+    res.json(await corrigirResenha(id, correcaoResenha.parse(req.body)));
   }),
 );
