@@ -1,0 +1,45 @@
+{
+  "name": "back-tempo_de_crescer",
+  "version": "1.0.0",
+  "description": "Backend do Tempo de Crescer: banco e API das pregações da IBPS Muriaé.",
+  "main": "build/index.js",
+  "scripts": {
+    "dev": "tsnd --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node build/index.js",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio",
+    "seed": "prisma db seed",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saitoboy/tempo_de_crescer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/saitoboy/tempo_de_crescer/issues"
+  },
+  "homepage": "https://github.com/saitoboy/tempo_de_crescer#readme",
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.2.0",
+    "prisma": "^7.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^7.0.2"
+  }
+}

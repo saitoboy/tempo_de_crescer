@@ -67,6 +67,14 @@ coverage.xml
 *.swo
 *~
 
+# ==================== NODE ====================
+
+node_modules/
+build/
+src/generated/
+*.tsbuildinfo
+npm-debug.log*
+
 # ==================== AMBIENTE ====================
 
 # Variáveis de ambiente (IMPORTANTE!)

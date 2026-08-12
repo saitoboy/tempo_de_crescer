@@ -5,9 +5,11 @@ Conjunto de ferramentas para extrair pregações do blog IBPS e convertê-las au
 ## 📦 Ferramentas Incluídas
 
 ### 1. **Blog Scraper IBPS** (`blog_scraper_ibps.py`)
+
 Extrai pregações do blog da IBPS Muriaé e salva em arquivos JSON organizados por ano.
 
 ### 2. **Conversor de Devocionais** (`conversor_devocional.py`)
+
 Converte pregações (formato JSON) em devocionais formatados (Markdown) usando Groq API.
 
 ---
@@ -291,3 +293,4 @@ Feito com ❤️ e ☕ para a glória de Deus
 ⭐ Se este projeto foi útil, considere dar uma estrela!
 
 </div> ```
+```

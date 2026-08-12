@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== ENUMS ====================
+
+/// Cultos acontecem às quartas, domingo de manhã e domingo à noite.
+enum TipoCulto {
+  QUARTA
+  DOMINGO_MANHA
+  DOMINGO_NOITE
+}
+
+enum TipoPregador {
+  PASTOR
+  SEMINARISTA
+  VISITANTE
+  IRMAO
+}
+
+/// De onde veio a informação do pregador daquela resenha.
+enum OrigemPregador {
+  ASSINATURA // extraído da assinatura no fim do texto
+  YOUTUBE // confirmado pelo título da live
+  MANUAL // corrigido à mão via PATCH
+}
+
+enum StatusResenha {
+  INGERIDA
+  CLASSIFICADA
+  REVISADA
+}
+
+enum PapelDoutrina {
+  PRINCIPAL
+  SECUNDARIO
+}
+
+enum StatusDevocional {
+  GERADO
+  REVISADO
+}
+
+// ==================== MODELS ====================
+
+/// O culto ao vivo. Tem louvor, avisos e mais coisas além da pregação —
+/// por isso é separado da Resenha. O QR code do livro aponta para `youtubeUrl`.
+model Culto {
+  id             String    @id @default(uuid())
+  data           DateTime  @db.Date
+  tipo           TipoCulto
+  youtubeVideoId String?   @unique
+  youtubeUrl     String?
+  tituloLive     String?
+  resenhas       Resenha[]
+  criadoEm       DateTime  @default(now())
+  atualizadoEm   DateTime  @updatedAt
+
+  @@unique([data, tipo])
+  @@map("culto")
+}
+
+/// Quem pregou. `aliases` resolve as variações que aparecem nas assinaturas
+/// (Ryan Sousa / Ryan Souza, Silvio Faria / Silvio Farias).
+model Pregador {
+  id           String       @id @default(uuid())
+  nomeCanonico String       @unique
+  tipo         TipoPregador @default(VISITANTE)
+  aliases      String[]
+  resenhas     Resenha[]
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
+
+  @@map("pregador")
+}
+
+/// O texto publicado no blog: resenha humana do culto, escrita por um redator.
+/// Pode conter erros — pregador ausente ou trocado.
+model Resenha {
+  id      String @id @default(uuid())
+  slug    String @unique
+  /// Chave de deduplicação da ingestão incremental.
+  urlBlog String @unique
+
+  titulo       String
+  dataPregacao DateTime @db.Date
+  ano          Int
+
+  /// Markdown como veio do Firecrawl, sem tratamento.
+  conteudoBruto String
+  /// Texto normalizado: sem assinatura, sem boilerplate do blog.
+  conteudoLimpo String
+
+  cultoId String?
+  culto   Culto?  @relation(fields: [cultoId], references: [id], onDelete: SetNull)
+
+  /// null = fila de PATCH manual. Nunca chutar pregador.
+  pregadorId String?
+  pregador   Pregador?       @relation(fields: [pregadorId], references: [id], onDelete: SetNull)
+  /// Assinatura crua, como apareceu no texto, antes de resolver o alias.
+  pregadorBruto  String?
+  pregadorOrigem OrigemPregador?
+
+  /// Referência bíblica extraída do título ("... - Lucas 2:41-52").
+  textoBase  String?
+  livro      String?
+  capitulo   Int?
+  versiculos String?
+
+  status StatusResenha @default(INGERIDA)
+
+  classificacoes Classificacao[]
+  devocional     Devocional?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([ano])
+  @@index([pregadorId])
+  @@index([dataPregacao])
+  @@map("resenha")
+}
+
+/// As 8 doutrinas da Teologia Sistemática de Wayne Grudem. Seed fixo.
+model Doutrina {
+  id              String @id @default(uuid())
+  numero          Int    @unique
+  nome            String @unique
+  perguntaCentral String
+
+  classificacoes Classificacao[]
+
+  @@map("doutrina")
+}
+
+/// Resultado do classificador. `zscore` é o desvio da densidade de marcadores
+/// desta resenha em relação à média do corpus — ver CLAUDE.md.
+model Classificacao {
+  id         String        @id @default(uuid())
+  resenhaId  String
+  resenha    Resenha       @relation(fields: [resenhaId], references: [id], onDelete: Cascade)
+  doutrinaId String
+  doutrina   Doutrina      @relation(fields: [doutrinaId], references: [id], onDelete: Cascade)
+  papel      PapelDoutrina
+
+  zscore    Float
+  densidade Float
+  /// [{ nome, intensidade, frequencia, densidade }]
+  subtemas  Json?
+
+  criadoEm DateTime @default(now())
+
+  @@unique([resenhaId, doutrinaId])
+  @@index([doutrinaId, papel])
+  @@map("classificacao")
+}
+
+/// Texto devocional gerado a partir da resenha. A fila de geração são as
+/// resenhas SEM devocional — por isso não existe status PENDENTE aqui.
+model Devocional {
+  id        String  @id @default(uuid())
+  resenhaId String  @unique
+  resenha   Resenha @relation(fields: [resenhaId], references: [id], onDelete: Cascade)
+
+  titulo       String
+  textoBiblico String?
+  corpo        String
+  oracao       String?
+
+  status StatusDevocional @default(GERADO)
+  modelo String?
+
+  geradoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("devocional")
+}
