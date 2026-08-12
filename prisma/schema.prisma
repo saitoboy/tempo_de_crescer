@@ -9,11 +9,32 @@ datasource db {
 
 // ==================== ENUMS ====================
 
-/// Cultos acontecem às quartas, domingo de manhã e domingo à noite.
-enum TipoCulto {
-  QUARTA
-  DOMINGO_MANHA
-  DOMINGO_NOITE
+/// Turno do encontro. O dia da semana sai da data, não do enum: juntar os dois
+/// num "DOMINGO_MANHA" não consegue expressar uma celebração de sábado.
+///
+/// DIA cobre manhã e tarde. Na prática o blog só escreve "manhã", mas eventos
+/// especiais fora da agenda acontecem à tarde.
+enum Turno {
+  DIA
+  NOITE
+}
+
+/// O que era o encontro. A agenda fixa é culto de quarta à noite, domingo de
+/// manhã e domingo à noite; o resto acontece fora dela.
+enum NaturezaEvento {
+  CULTO
+  CELEBRACAO
+  EBD
+  ESTUDO
+  VIGILIA
+  CONFERENCIA
+}
+
+/// De onde veio a data do encontro, para separar o que é certo do que é inferido.
+enum OrigemData {
+  TEXTO // escrita na própria resenha
+  YOUTUBE // confirmada pela live
+  MANUAL // corrigida à mão
 }
 
 enum TipoPregador {
@@ -79,17 +100,23 @@ model Usuario {
 /// O culto ao vivo. Tem louvor, avisos e mais coisas além da pregação —
 /// por isso é separado da Resenha. O QR code do livro aponta para `youtubeUrl`.
 model Culto {
-  id             String    @id @default(uuid())
-  data           DateTime  @db.Date
-  tipo           TipoCulto
-  youtubeVideoId String?   @unique
+  id       String         @id @default(uuid())
+  /// Data do encontro, não da publicação no blog. @db.Date de propósito:
+  /// é calendário puro, imune a fuso.
+  data     DateTime       @db.Date
+  /// null quando a resenha não diz o turno e não dá para inferir.
+  turno    Turno?
+  natureza NaturezaEvento @default(CULTO)
+
+  youtubeVideoId String? @unique
   youtubeUrl     String?
   tituloLive     String?
-  resenhas       Resenha[]
-  criadoEm       DateTime  @default(now())
-  atualizadoEm   DateTime  @updatedAt
 
-  @@unique([data, tipo])
+  resenhas     Resenha[]
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+
+  @@unique([data, turno, natureza])
   @@map("culto")
 }
 
@@ -115,9 +142,21 @@ model Resenha {
   /// Chave de deduplicação da ingestão incremental.
   urlBlog String @unique
 
-  titulo       String
-  dataPregacao DateTime @db.Date
-  ano          Int
+  titulo String
+
+  /// Data do encontro, extraída do texto da resenha. null quando a resenha não
+  /// diz — 265 posts, quase todos de 2016, estão nessa situação. Não inferir
+  /// pela data de publicação: o blog atrasa de 0 a 5 dias, então a publicação
+  /// cai em qualquer dia da semana e a inferência inventaria dado.
+  dataPregacao DateTime?   @db.Date
+  origemData   OrigemData?
+
+  /// Data em que o post foi ao ar. Sempre existe, vem do blog, e ancora a
+  /// resenha mesmo quando dataPregacao é null.
+  publicadoEm DateTime @db.Date
+  /// Ano de referência para agrupar. Usa o ano de dataPregacao quando há, e o
+  /// de publicadoEm quando não há.
+  ano         Int
 
   /// Markdown como veio do Firecrawl, sem tratamento.
   conteudoBruto String
