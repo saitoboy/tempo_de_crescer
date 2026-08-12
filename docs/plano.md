@@ -10,8 +10,8 @@ Oito fases. Três prontas, uma parcial, quatro pela frente.
 | —   | Taxonomia de Grudem, 57 capítulos         | ✅ pronta   |
 | 4    | YouTube: casar culto com a live, QR code   | ✅ pronta   |
 | 5    | Classificação teológica                 | ✅ pronta   |
-| 6    | Geração dos devocionais                  | ⬜ próxima |
-| 7    | Análise e front                           | ⬜          |
+| 6    | Geração dos devocionais                  | ✅ pronta   |
+| 7    | Análise e front                           | ⬜ próxima |
 | 8    | Montagem do livro                          | ⬜          |
 
 ---
@@ -185,7 +185,7 @@ Os 57 subtemas são alvos finos que o classificador ainda não usa. Detectar
 "trata de Justificação, capítulo 36" exige vocabulário por capítulo, não só
 por doutrina.
 
-## ⬜ Fase 6 — Devocionais
+## ✅ Fase 6 — Devocionais
 
 A fila são as resenhas sem devocional, consumida por um runner local que chama
 o **Claude Opus pelo CLI**, em lote — a assinatura em vez da chave de API.
@@ -197,6 +197,41 @@ O estilo de escrita é o de **A.W. Tozer**; a amostra e a anatomia da página
 estão em `CONTEXTO/referencia-de-escrita.md`.
 
 > **Grudem classifica, Tozer escreve.** São papéis distintos.
+
+```bash
+npm run devocionais          # 5 resenhas
+npm run devocionais -- 20    # 20 resenhas
+```
+
+Cerca de 22 segundos por devocional. Interromper no meio não perde nada: cada
+um é gravado assim que fica pronto, e a execução seguinte continua de onde
+parou — a fila é "resenha sem devocional", não um status.
+
+### O versículo nunca é escrito pelo modelo
+
+Ele indica a **referência**; o texto vem da tabela `Versiculo`, que tem a ACF
+inteira. Modelo citando Escritura de memória troca palavra, e num livro
+devocional isso é grave.
+
+### O devocional nasce da resenha
+
+A resenha vai inteira no prompt, junto com o texto base, o pregador e a
+doutrina que a classificação apontou. O que o devocional diz tem de ser o que
+foi pregado naquele culto, não teologia genérica sobre a passagem.
+
+Funciona: no primeiro gerado, sobre Gênesis 13, a frase "andar de altar em
+altar, não de vitrine em vitrine" veio da pregação do Pr. Nélio — não do
+modelo.
+
+### O prompt vai pelo stdin
+
+Passar milhares de caracteres com quebras de linha e aspas na linha de comando
+do Windows não sobrevive: o CLI recebia vazio e respondia "Fala. Que precisa?".
+Pelo stdin não há o que escapar.
+
+O CLI também roda de uma **pasta vazia**, para não carregar o `CLAUDE.md` do
+projeto a cada chamada — eram 23 mil tokens de contexto desperdiçados, e ainda
+arriscava misturar as instruções do repositório com as do devocional.
 
 ## ⬜ Fase 7 — Análise e front
 

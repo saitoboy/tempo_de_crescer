@@ -22,7 +22,8 @@
     "db:down": "docker compose down",
     "youtube": "tsx src/scripts/casarYoutube.ts",
     "qrcodes": "tsx src/scripts/gerarQrCodes.ts",
-    "classificar": "tsx src/scripts/classificar.ts"
+    "classificar": "tsx src/scripts/classificar.ts",
+    "devocionais": "tsx src/scripts/gerarDevocionais.ts"
   },
   "repository": {
     "type": "git",
