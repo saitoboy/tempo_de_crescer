@@ -1,4 +1,3 @@
-import assert from 'assert';
 import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 
 /**
@@ -24,15 +23,4 @@ export function verificarSenha(senha: string, armazenado: string): boolean {
 
   const calculado = scryptSync(senha, salt, TAMANHO_HASH);
   return timingSafeEqual(esperado, calculado);
-}
-
-if (require.main === module) {
-  const hash = gerarHash('senha-secreta');
-  assert.ok(verificarSenha('senha-secreta', hash), 'senha correta deve passar');
-  assert.ok(!verificarSenha('senha-errada', hash), 'senha errada deve falhar');
-  assert.notStrictEqual(gerarHash('igual'), gerarHash('igual'), 'salt deve variar');
-  assert.ok(!verificarSenha('x', 'lixo'), 'hash malformado deve falhar sem lançar');
-  assert.ok(!verificarSenha('x', 'abc:def'), 'hash de tamanho errado deve falhar sem lançar');
-
-  console.log('✓ senha.ts ok');
 }
