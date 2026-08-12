@@ -112,6 +112,7 @@ export function extrairTurno(texto: string, dataIso: string | null): Turno | nul
 export function extrairNatureza(texto: string): NaturezaEvento {
   const marcadores = bordas(texto);
 
+  if (/funebre|sepultamento/.test(marcadores)) return 'FUNEBRE';
   if (/\bebd\b|escola biblica/.test(marcadores)) return 'EBD';
   if (/vigilia/.test(marcadores)) return 'VIGILIA';
   if (/da virada|consagracao|batismo|casamento|posse pastoral/.test(marcadores)) return 'CELEBRACAO';
@@ -123,6 +124,12 @@ export function extrairNatureza(texto: string): NaturezaEvento {
 
 /** Quem escreve e edita as resenhas — nunca é o pregador. */
 const REDATORAS = /\(?\s*editad[oa]\s+por[^)\n]*\)?|transcrit[oa]\s+por[^)\n]*|resenha\s+por[^)\n]*/gi;
+
+/**
+ * Em culto fúnebre a pessoa citada é o homenageado, não quem pregou:
+ * "Culto Fúnebre do irmão Souza" cadastrava o falecido como pregador.
+ */
+const HOMENAGEADOS = /f[úu]nebre\s+d[oa]\s+(?:irm[ãa]o?\s+|pastora?\s+)?[A-ZÀ-Ý][\wÀ-ÿ]*(?:\s+[A-ZÀ-Ý][\wÀ-ÿ]*)?/gi;
 
 /**
  * Títulos por extenso e abreviados.
@@ -228,7 +235,11 @@ function limparNome(bruto: string): string | null {
  */
 export function extrairPregador(texto: string): string | null {
   const linhas = texto.split('\n').filter(Boolean);
-  const fim = linhas.slice(-LINHAS_ASSINATURA).join(' ').replace(REDATORAS, ' ');
+  const fim = linhas
+    .slice(-LINHAS_ASSINATURA)
+    .join(' ')
+    .replace(REDATORAS, ' ')
+    .replace(HOMENAGEADOS, ' ');
 
   // A flag `i` é necessária porque o blog escreve "PASTOR NÉLIO MONTEIRO" em
   // caixa alta, mas ela anula a exigência de inicial maiúscula em NOME. Por

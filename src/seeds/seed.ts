@@ -36,9 +36,24 @@ const PREGADORES: Array<{ nomeCanonico: string; tipo: TipoPregador; aliases: str
   { nomeCanonico: 'Daniel Monteiro', tipo: 'SEMINARISTA', aliases: ['daniel monteiro', 'daniel'] },
   { nomeCanonico: 'Jaine Feliciano', tipo: 'IRMAO', aliases: ['jaine feliciano', 'missionária jaine', 'missionaria jaine', 'jaine'] },
 
-  // Nomes que o blog escreve errado ou abreviado. O canônico é o correto.
+  // Nomes que o blog escreve errado, abreviado ou de mais de um jeito.
+  // O nomeCanonico é o correto, confirmado pela igreja; os aliases são as
+  // grafias que aparecem nas assinaturas.
   { nomeCanonico: 'Guilherme de Souza Saito', tipo: 'IRMAO', aliases: ['guilherme saito', 'guilherme de souza saito', 'guilherme'] },
   { nomeCanonico: 'Fernando Arêdes', tipo: 'PASTOR', aliases: ['fernando arede', 'fernando arêde', 'fernando aredes', 'fernando arêdes'] },
+  { nomeCanonico: 'Estevão Vianna', tipo: 'CONVIDADO', aliases: ['estevao vianna', 'estevão vianna', 'estevao', 'estevão', 'estevam'] },
+  { nomeCanonico: 'Geovane Glória', tipo: 'CONVIDADO', aliases: ['geovane gloria', 'geovane glória', 'giovani gloria', 'giovani glória', 'geovane'] },
+  { nomeCanonico: 'Luís Fernando', tipo: 'CONVIDADO', aliases: ['luis fernando', 'luís fernando', 'luiz fernando'] },
+  { nomeCanonico: 'Eliel Martins', tipo: 'CONVIDADO', aliases: ['eliel martins', 'eliel marins', 'eliel'] },
+  { nomeCanonico: 'Henrique Romero', tipo: 'CONVIDADO', aliases: ['henrique romero', 'henrique'] },
+  { nomeCanonico: 'Áquila Cabral', tipo: 'CONVIDADO', aliases: ['aquila cabral', 'áquila cabral', 'àquila cabral', 'aquila', 'áquila', 'àquila'] },
+  // O blog alterna entre "Thales" (2018, 2021) e "Thalles" (2024). Grafia
+  // canônica escolhida pela maioria — confirmar com a igreja.
+  { nomeCanonico: 'Thales', tipo: 'CONVIDADO', aliases: ['thales', 'thalles'] },
+
+  // Missionários cujo lugar de origem veio grudado na assinatura do blog.
+  { nomeCanonico: 'Abdulay', tipo: 'CONVIDADO', aliases: ['abdulay', 'abdulay sao tome e principe', 'abdulay são tomé e príncipe'] },
+  { nomeCanonico: 'Liliane', tipo: 'CONVIDADO', aliases: ['liliane', 'liliane de passo fundo rs'] },
 ];
 
 async function main() {
@@ -60,7 +75,48 @@ async function main() {
   }
   console.log(`✓ ${PREGADORES.length} pregadores`);
 
+  await fundirDuplicados();
   await criarAdmin();
+}
+
+/**
+ * Funde num só os pregadores que o blog escreveu de mais de um jeito.
+ *
+ * A carga anterior cadastrou "Estevão" e "Estevam" como pessoas diferentes,
+ * porque na época nenhuma era conhecida. Agora que o canônico existe com esses
+ * apelidos, os registros soltos precisam ser repontados e removidos — senão
+ * continuam vencendo a resolução, que casa nome canônico antes de alias.
+ */
+async function fundirDuplicados() {
+  let fundidos = 0;
+
+  for (const canonico of PREGADORES) {
+    const destino = await connection.pregador.findUnique({
+      where: { nomeCanonico: canonico.nomeCanonico },
+      select: { id: true },
+    });
+    if (!destino) continue;
+
+    const duplicados = await connection.pregador.findMany({
+      where: {
+        id: { not: destino.id },
+        nomeCanonico: { in: canonico.aliases, mode: 'insensitive' },
+      },
+      select: { id: true, nomeCanonico: true },
+    });
+
+    for (const duplicado of duplicados) {
+      const { count } = await connection.resenha.updateMany({
+        where: { pregadorId: duplicado.id },
+        data: { pregadorId: destino.id },
+      });
+      await connection.pregador.delete({ where: { id: duplicado.id } });
+      console.log(`  ~ "${duplicado.nomeCanonico}" (${count}) → ${canonico.nomeCanonico}`);
+      fundidos++;
+    }
+  }
+
+  if (fundidos > 0) console.log(`✓ ${fundidos} duplicados fundidos`);
 }
 
 /**

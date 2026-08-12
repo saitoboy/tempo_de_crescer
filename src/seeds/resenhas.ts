@@ -74,7 +74,7 @@ async function main() {
         const criado = await connection.pregador.create({
           data: {
             nomeCanonico: dados.pregadorBruto,
-            tipo: 'VISITANTE',
+            tipo: 'CONVIDADO',
             aliases: [chave(dados.pregadorBruto)],
           },
           select: { id: true, nomeCanonico: true, aliases: true },
@@ -144,11 +144,20 @@ async function main() {
     }
   }
 
+  // Convidados que ficaram sem nenhuma resenha são sobra de uma carga anterior:
+  // ou o nome era lixo que o parser aprendeu a rejeitar, ou virou alias de um
+  // pregador do cadastro. Pastores e seminaristas do seed ficam, mesmo sem
+  // resenha ainda.
+  const orfaos = await connection.pregador.deleteMany({
+    where: { tipo: 'CONVIDADO', resenhas: { none: {} } },
+  });
+
   contagem.cultos = await connection.culto.count();
 
   console.log(`\n\n✓ ${contagem.resenhas} resenhas`);
   console.log(`  ${contagem.cultos} cultos`);
   console.log(`  ${contagem.pregadoresNovos} pregadores novos cadastrados`);
+  console.log(`  ${orfaos.count} convidados sem resenha removidos`);
   console.log(`  ${contagem.anosCorrigidos} anos corrigidos pelo dia da semana`);
   console.log(`\n  incompletos, para revisão manual:`);
   console.log(`    sem data      ${contagem.semData}`);

@@ -80,6 +80,7 @@ describe('extrairNatureza', () => {
     ['Resenha do Culto da Virada\ntexto', 'CELEBRACAO'],
     ['Resenha do Culto de Consagração Pastoral\ntexto', 'CELEBRACAO'],
     ['Conferência da Família\ntexto', 'CONFERENCIA'],
+    ['Culto Fúnebre do irmão Souza\ntexto', 'FUNEBRE'],
     ['Resenha do Culto da noite de Domingo\ntexto', 'CULTO'],
   ])('classifica %s', (texto, esperado) => {
     expect(extrairNatureza(texto)).toBe(esperado);
@@ -165,6 +166,13 @@ describe('extrairPregador', () => {
     // Caso real: 7 resenhas viraram um pregador chamado "Nélio Monteiro Noite".
     expect(extrairPregador('corpo\nPastor Nélio Monteiro\nNoite de 28/12/2016')).toBe('Nélio Monteiro');
     expect(extrairPregador('corpo\nPastor Nélio Monteiro Manhã de Domingo')).toBe('Nélio Monteiro');
+  });
+
+  it('em culto fúnebre, o homenageado não é o pregador', () => {
+    // Caso real de 20/01/2017: o irmão Souza era o falecido, e foi cadastrado
+    // como pregador da própria cerimônia.
+    const texto = 'corpo\nIgreja Batista do Parque Safira\nCulto Fúnebre do irmão Souza\n20/01/2017';
+    expect(extrairPregador(texto)).toBeNull();
   });
 
   it('não aceita palavra do texto devocional como pregador', () => {

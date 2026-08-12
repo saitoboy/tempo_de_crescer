@@ -28,6 +28,7 @@ enum NaturezaEvento {
   ESTUDO
   VIGILIA
   CONFERENCIA
+  FUNEBRE
 }
 
 /// De onde veio a data do encontro, para separar o que é certo do que é inferido.
@@ -40,7 +41,8 @@ enum OrigemData {
 enum TipoPregador {
   PASTOR
   SEMINARISTA
-  VISITANTE
+  /// Missionários e pregadores de fora, que costumam aparecer uma vez só.
+  CONVIDADO
   IRMAO
 }
 
@@ -125,7 +127,7 @@ model Culto {
 model Pregador {
   id           String       @id @default(uuid())
   nomeCanonico String       @unique
-  tipo         TipoPregador @default(VISITANTE)
+  tipo         TipoPregador @default(CONVIDADO)
   aliases      String[]
   resenhas     Resenha[]
   criadoEm     DateTime     @default(now())
