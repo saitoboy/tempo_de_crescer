@@ -46,7 +46,18 @@ async function baixarAcf(): Promise<LivroAcf[]> {
   return livros;
 }
 
+/** 66 livros, 31.106 versículos. Se já está tudo lá, não precisa recarregar. */
+const TOTAL_VERSICULOS = 31_106;
+
 async function main() {
+  // Roda a cada subida do contêiner em produção. Recarregar 31 mil versículos
+  // que já estão no banco só gastaria tempo e 3,9 MB de download.
+  const jaImportados = await connection.versiculo.count();
+  if (jaImportados === TOTAL_VERSICULOS && !process.argv.includes('--forcar')) {
+    console.log(`📖 Bíblia já importada (${jaImportados} versículos), nada a fazer`);
+    return;
+  }
+
   console.log('📖 Importando a Bíblia (ACF)');
 
   const livros = await baixarAcf();

@@ -290,27 +290,73 @@ const NOME_LIVRO = `(?:${LIVROS_ORDINAIS})?[A-ZÀ-Ý][a-zà-ÿ]+(?:\\s+[a-zà-ÿ
  * `livrosConhecidos` vem da tabela LivroBiblico, para não aceitar qualquer
  * palavra seguida de números como se fosse livro da Bíblia.
  */
+export type Referencia = {
+  textoBase: string | null;
+  livro: string | null;
+  capitulo: number | null;
+  versiculos: string | null;
+};
+
+const VAZIA: Referencia = { textoBase: null, livro: null, capitulo: null, versiculos: null };
+
+/** Quantas linhas do começo do corpo podem trazer a referência. */
+const LINHAS_REFERENCIA = 6;
+
+function acharReferencia(texto: string, livrosConhecidos: string[]): Referencia {
+  // O versículo é opcional: parte das resenhas cita só o capítulo ("João 6").
+  const padrao = new RegExp(
+    `(${NOME_LIVRO})[ \\t]*(\\d+)(?:[ \\t]*[:.][ \\t]*(\\d+(?:[ \\t]*-[ \\t]*\\d+)?))?`,
+    'g',
+  );
+
+  // Percorre todos os candidatos, não só o primeiro: no corpo, o cabeçalho
+  // "Resenha do Culto da Noite de Domingo / 09/08/2026" casa como se "Domingo"
+  // fosse livro seguido do dia. Desistir no primeiro descartaria a referência
+  // verdadeira, que vem duas linhas abaixo.
+  for (const m of texto.matchAll(padrao)) {
+    const alvo = semAcento(m[1].replace(/\s+/g, ' ').trim()).replace(/\s/g, '');
+    const livro = livrosConhecidos.find(
+      (conhecido) => semAcento(conhecido).replace(/\s/g, '') === alvo,
+    );
+    if (!livro) continue;
+
+    const versiculos = m[3] ? m[3].replace(/\s/g, '') : null;
+    return {
+      textoBase: versiculos ? `${livro} ${m[2]}:${versiculos}` : `${livro} ${m[2]}`,
+      livro,
+      capitulo: Number(m[2]),
+      versiculos,
+    };
+  }
+
+  return VAZIA;
+}
+
+/**
+ * Referência bíblica da resenha.
+ *
+ * Procura primeiro no título, que quase sempre termina nela ("Desafios para o
+ * novo ano - Lucas 2:41-52") e em 2016 costuma ser só ela ("João 3:3").
+ *
+ * Quando o título não traz, cai para as primeiras linhas do corpo: o texto
+ * base aparece logo depois do cabeçalho e da data, antes da mensagem. São 274
+ * resenhas nessa situação.
+ *
+ * `livrosConhecidos` vem da tabela LivroBiblico, para não aceitar qualquer
+ * palavra seguida de número como se fosse livro da Bíblia.
+ */
 export function extrairReferencia(
   titulo: string,
   livrosConhecidos: string[],
-): { textoBase: string | null; livro: string | null; capitulo: number | null; versiculos: string | null } {
-  const vazio = { textoBase: null, livro: null, capitulo: null, versiculos: null };
+  corpo?: string,
+): Referencia {
+  const doTitulo = acharReferencia(titulo, livrosConhecidos);
+  if (doTitulo.livro) return doTitulo;
 
-  const m = titulo.match(new RegExp(`(${NOME_LIVRO})\\s*(\\d+)\\s*[:.]\\s*(\\d+(?:\\s*-\\s*\\d+)?)`));
-  if (!m) return vazio;
+  if (!corpo) return VAZIA;
 
-  const bruto = m[1].replace(/\s+/g, ' ').trim();
-  const alvo = semAcento(bruto).replace(/\s/g, '');
-  const livro = livrosConhecidos.find((conhecido) => semAcento(conhecido).replace(/\s/g, '') === alvo);
-  if (!livro) return vazio;
-
-  const versiculos = m[3].replace(/\s/g, '');
-  return {
-    textoBase: `${livro} ${m[2]}:${versiculos}`,
-    livro,
-    capitulo: Number(m[2]),
-    versiculos,
-  };
+  const inicio = corpo.split('\n').filter(Boolean).slice(0, LINHAS_REFERENCIA).join('\n');
+  return acharReferencia(inicio, livrosConhecidos);
 }
 
 export function parsearResenha(
@@ -318,7 +364,7 @@ export function parsearResenha(
   livrosConhecidos: string[],
 ): ResenhaParseada {
   const data = extrairData(entrada.texto, entrada.publicadoEm);
-  const referencia = extrairReferencia(entrada.titulo, livrosConhecidos);
+  const referencia = extrairReferencia(entrada.titulo, livrosConhecidos, entrada.texto);
 
   return {
     dataPregacao: data?.iso ?? null,

@@ -1,6 +1,10 @@
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
+  // O projeto é CommonJS. Sem isto o client sai em ESM, usando import.meta, e
+  // o build compilado quebra ao rodar com `node` — o tsx disfarça em
+  // desenvolvimento, mas o contêiner de produção não.
+  moduleFormat = "cjs"
 }
 
 datasource db {

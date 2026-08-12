@@ -223,4 +223,35 @@ describe('extrairReferencia', () => {
   it('devolve vazio quando o título não tem referência', () => {
     expect(extrairReferencia('Espelho, espelho meu', LIVROS)).toMatchObject({ livro: null });
   });
+
+  it('cai para o corpo quando o título não traz a referência', () => {
+    // Caso real: 274 resenhas têm o texto base só no corpo, logo após a data.
+    const corpo = 'Resenha do Culto da Noite de Domingo\n09/08/2026\n"Ainda há lugar"\nLucas 14:12-15\nJesus estava numa festa.';
+    expect(extrairReferencia('Ainda há lugar.', LIVROS, corpo)).toMatchObject({
+      livro: 'Lucas',
+      capitulo: 14,
+      versiculos: '12-15',
+    });
+  });
+
+  it('aceita referência só de capítulo, sem versículo', () => {
+    const corpo = 'Resenha do Culto de Quarta-feira\n24/06/2026\nQuando a Graça Multiplica\nJoão 6\ntexto';
+    expect(extrairReferencia('Quando a Graça multiplica', LIVROS, corpo)).toMatchObject({
+      livro: 'João',
+      capitulo: 6,
+      versiculos: null,
+      textoBase: 'João 6',
+    });
+  });
+
+  it('o título tem prioridade sobre o corpo', () => {
+    const corpo = 'Resenha\nMarcos 1:1\ntexto';
+    expect(extrairReferencia('Tema - Lucas 2:41-52', LIVROS, corpo)).toMatchObject({ livro: 'Lucas' });
+  });
+
+  it('não procura no corpo inteiro, só no começo', () => {
+    // Citações no meio da mensagem não são o texto base da pregação.
+    const corpo = ['Resenha do Culto', 'a', 'b', 'c', 'd', 'e', 'f', 'Romanos 8:28'].join('\n');
+    expect(extrairReferencia('Sem referência', LIVROS, corpo)).toMatchObject({ livro: null });
+  });
 });

@@ -30,18 +30,35 @@ export type PostBruto = {
  * produz "R esenha" e datas como "1 9/10/2025". Só os blocos viram quebra de
  * linha.
  */
+/**
+ * Resolve as entidades HTML do blog, nomeadas e numéricas.
+ *
+ * As numéricas importam: 76 títulos usam &#8220; e &#8221; (aspas curvas) e
+ * guardariam o código cru no banco. Entidade desconhecida fica como está.
+ */
+export function decodificarEntidades(texto: string): string {
+  const nomeadas: Record<string, string> = {
+    '&nbsp;': ' ',
+    '&quot;': '"',
+    '&apos;': "'",
+    '&lt;': '<',
+    '&gt;': '>',
+    '&amp;': '&',
+  };
+
+  return texto
+    .replace(/&(?:nbsp|quot|apos|lt|gt|amp);/g, (entidade) => nomeadas[entidade])
+    .replace(/&#(\d+);/g, (_, codigo) => String.fromCodePoint(Number(codigo)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, codigo) => String.fromCodePoint(parseInt(codigo, 16)));
+}
+
 export function htmlParaTexto(html: string): string {
   return html
     .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, '')
     .replace(/<(br|p|div|li|tr|h[1-6])\b[^>]*>/gi, '\n')
     .replace(/<\/(p|div|li|tr|h[1-6])>/gi, '\n')
     .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&quot;/g, '"')
-    .replace(/&#3[49];/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
+    .replace(/&(?:#x?[0-9a-f]+|\w+);/gi, decodificarEntidades)
     .replace(/[ \t ]+/g, ' ')
     .split('\n')
     .map((linha) => linha.trim())
@@ -75,7 +92,8 @@ export function extrairPublicadoEm(html: string): string | undefined {
 export function extrairTitulo(html: string): string {
   const og = html.match(/<meta[^>]+property=['"]og:title['"][^>]*>/i)?.[0];
   const conteudo = og?.match(/content=['"]([^'"]*)['"]/i)?.[1];
-  return (conteudo ?? '').trim();
+  // O og:title vem com entidades: 76 títulos guardariam &quot; cru sem isto.
+  return decodificarEntidades(conteudo ?? '').replace(/\s+/g, ' ').trim();
 }
 
 /** Lista as URLs de todos os posts. O sitemap raiz aponta para sub-sitemaps. */

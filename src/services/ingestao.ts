@@ -156,6 +156,15 @@ export function urlsNovas(doSitemap: string[], jaNoBanco: string[]): string[] {
   return doSitemap.filter((url) => !conhecidas.has(url));
 }
 
+/**
+ * Quantas páginas baixar ao mesmo tempo.
+ *
+ * No dia a dia são duas ou três resenhas novas e isto não muda nada. Importa
+ * no primeiro arranque, em banco vazio, quando as 1409 páginas precisam ser
+ * buscadas de uma vez.
+ */
+const PARALELAS = 6;
+
 export type ResultadoIngestao = Contagem & {
   noSitemap: number;
   novas: number;
@@ -166,7 +175,13 @@ export type ResultadoIngestao = Contagem & {
  * Busca no blog o que ainda não está no banco e grava.
  *
  * O blog publica depois do culto, com atraso de 0 a 5 dias, então rodar isto
- * todo dia dá conta. Não baixa o que já está no banco.
+ * todo dia dá conta. Não baixa o que já está no banco — é o que permite usar
+ * a mesma função para o arranque em produção, com o banco vazio, e para a
+ * atualização diária.
+ *
+ * O download é paralelo, a gravação é sequencial. Gravar em paralelo
+ * duplicaria pregadores: duas resenhas do mesmo pregador desconhecido
+ * criariam dois cadastros.
  */
 export async function ingerirNovos(): Promise<ResultadoIngestao> {
   const [doSitemap, existentes] = await Promise.all([
@@ -182,11 +197,25 @@ export async function ingerirNovos(): Promise<ResultadoIngestao> {
   if (novas.length > 0) {
     const contexto = await carregarContexto();
 
-    for (const url of novas) {
-      try {
-        await gravarPost(await baixarPost(url), contexto, contagem);
-      } catch (e) {
-        falhas.push({ url, erro: (e as Error).message });
+    for (let i = 0; i < novas.length; i += PARALELAS) {
+      const baixados = await Promise.all(
+        novas.slice(i, i + PARALELAS).map(async (url) => {
+          try {
+            return await baixarPost(url);
+          } catch (e) {
+            falhas.push({ url, erro: (e as Error).message });
+            return null;
+          }
+        }),
+      );
+
+      for (const post of baixados) {
+        if (!post) continue;
+        try {
+          await gravarPost(post, contexto, contagem);
+        } catch (e) {
+          falhas.push({ url: post.url, erro: (e as Error).message });
+        }
       }
     }
   }
