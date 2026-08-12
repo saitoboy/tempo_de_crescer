@@ -4,6 +4,8 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { AddressInfo } from 'net';
 import connection from './connection';
+import { agendarIngestao } from './services/agendamento';
+import { aplicarProxy } from './utils/proxy';
 
 const app = express();
 app.use(express.json());
@@ -25,4 +27,10 @@ app.get('/health', async (_req: Request, res: Response) => {
 const server = app.listen(process.env.PORT || 3003, () => {
   const address = server.address() as AddressInfo;
   console.log(`Server is running in http://localhost:${address.port}`);
+
+  const proxy = aplicarProxy();
+  if (proxy) console.log(`Proxy: ${proxy}`);
+
+  const cron = agendarIngestao();
+  console.log(cron ? `Ingestão agendada: ${cron} (${process.env.TZ})` : 'Ingestão agendada: desligada');
 });

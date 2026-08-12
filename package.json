@@ -15,6 +15,9 @@
     "prisma:studio": "prisma studio --port 5555",
     "seed": "prisma db seed",
     "seed:biblia": "tsx src/seeds/biblia.ts",
+    "seed:resenhas": "tsx src/seeds/resenhas.ts",
+    "baixar:posts": "tsx src/scripts/baixarPosts.ts",
+    "ingerir": "tsx src/scripts/ingerir.ts",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down"
   },
@@ -36,12 +39,14 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "node-cron": "^4.6.0",
     "undici": "^8.10.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.2.0",
+    "@types/node-cron": "^3.0.11",
     "prisma": "^7.9.1",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2",

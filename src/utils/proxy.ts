@@ -30,9 +30,27 @@ export function urlDoProxy(): string | undefined {
  * boot, antes do dotenv carregar o .env. Por isso o dispatcher é montado aqui.
  */
 export function aplicarProxy(): string | undefined {
-  const url = urlDoProxy();
-  if (!url) return undefined;
+  const host = process.env.PROXY_HOST;
+  if (!host) return undefined;
 
-  setGlobalDispatcher(new ProxyAgent(url));
-  return url.replace(/:[^:@]*@/, ':***@');
+  const porta = process.env.PROXY_PORT || '3128';
+  const usuario = process.env.PROXY_USER;
+  const senha = process.env.PROXY_PASS;
+
+  // O ProxyAgent do undici NÃO lê credenciais embutidas na URI — precisa do
+  // header Proxy-Authorization. Sem ele o túnel HTTPS volta 407, mesmo com
+  // usuário e senha na string de conexão.
+  //
+  // O Basic usa a senha crua, não a versão escapada da URL: percent-encoding
+  // aqui produziria "%40159357gS" como senha e a autenticação falharia.
+  setGlobalDispatcher(
+    new ProxyAgent({
+      uri: `http://${host}:${porta}`,
+      token: usuario
+        ? `Basic ${Buffer.from(`${usuario}:${senha ?? ''}`).toString('base64')}`
+        : undefined,
+    }),
+  );
+
+  return `http://${usuario ? `${usuario}:***@` : ''}${host}:${porta}`;
 }

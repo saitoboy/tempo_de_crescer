@@ -259,9 +259,16 @@ A rede exige proxy autenticado. Sem ele, chamadas externas voltam **407**.
 Qualquer script que use rede tem de chamar `aplicarProxy()` antes do primeiro `fetch` —
 inclusive o MCP do Firecrawl, que **não** passa pelo proxy e por isso falha aqui.
 
-**Fase 2 — Ingestão incremental**
-Job que busca só o que ainda não está no banco (dedupe por `urlBlog`) e insere.
-O blog sempre atrasa em relação ao culto; isso é aceito.
+**Fase 2 — Ingestão incremental (feita)**
+- [x] `ingerirNovos()` compara o sitemap com o banco e baixa só o que falta
+- [x] `npm run ingerir` para rodar na mão
+- [x] Agendamento com node-cron dentro do processo da API, `CRON_INGESTAO`
+      (padrão `0 7 * * *`, `off` desliga)
+- [x] Validado apagando uma resenha e vendo ela voltar sozinha
+
+A lógica de gravação vive em `src/services/ingestao.ts` e é a mesma da carga
+inicial — só muda de onde vêm os posts (cache em disco na carga, blog na
+incremental).
 
 **Fase 3 — Pregador**
 Parser da assinatura no fim do texto, resolução de aliases para nome canônico,
