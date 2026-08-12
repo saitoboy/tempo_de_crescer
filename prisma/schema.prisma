@@ -54,6 +54,11 @@ enum Papel {
   LIDER
 }
 
+enum Testamento {
+  ANTIGO
+  NOVO
+}
+
 // ==================== MODELS ====================
 
 /// Quem acessa a API. Autenticação e autorização entram na Fase 7, junto com
@@ -181,6 +186,39 @@ model Classificacao {
   @@unique([resenhaId, doutrinaId])
   @@index([doutrinaId, papel])
   @@map("classificacao")
+}
+
+// ==================== BÍBLIA ====================
+// Texto integral da Almeida Corrigida Fiel (ACF): 66 livros, 31.106 versículos.
+// Serve para resolver as referências das resenhas em texto de verdade e, mais
+// à frente, para o mapa do que já foi pregado.
+//
+// Uma versão só, de propósito. Se um dia entrar ARA ou NVI, aí sim vale uma
+// tabela de versão — antes disso é coluna que nunca muda.
+
+model LivroBiblico {
+  /// 1 a 66, na ordem canônica. Também é a posição.
+  id         Int        @id
+  abbrev     String     @unique
+  nome       String     @unique
+  testamento Testamento
+
+  versiculos Versiculo[]
+
+  @@map("livro_biblico")
+}
+
+model Versiculo {
+  id       String       @id @default(uuid())
+  livroId  Int
+  livro    LivroBiblico @relation(fields: [livroId], references: [id], onDelete: Cascade)
+  capitulo Int
+  numero   Int
+  texto    String
+
+  @@unique([livroId, capitulo, numero])
+  @@index([livroId, capitulo])
+  @@map("versiculo")
 }
 
 /// Texto devocional gerado a partir da resenha. A fila de geração são as
