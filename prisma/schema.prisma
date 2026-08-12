@@ -205,16 +205,41 @@ model Resenha {
   @@map("resenha")
 }
 
-/// As 8 doutrinas da Teologia Sistemática de Wayne Grudem. Seed fixo.
+/// As 8 doutrinas usadas para classificar as pregações. Seed fixo.
+///
+/// São um recorte das 7 partes da Teologia Sistemática de Grudem: a parte
+/// "Christ and the Holy Spirit" é separada em duas, porque distinguir
+/// cristologia de pneumatologia importa para ler o que a igreja tem pregado.
 model Doutrina {
   id              String @id @default(uuid())
   numero          Int    @unique
   nome            String @unique
   perguntaCentral String
 
+  subtemas       Subtema[]
   classificacoes Classificacao[]
 
   @@map("doutrina")
+}
+
+/// Os capítulos da Teologia Sistemática, um a um, sob a doutrina que cobrem.
+///
+/// São a referência real da obra, não um resumo: `capituloGrudem` aponta para
+/// o capítulo de onde o subtema vem. Serve para dizer "esta pregação trata de
+/// Justificação, capítulo 36" em vez de só "trata de Salvação".
+model Subtema {
+  id   String @id @default(uuid())
+  /// Número do capítulo na obra, de 1 a 57.
+  capituloGrudem Int    @unique
+  nome           String
+  /// Título como aparece na edição em inglês, para conferência.
+  nomeOriginal   String
+
+  doutrinaId String
+  doutrina   Doutrina @relation(fields: [doutrinaId], references: [id], onDelete: Cascade)
+
+  @@index([doutrinaId])
+  @@map("subtema")
 }
 
 /// Resultado do classificador. `zscore` é o desvio da densidade de marcadores

@@ -1,6 +1,7 @@
 import connection from '../connection';
 import { TipoPregador } from '../generated/prisma/enums';
 import { logInfo, logSuccess, logWarning } from '../utils/logger';
+import { semearSubtemas } from './subtemas';
 import { gerarHash } from '../utils/senha';
 
 /**
@@ -76,6 +77,7 @@ async function main() {
   }
   logSuccess(`${PREGADORES.length} pregadores no cadastro`, 'pregador');
 
+  await semearSubtemas();
   await fundirDuplicados();
   await criarAdmin();
 }
