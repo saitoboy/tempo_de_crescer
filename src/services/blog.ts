@@ -1,0 +1,167 @@
+/**
+ * Leitura do blog da IBPS: https://pregacoesibps.blogspot.com
+ *
+ * A enumeração sai do sitemap.xml, que é a única fonte que bate com o widget
+ * de arquivo do blog (1409 posts). O feed JSON do Blogger devolve só 1285 —
+ * não serve para ingestão.
+ *
+ * O conteúdo sai da página renderizada, que já vem em UTF-8 correto. O
+ * mojibake dos JSONs em legacy/ era defeito do scraper antigo, não do blog.
+ */
+
+const SITEMAP = 'https://pregacoesibps.blogspot.com/sitemap.xml';
+
+export type PostBruto = {
+  url: string;
+  titulo: string;
+  /** Data de publicação como o Blogger exibe, em ISO (YYYY-MM-DD). */
+  publicadoEm: string;
+  /** O post-body, ainda em HTML. */
+  html: string;
+  /** O post-body convertido em texto. */
+  texto: string;
+};
+
+/**
+ * Converte um fragmento de HTML do post em texto.
+ *
+ * O blog tem tags no meio das palavras, resquício de edição no editor do
+ * Blogger. Por isso as tags inline somem SEM virar espaço: trocar por espaço
+ * produz "R esenha" e datas como "1 9/10/2025". Só os blocos viram quebra de
+ * linha.
+ */
+/**
+ * Resolve as entidades HTML do blog, nomeadas e numéricas.
+ *
+ * As numéricas importam: 76 títulos usam &#8220; e &#8221; (aspas curvas) e
+ * guardariam o código cru no banco. Entidade desconhecida fica como está.
+ */
+export function decodificarEntidades(texto: string): string {
+  const nomeadas: Record<string, string> = {
+    '&nbsp;': ' ',
+    '&quot;': '"',
+    '&apos;': "'",
+    '&lt;': '<',
+    '&gt;': '>',
+    '&amp;': '&',
+  };
+
+  return texto
+    .replace(/&(?:nbsp|quot|apos|lt|gt|amp);/g, (entidade) => nomeadas[entidade])
+    .replace(/&#(\d+);/g, (_, codigo) => String.fromCodePoint(Number(codigo)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, codigo) => String.fromCodePoint(parseInt(codigo, 16)));
+}
+
+export function htmlParaTexto(html: string): string {
+  return html
+    .replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, '')
+    .replace(/<(br|p|div|li|tr|h[1-6])\b[^>]*>/gi, '\n')
+    .replace(/<\/(p|div|li|tr|h[1-6])>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&(?:#x?[0-9a-f]+|\w+);/gi, decodificarEntidades)
+    .replace(/[ \t ]+/g, ' ')
+    .split('\n')
+    .map((linha) => linha.trim())
+    .filter((linha) => linha.length > 0)
+    .join('\n');
+}
+
+/** Recorta o post-body do HTML da página. O template usa aspas simples. */
+export function extrairCorpo(html: string): string | undefined {
+  const inicio = html.search(/<div[^>]+class=['"][^'"]*post-body[^'"]*['"]/i);
+  if (inicio === -1) return undefined;
+
+  const depois = html.slice(inicio);
+  const fim = depois.search(/<div[^>]+class=['"][^'"]*post-footer/i);
+
+  return fim === -1 ? depois : depois.slice(0, fim);
+}
+
+/**
+ * Data de publicação, do atributo title do <abbr class='published'>.
+ *
+ * Devolve só a parte da data, sem converter fuso: o blog está em -08:00 e
+ * converter para o horário de Brasília mudaria o dia de posts publicados à
+ * noite. A data exibida pelo blog é a que vale.
+ */
+export function extrairPublicadoEm(html: string): string | undefined {
+  const m = html.match(/<abbr[^>]+class=['"]published['"][^>]+title=['"](\d{4}-\d{2}-\d{2})/i);
+  return m?.[1];
+}
+
+export function extrairTitulo(html: string): string {
+  const og = html.match(/<meta[^>]+property=['"]og:title['"][^>]*>/i)?.[0];
+  const conteudo = og?.match(/content=['"]([^'"]*)['"]/i)?.[1];
+  // O og:title vem com entidades: 76 títulos guardariam &quot; cru sem isto.
+  return decodificarEntidades(conteudo ?? '').replace(/\s+/g, ' ').trim();
+}
+
+/** Lista as URLs de todos os posts. O sitemap raiz aponta para sub-sitemaps. */
+export async function listarUrls(): Promise<string[]> {
+  const locs = async (url: string) => {
+    const resposta = await fetch(url);
+    if (!resposta.ok) throw new Error(`sitemap ${url}: HTTP ${resposta.status}`);
+    const xml = await resposta.text();
+    return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  };
+
+  const raiz = await locs(SITEMAP);
+  const urls = new Set<string>();
+
+  for (const entrada of raiz) {
+    if (/sitemap/i.test(entrada)) {
+      for (const url of await locs(entrada)) urls.add(url);
+    } else {
+      urls.add(entrada);
+    }
+  }
+
+  return [...urls];
+}
+
+/** Respostas que valem a pena tentar de novo: o blog está limitando a taxa. */
+const TENTAR_DE_NOVO = new Set([429, 500, 502, 503, 504]);
+const TENTATIVAS = 4;
+
+const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Busca uma página, insistindo quando o blog responde 503.
+ *
+ * Na carga inicial são 1409 páginas seguidas e o Blogger passa a recusar: sem
+ * insistir, 98 resenhas ficaram de fora. A espera dobra a cada tentativa
+ * (1s, 2s, 4s), o que basta para o blog voltar a responder.
+ */
+async function buscarComInsistencia(url: string): Promise<Response> {
+  let ultimoStatus = 0;
+
+  for (let tentativa = 0; tentativa < TENTATIVAS; tentativa++) {
+    if (tentativa > 0) await esperar(1000 * 2 ** (tentativa - 1));
+
+    const resposta = await fetch(url);
+    if (resposta.ok) return resposta;
+
+    ultimoStatus = resposta.status;
+    if (!TENTAR_DE_NOVO.has(resposta.status)) break;
+  }
+
+  throw new Error(`post ${url}: HTTP ${ultimoStatus}`);
+}
+
+export async function baixarPost(url: string): Promise<PostBruto> {
+  const resposta = await buscarComInsistencia(url);
+  const pagina = await resposta.text();
+  const corpo = extrairCorpo(pagina);
+  if (!corpo) throw new Error(`post ${url}: post-body não encontrado`);
+
+  const publicadoEm = extrairPublicadoEm(pagina);
+  if (!publicadoEm) throw new Error(`post ${url}: data de publicação não encontrada`);
+
+  return {
+    url,
+    titulo: extrairTitulo(pagina),
+    publicadoEm,
+    html: corpo,
+    texto: htmlParaTexto(corpo),
+  };
+}

@@ -1,0 +1,62 @@
+{
+  "name": "back-tempo_de_crescer",
+  "version": "1.0.0",
+  "description": "Backend do Tempo de Crescer: banco e API das pregações da IBPS Muriaé.",
+  "main": "build/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node build/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio --port 5555",
+    "seed": "prisma db seed",
+    "seed:biblia": "tsx src/seeds/biblia.ts",
+    "seed:resenhas": "tsx src/seeds/resenhas.ts",
+    "baixar:posts": "tsx src/scripts/baixarPosts.ts",
+    "ingerir": "tsx src/scripts/ingerir.ts",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "youtube": "tsx src/scripts/casarYoutube.ts",
+    "qrcodes": "tsx src/scripts/gerarQrCodes.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saitoboy/tempo_de_crescer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/saitoboy/tempo_de_crescer/issues"
+  },
+  "homepage": "https://github.com/saitoboy/tempo_de_crescer#readme",
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "node-cron": "^4.6.0",
+    "qrcode": "^1.5.4",
+    "swagger-ui-express": "^5.0.1",
+    "undici": "^8.10.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.2.0",
+    "@types/node-cron": "^3.0.11",
+    "@types/qrcode": "^1.5.6",
+    "@types/swagger-ui-express": "^4.1.8",
+    "prisma": "^7.9.1",
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}

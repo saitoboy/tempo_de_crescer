@@ -1,0 +1,346 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  // O projeto é CommonJS. Sem isto o client sai em ESM, usando import.meta, e
+  // o build compilado quebra ao rodar com `node` — o tsx disfarça em
+  // desenvolvimento, mas o contêiner de produção não.
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== ENUMS ====================
+
+/// Turno do encontro. O dia da semana sai da data, não do enum: juntar os dois
+/// num "DOMINGO_MANHA" não consegue expressar uma celebração de sábado.
+///
+/// DIA cobre manhã e tarde. Na prática o blog só escreve "manhã", mas eventos
+/// especiais fora da agenda acontecem à tarde.
+enum Turno {
+  DIA
+  NOITE
+}
+
+/// O que era o encontro. A agenda fixa é culto de quarta à noite, domingo de
+/// manhã e domingo à noite; o resto acontece fora dela.
+enum NaturezaEvento {
+  CULTO
+  CELEBRACAO
+  EBD
+  ESTUDO
+  VIGILIA
+  CONFERENCIA
+  FUNEBRE
+}
+
+/// De onde veio a data do encontro, para separar o que é certo do que é inferido.
+enum OrigemData {
+  TEXTO // escrita na própria resenha
+  YOUTUBE // confirmada pela live
+  MANUAL // corrigida à mão
+}
+
+enum TipoPregador {
+  PASTOR
+  SEMINARISTA
+  /// Missionários e pregadores de fora, que costumam aparecer uma vez só.
+  CONVIDADO
+  IRMAO
+}
+
+/// De onde veio a informação do pregador daquela resenha.
+enum OrigemPregador {
+  ASSINATURA // extraído da assinatura no fim do texto
+  YOUTUBE // confirmado pelo título da live
+  MANUAL // corrigido à mão via PATCH
+}
+
+enum StatusResenha {
+  INGERIDA
+  CLASSIFICADA
+  REVISADA
+}
+
+enum PapelDoutrina {
+  PRINCIPAL
+  SECUNDARIO
+}
+
+enum StatusDevocional {
+  GERADO
+  REVISADO
+}
+
+/// ADMIN faz tudo. PASTOR e LIDER só leem — o recorte fino do que cada um
+/// enxerga fica para depois; por ora o papel só está registrado.
+enum Papel {
+  ADMIN
+  PASTOR
+  LIDER
+}
+
+enum Testamento {
+  ANTIGO
+  NOVO
+}
+
+// ==================== MODELS ====================
+
+/// Quem acessa a API. Autenticação e autorização entram na Fase 7, junto com
+/// os endpoints que precisam ser protegidos — aqui só fica o cadastro.
+model Usuario {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  nome         String
+  senhaHash    String
+  papel        Papel    @default(LIDER)
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("usuario")
+}
+
+/// O culto ao vivo. Tem louvor, avisos e mais coisas além da pregação —
+/// por isso é separado da Resenha. O QR code do livro aponta para `youtubeUrl`.
+model Culto {
+  id       String         @id @default(uuid())
+  /// Data do encontro, não da publicação no blog. @db.Date de propósito:
+  /// é calendário puro, imune a fuso.
+  data     DateTime       @db.Date
+  /// null quando a resenha não diz o turno e não dá para inferir.
+  turno    Turno?
+  natureza NaturezaEvento @default(CULTO)
+
+  youtubeVideoId String? @unique
+  youtubeUrl     String?
+  tituloLive     String?
+
+  /// QR code da transmissão, em SVG.
+  ///
+  /// Guardado em vez de gerado a cada leitura porque a montagem do livro vai
+  /// empacotar as páginas para o designer, e regerar centenas na hora seria
+  /// desperdício. SVG cru, não base64 de PNG: é vetor, não perde na impressão
+  /// em A5, ocupa menos, e virar `data:` URI é uma linha.
+  ///
+  /// Cerca de 2,4 KB cada; nos 620 cultos com vídeo, ~1,5 MB no total.
+  qrcodeSvg String?
+
+  resenhas     Resenha[]
+  criadoEm     DateTime  @default(now())
+  atualizadoEm DateTime  @updatedAt
+
+  @@unique([data, turno, natureza])
+  @@map("culto")
+}
+
+/// Quem pregou. `aliases` resolve as variações que aparecem nas assinaturas
+/// (Ryan Sousa / Ryan Souza, Silvio Faria / Silvio Farias).
+model Pregador {
+  id           String       @id @default(uuid())
+  nomeCanonico String       @unique
+  tipo         TipoPregador @default(CONVIDADO)
+  aliases      String[]
+  resenhas     Resenha[]
+  criadoEm     DateTime     @default(now())
+  atualizadoEm DateTime     @updatedAt
+
+  @@map("pregador")
+}
+
+/// O texto publicado no blog: resenha humana do culto, escrita por um redator.
+/// Pode conter erros — pregador ausente ou trocado.
+model Resenha {
+  id      String @id @default(uuid())
+  slug    String @unique
+  /// Chave de deduplicação da ingestão incremental.
+  urlBlog String @unique
+
+  titulo String
+
+  /// Data do encontro, extraída do texto da resenha. null quando a resenha não
+  /// diz — 265 posts, quase todos de 2016, estão nessa situação. Não inferir
+  /// pela data de publicação: o blog atrasa de 0 a 5 dias, então a publicação
+  /// cai em qualquer dia da semana e a inferência inventaria dado.
+  dataPregacao DateTime?   @db.Date
+  origemData   OrigemData?
+
+  /// Data em que o post foi ao ar. Sempre existe, vem do blog, e ancora a
+  /// resenha mesmo quando dataPregacao é null.
+  publicadoEm DateTime @db.Date
+  /// Ano de referência para agrupar. Usa o ano de dataPregacao quando há, e o
+  /// de publicadoEm quando não há.
+  ano         Int
+
+  /// Markdown como veio do Firecrawl, sem tratamento.
+  conteudoBruto String
+  /// Texto normalizado: sem assinatura, sem boilerplate do blog.
+  conteudoLimpo String
+
+  cultoId String?
+  culto   Culto?  @relation(fields: [cultoId], references: [id], onDelete: SetNull)
+
+  /// null = fila de PATCH manual. Nunca chutar pregador.
+  pregadorId String?
+  pregador   Pregador?       @relation(fields: [pregadorId], references: [id], onDelete: SetNull)
+  /// Assinatura crua, como apareceu no texto, antes de resolver o alias.
+  pregadorBruto  String?
+  pregadorOrigem OrigemPregador?
+
+  /// Quem redigiu e editou a resenha. Recebe crédito de redação no livro.
+  /// Hoje é sempre Elizabete Lacerda Paulo, que assina também como "Beth".
+  /// ponytail: coluna simples porque só há uma redatora; vira tabela própria
+  /// se aparecer uma segunda com aliases seus.
+  redator String?
+
+  /// Referência bíblica extraída do título ("... - Lucas 2:41-52").
+  textoBase  String?
+  livro      String?
+  capitulo   Int?
+  versiculos String?
+
+  status StatusResenha @default(INGERIDA)
+
+  classificacoes Classificacao[]
+  devocional     Devocional?
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([ano])
+  @@index([pregadorId])
+  @@index([dataPregacao])
+  @@map("resenha")
+}
+
+/// As 8 doutrinas usadas para classificar as pregações. Seed fixo.
+///
+/// São um recorte das 7 partes da Teologia Sistemática de Grudem: a parte
+/// "Christ and the Holy Spirit" é separada em duas, porque distinguir
+/// cristologia de pneumatologia importa para ler o que a igreja tem pregado.
+model Doutrina {
+  id              String @id @default(uuid())
+  numero          Int    @unique
+  nome            String @unique
+  perguntaCentral String
+
+  subtemas       Subtema[]
+  classificacoes Classificacao[]
+
+  @@map("doutrina")
+}
+
+/// Os capítulos da Teologia Sistemática, um a um, sob a doutrina que cobrem.
+///
+/// São a referência real da obra, não um resumo: `capituloGrudem` aponta para
+/// o capítulo de onde o subtema vem. Serve para dizer "esta pregação trata de
+/// Justificação, capítulo 36" em vez de só "trata de Salvação".
+model Subtema {
+  id   String @id @default(uuid())
+  /// Número do capítulo na obra, de 1 a 57.
+  capituloGrudem Int    @unique
+  nome           String
+  /// Título como aparece na edição em inglês, para conferência.
+  nomeOriginal   String
+
+  doutrinaId String
+  doutrina   Doutrina @relation(fields: [doutrinaId], references: [id], onDelete: Cascade)
+
+  @@index([doutrinaId])
+  @@map("subtema")
+}
+
+/// Resultado do classificador. `zscore` é o desvio da densidade de marcadores
+/// desta resenha em relação à média do corpus — ver CLAUDE.md.
+model Classificacao {
+  id         String        @id @default(uuid())
+  resenhaId  String
+  resenha    Resenha       @relation(fields: [resenhaId], references: [id], onDelete: Cascade)
+  doutrinaId String
+  doutrina   Doutrina      @relation(fields: [doutrinaId], references: [id], onDelete: Cascade)
+  papel      PapelDoutrina
+
+  zscore    Float
+  densidade Float
+  /// [{ nome, intensidade, frequencia, densidade }]
+  subtemas  Json?
+
+  criadoEm DateTime @default(now())
+
+  @@unique([resenhaId, doutrinaId])
+  @@index([doutrinaId, papel])
+  @@map("classificacao")
+}
+
+// ==================== BÍBLIA ====================
+// Texto integral da Almeida Corrigida Fiel (ACF): 66 livros, 31.106 versículos.
+// Serve para resolver as referências das resenhas em texto de verdade e, mais
+// à frente, para o mapa do que já foi pregado.
+//
+// Uma versão só, de propósito. Se um dia entrar ARA ou NVI, aí sim vale uma
+// tabela de versão — antes disso é coluna que nunca muda.
+
+model LivroBiblico {
+  /// 1 a 66, na ordem canônica. Também é a posição.
+  id         Int        @id
+  abbrev     String     @unique
+  nome       String     @unique
+  testamento Testamento
+
+  versiculos Versiculo[]
+
+  @@map("livro_biblico")
+}
+
+model Versiculo {
+  id       String       @id @default(uuid())
+  livroId  Int
+  livro    LivroBiblico @relation(fields: [livroId], references: [id], onDelete: Cascade)
+  capitulo Int
+  numero   Int
+  texto    String
+
+  @@unique([livroId, capitulo, numero])
+  @@index([livroId, capitulo])
+  @@map("versiculo")
+}
+
+/// Texto devocional gerado a partir da resenha. A fila de geração são as
+/// resenhas SEM devocional — por isso não existe status PENDENTE aqui.
+model Devocional {
+  id        String  @id @default(uuid())
+  resenhaId String  @unique
+  resenha   Resenha @relation(fields: [resenhaId], references: [id], onDelete: Cascade)
+
+  /// Os campos abaixo são exatamente os blocos da página do livro —
+  /// ver CONTEXTO/modelo-pagina.jpeg.
+
+  /// Título em caixa alta no topo da página.
+  titulo String
+
+  /// Referência do versículo em destaque ("Salmos 23:1"). Pode ser mais
+  /// específica que a da resenha: a pregação foi sobre o Salmo 23 inteiro,
+  /// a página destaca o versículo 1.
+  referencia String?
+  /// Texto do versículo, impresso em itálico sob o título. Vem da tabela
+  /// Versiculo quando a referência resolve.
+  versiculo  String?
+
+  /// O bloco "REFLEXÃO DEVOCIONAL".
+  reflexao String
+  /// O bloco "PONTOS DE APLICAÇÃO PRÁTICA", um item por marcador.
+  pontosAplicacao String[]
+  /// O bloco "ORAÇÃO", em primeira pessoa do plural, como no modelo.
+  oracao String?
+
+  status StatusDevocional @default(GERADO)
+  /// Quem escreveu: "claude-opus-5", "revisao-humana"...
+  modelo String?
+
+  geradoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("devocional")
+}

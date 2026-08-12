@@ -67,6 +67,14 @@ coverage.xml
 *.swo
 *~
 
+# ==================== NODE ====================
+
+node_modules/
+build/
+src/generated/
+*.tsbuildinfo
+npm-debug.log*
+
 # ==================== AMBIENTE ====================
 
 # Variáveis de ambiente (IMPORTANTE!)
@@ -119,3 +127,6 @@ $RECYCLE.BIN/
 *.pem
 *.key
 *.crt
+
+# Cache local dos posts do blog
+.cache_blog/

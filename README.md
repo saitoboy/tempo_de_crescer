@@ -1,293 +1,159 @@
-# 🙏 Tempo de Crescer - Ferramentas para Devocionais
+<div align="center">
 
-Conjunto de ferramentas para extrair pregações do blog IBPS e convertê-las automaticamente em devocionais usando IA.
+# 🌱 Tempo de Crescer
 
-## 📦 Ferramentas Incluídas
+**O acervo de pregações da Igreja Batista do Parque Safira, virando livro.**
 
-### 1. **Blog Scraper IBPS** (`blog_scraper_ibps.py`)
-Extrai pregações do blog da IBPS Muriaé e salva em arquivos JSON organizados por ano.
+Backend que guarda, cura, classifica e transforma em devocional
+quinze anos de pregações — de 2012 a 2026.
 
-### 2. **Conversor de Devocionais** (`conversor_devocional.py`)
-Converte pregações (formato JSON) em devocionais formatados (Markdown) usando Groq API.
+[![Node](https://img.shields.io/badge/Node-22-5FA04E?logo=node.js&logoColor=white)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![Testes](https://img.shields.io/badge/testes-84%20passando-3FB950)](#)
+
+</div>
 
 ---
 
-## 🚀 Instalação
+## O que é
 
-### 1. Clone o repositório
+A igreja publica no blog uma **resenha** de cada culto, escrita à mão por uma
+redatora. São quinze anos disso — um patrimônio doutrinário espalhado em 1409
+posts, sem busca, sem estrutura e sem memória.
 
-```bash
-git clone https://github.com/saitoboy/tempo_de_crescer.git
-cd tempo_de_crescer
+Este projeto transforma esse acervo em base de dados curada, para três coisas:
 
-2. Crie um ambiente virtual
+| | |
+|---|---|
+| 📖 **Livro** | devocionais diários, diagramados em A5, com QR code para o culto |
+| 📊 **Análise** | o que a igreja tem ensinado ao longo do tempo, por doutrina e por pregador |
+| 🗺️ **Mapa bíblico** | quais textos já foram pregados, e quais nunca foram |
 
-# Windows
-python -m venv .venv
-.venv\Scripts\activate
+> *"O que estamos ensinando como igreja, ao longo do tempo?"*
+> — a pergunta que originou o projeto
 
-# Linux/Mac
-python3 -m venv .venv
-source .venv/bin/activate
+---
 
-3. Instale as dependências
-bash
-pip install -r requirements.txt
-
-4. Configure as variáveis de ambiente
-Copie o arquivo de exemplo e configure:
-
-# Windows
-copy .env.example .env
-
-# Linux/Mac
-cp .env.example .env
-
-Edite o arquivo .env e adicione sua chave da API Groq:
-GROQ_API_KEY=sua_chave_aqui
-
-🔑 Obtenha sua chave gratuita em: https://console.groq.com/keys
-
-📖 Como Usar
-🕷️ Extrair Pregações do Blog
-O blog_scraper_ibps.py extrai todas as pregações do blog e organiza por ano:
-
-python blog_scraper_ibps.py
-
-O que ele faz:
-
-✅ Acessa o blog: https://pregacoesibps.blogspot.com
-
-✅ Extrai informações de todas as pregações
-
-✅ Salva em arquivos JSON separados por ano (pregacoes_2016.json, pregacoes_2025.json, etc.)
-
-✅ Gera também um arquivo completo com tudo (pregacoes_completo.json)
-
-Estrutura do JSON gerado:
-
-{
-  "ano": 2025,
-  "igreja": "IBPS Muriaé",
-  "pastores": ["Pr. Nélio Monteiro", "Pr. Ryan Sousa"],
-  "total_pregacoes": 42,
-  "pregacoes": [
-    {
-      "id": 1,
-      "titulo": "Título da Pregação",
-      "data_pregacao": "01/02/2025",
-      "url_blog": "https://...",
-      "url_youtube": "https://...",
-      "conteudo_completo": "Texto completo da pregação..."
-    }
-  ]
-}
-
-
-✝️ Converter Pregações em Devocionais
-O conversor_devocional.py transforma as pregações em devocionais edificantes:
-
-python conversor_devocional.py
-
-
-O que ele faz:
-
-✅ Lista todos os arquivos JSON de pregações disponíveis
-
-✅ Permite escolher qual ano processar
-
-✅ Usa IA (Groq API) para transformar em devocionais
-
-✅ Gera arquivo Markdown formatado com todos os devocionais
-
-✅ Suporte a proxy corporativo
-
-Exemplo de uso interativo:
-
-
-🙏 CONVERSOR EM BATCH: PREGAÇÕES → DEVOCIONAIS (GROQ API)
-================================================================================
-
-📂 Buscando arquivos JSON...
-
-Arquivos encontrados:
-  1. pregacoes_2016.json
-  2. pregacoes_2025.json
-  3. pregacoes_2026.json
-
-👉 Escolha o número do arquivo: 2
-
-✅ 42 pregações encontradas
-
-🚀 PRONTO PARA PROCESSAR 42 PREGAÇÕES
-❓ Continuar? (s/n): s
-
-[1/42] Santos no Mundo - Colossenses 3:1-7
-      🤖 Gerando com llama-3.3-70b-versatile...
-      ✅ Devocional gerado
-
-...
-
-📊 RESUMO DO PROCESSAMENTO
-   ✅ Sucesso: 42
-   ❌ Erros: 0
-   📝 Total: 42
-
-✅ Arquivo salvo: devocionais_2025.md
-
-
-
-📄 Formato do Output
-O conversor gera um arquivo Markdown completo com:
-
-📋 Índice com todas as pregações
-
-✝️ Devocionais formatados com:
-
-Título inspirador
-
-Texto bíblico
-
-Reflexão devocional
-
-Pontos de aplicação prática
-
-Oração
-
-🔗 Links para blog e YouTube (quando disponíveis)
-
-📅 Metadados (data, pastor, igreja)
-
-Exemplo de saída: Ver devocionais_2025.md
-
-⚙️ Configuração de Proxy (Redes Corporativas)
-Se você está em uma rede corporativa com proxy, adicione ao arquivo .env:
-
-HTTP_PROXY=http://usuario:senha@proxy.empresa.com:porta
-HTTPS_PROXY=http://usuario:senha@proxy.empresa.com:porta
-
-
-Ou o script perguntará interativamente ao executar.
-
-🎯 Limites da API Groq (Plano Gratuito)
-📊 100.000 tokens/dia no plano gratuito
-
-⏰ Limite reseta a cada 24 horas
-
-💡 Dica: Processe em lotes menores se tiver muitas pregações
-
-Se atingir o limite:
-
-Aguarde 24h para resetar
-
-Use modelo mais econômico: llama-3.1-8b-instant
-
-Faça upgrade: https://console.groq.com/settings/billing
-
-📂 Estrutura do Projeto
-
-
-tempo_de_crescer/
-├── blog_scraper_ibps.py       # Extrai pregações do blog
-├── conversor_devocional.py    # Converte em devocionais
-├── requirements.txt           # Dependências Python
-├── .env.example              # Modelo de configuração
-├── .gitignore               # Arquivos ignorados pelo Git
-├── README.md               # Este arquivo
-├── pregacoes_*.json       # JSONs das pregações (gerados)
-└── devocionais_*.md      # Devocionais gerados
-
-
-🛠️ Tecnologias Utilizadas
-Python 3.8+
-
-BeautifulSoup4 - Web scraping
-
-Requests - Requisições HTTP
-
-Groq API - IA para gerar devocionais (llama-3.3-70b-versatile)
-
-httpx - Cliente HTTP com suporte a proxy
-
-📝 Exemplos Práticos
-Processar apenas 2025
-
-python conversor_devocional.py
-# Escolha: 2 (pregacoes_2025.json)
-
-
-Processar todos os anos
-Execute o conversor várias vezes, escolhendo diferentes arquivos, ou modifique o código para processar em loop.
-
-Re-processar pregações que falharam
-O script mostra no resumo quantas falharam. Você pode rodar novamente após 24h se atingiu o limite de tokens.
-
-🤝 Contribuindo
-Contribuições são bem-vindas! Sinta-se livre para:
-
-Fazer fork do projeto
-
-Criar uma branch para sua feature (git checkout -b feature/NovaFuncionalidade)
-
-Commitar suas mudanças (git commit -m 'Adiciona nova funcionalidade')
-
-Push para a branch (git push origin feature/NovaFuncionalidade)
-
-Abrir um Pull Request
-
-👤 Autor
-Guilherme Saito
-Coordenador de Inovação | Gerente de Projetos
-📍 Muriaé, Minas Gerais, Brasil
-
-GitHub: @saitoboy
-
-LinkedIn: Guilherme Saito
-
-🙏 Créditos
-IBPS Muriaé - Igreja Batista da Palavra Santificada
-
-Blog: https://pregacoesibps.blogspot.com
-
-Pastores: Pr. Nélio Monteiro e Pr. Ryan Sousa
-
-📄 Licença
-Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes.
-
-⚠️ Observações
-Este projeto é para uso educacional e ministerial
-
-Respeite os limites da API Groq
-
-Sempre revise os devocionais gerados antes de publicar
-
-Os textos originais pertencem aos respectivos autores/pregadores
-
-
-🆘 Problemas Comuns
-Erro de conexão
-bash
-❌ Erro: Connection error
-Solução: Configure o proxy no arquivo .env se estiver em rede corporativa.
-
-Rate limit exceeded
-bash
-❌ Erro: Rate limit reached
-Solução: Aguarde 24h ou use modelo mais econômico (llama-3.1-8b-instant).
-
-Módulo não encontrado
-bash
-ModuleNotFoundError: No module named 'groq'
-Solução: Instale as dependências:
-
-bash
-pip install -r requirements.txt
-📞 Suporte
-Encontrou algum problema ou tem sugestões? Abra uma issue!
+## O acervo hoje
 
 <div align="center">
-Feito com ❤️ e ☕ para a glória de Deus
 
-⭐ Se este projeto foi útil, considere dar uma estrela!
+| | | | |
+|---:|:---|---:|:---|
+| **1.409** | resenhas | **1.026** | cultos |
+| **51** | pregadores | **57** | capítulos de Grudem |
+| **66** | livros da Bíblia | **31.106** | versículos |
 
-</div> ```
+*de 2012 a 2026*
+
+</div>
+
+---
+
+## Começando
+
+```bash
+npm install
+cp .env.example .env          # preencha DATABASE_URL e ADMIN_*
+npm run db:up                 # Postgres 17 no Docker (opcional)
+npx prisma migrate deploy     # cria as tabelas
+npm run seed                  # doutrinas, subtemas, pregadores, admin
+npm run seed:biblia           # Bíblia ACF completa
+npm run ingerir               # busca o acervo no blog
+npm run dev                   # http://localhost:3003
+```
+
+Pronto: a API sobe em `/api/v1` e a documentação interativa fica em
+**http://localhost:3003/api/v1/docs**.
+
+---
+
+## Como funciona
+
+```
+  blog da igreja                    ┌─────────────┐
+  sitemap.xml ──── 1409 posts ─────▶│  ingestão   │  a cada 4h
+                                    └──────┬──────┘
+                                           │
+                    ┌──────────────────────▼──────────────────────┐
+                    │  parser: data · turno · pregador · texto     │
+                    │  o que não dá para afirmar, fica null        │
+                    └──────────────────────┬──────────────────────┘
+                                           │
+            ┌──────────────┬───────────────┼───────────────┬──────────────┐
+            ▼              ▼               ▼               ▼              ▼
+        ┌───────┐    ┌──────────┐    ┌──────────┐   ┌────────────┐  ┌──────────┐
+        │ Culto │    │ Pregador │    │ Resenha  │   │ Doutrina   │  │  Bíblia  │
+        │  QR   │    │  aliases │    │          │   │ 57 subtemas│  │   ACF    │
+        └───────┘    └──────────┘    └────┬─────┘   └────────────┘  └──────────┘
+                                          │
+                                          ▼
+                                   ┌─────────────┐
+                                   │  Devocional │ ──▶ página do livro
+                                   └─────────────┘
+```
+
+**O princípio que governa tudo:** nunca inventar. Quando o texto não diz quem
+pregou ou em que dia, o campo fica `null` e entra na fila de revisão manual —
+em vez de receber um chute que depois vira estatística.
+
+---
+
+## Comandos
+
+| comando | o que faz |
+|---|---|
+| `npm run dev` | servidor com recarga automática |
+| `npm test` | 84 testes |
+| `npm run ingerir` | busca no blog o que ainda não está no banco |
+| `npm run seed` | doutrinas, subtemas de Grudem, pregadores, admin |
+| `npm run seed:biblia` | importa a Bíblia ACF |
+| `npm run prisma:studio` | navegador do banco em :5555 |
+| `npm run build` | compila para `build/` |
+
+---
+
+## Documentação
+
+| documento | conteúdo |
+|---|---|
+| [docs/plano.md](docs/plano.md) | as 8 fases, o que está pronto e o que falta |
+| [docs/dados.md](docs/dados.md) | o que o acervo ensinou — e as armadilhas |
+| [docs/api.md](docs/api.md) | as rotas — ou abra `/api/v1/docs` |
+| [docs/operacao.md](docs/operacao.md) | deploy no EasyPanel, variáveis, proxy |
+| [CLAUDE.md](CLAUDE.md) | contexto para agentes de IA |
+
+---
+
+## Stack
+
+**Node 22** · **TypeScript 7** · **Express 5** · **Prisma 7** · **PostgreSQL 17**
+· **Zod** · **Vitest** · **node-cron** · **undici**
+
+Sem ORM alternativo, sem framework de teste pesado, sem dependência que uma
+função de dez linhas resolva. O código roda em um contêiner que sobe populado
+e se atualiza sozinho.
+
+---
+
+## Créditos
+
+**Igreja Batista do Parque Safira** — Muriaé, Minas Gerais
+Blog: [pregacoesibps.blogspot.com](https://pregacoesibps.blogspot.com)
+
+Pregações de **Pr. Nélio Monteiro**, **Pr. Gabriel Monteiro**, **Pr. Ryan Souza**
+e outros 48 pregadores ao longo de quinze anos.
+Resenhas redigidas por **Elizabete Lacerda Paulo**.
+
+Bíblia Almeida Corrigida Fiel via [thiagobodruk/biblia](https://github.com/thiagobodruk/biblia).
+Taxonomia doutrinária da *Teologia Sistemática* de **Wayne Grudem**.
+
+Desenvolvido por [Guilherme Saito](https://github.com/saitoboy).
+
+<div align="center">
+
+*"Tudo deve ser feito para edificação."* — 1 Coríntios 14:26
+
+</div>

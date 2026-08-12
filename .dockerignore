@@ -1,0 +1,12 @@
+node_modules
+build
+.git
+.env
+.env.*
+!.env.example
+.cache_blog
+legacy
+CONTEXTO
+output
+src/generated
+*.log
