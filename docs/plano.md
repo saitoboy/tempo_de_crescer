@@ -9,8 +9,8 @@ Oito fases. Três prontas, uma parcial, quatro pela frente.
 | 3    | Curadoria manual: pregador e data          | ✅ pronta   |
 | —   | Taxonomia de Grudem, 57 capítulos         | ✅ pronta   |
 | 4    | YouTube: casar culto com a live, QR code   | ✅ pronta   |
-| 5    | Classificação teológica                 | ⬜ próxima |
-| 6    | Geração dos devocionais                  | ⬜          |
+| 5    | Classificação teológica                 | ✅ pronta   |
+| 6    | Geração dos devocionais                  | ⬜ próxima |
 | 7    | Análise e front                           | ⬜          |
 | 8    | Montagem do livro                          | ⬜          |
 
@@ -124,7 +124,7 @@ Quando a assinatura da resenha e o título da live discordam sobre quem pregou,
 **nada é alterado** — a divergência é registrada para revisão humana. São duas
 fontes falíveis, e nenhuma é boa o bastante para calar a outra sozinha.
 
-## ⬜ Fase 5 — Classificação teológica
+## ✅ Fase 5 — Classificação teológica
 
 O risco central: **uma pregação pode citar Jesus do começo ao fim sem ser sobre
 cristologia**. Contagem absoluta de marcadores erra nesse caso.
@@ -140,9 +140,50 @@ Jesus, a média de cristologia já é alta, e citar Jesus muito vira normal.
 4. Tema principal: maior `z`. Secundários: até 2 com `z ≥ 1.0`
 5. Nenhum passa do mínimo → **indefinido**, vai para revisão
 
-Continua auditável: dá para mostrar densidade, média e desvio de cada decisão.
+Continua auditável: `Classificacao` guarda o z-score e a densidade de cada
+decisão.
 
-Com os 57 subtemas, a classificação ganha alvos finos além das 8 doutrinas.
+### Resultado sobre as 1.409
+
+`npm run classificar` — **1.138 classificadas**, 271 indefinidas.
+
+| doutrina | como tema principal |
+|---|---:|
+| Cristo | 192 |
+| Homem | 163 |
+| Salvação | 161 |
+| Igreja | 140 |
+| Últimas Coisas | 138 |
+| Palavra de Deus | 133 |
+| Deus | 125 |
+| Espírito Santo | 86 |
+
+Cristo lidera, mas com 17% — não engole tudo, que é o que aconteceria com
+contagem bruta. **É a prova de que a abordagem funciona.**
+
+Aferição por amostra: a pneumatologia pegou Atos 1, Atos 2, Romanos 8 e
+Efésios 1:13-14 (o selo do Espírito); a eclesiologia pegou as Ceias do Senhor.
+São os textos canônicos de cada doutrina.
+
+### Duas correções que a execução real expôs
+
+**`vida eterna` mandava João 3 para escatologia.** O texto do novo nascimento
+virava Últimas Coisas porque a expressão só valia para lá. Virou ambígua,
+resolvida por contexto: com "nascer de novo" perto, é Salvação; com "juízo",
+é escatologia. João 3:1-10 agora é Salvação (z=5,5) com Espírito Santo como
+secundário — a regeneração é obra do Espírito.
+
+**A desambiguação não rodava.** `santificação`, `fé` e `vida eterna` estavam
+nas regras mas em nenhuma lista de marcadores, e o código só desambiguava o
+que já estava numa lista — o mesmo defeito do classificador antigo, onde as
+regras existiam e nunca eram chamadas. Agora as ambíguas são varridas à parte.
+Corrigir isso levou as classificadas de 1.061 para 1.138.
+
+### Ainda por fazer
+
+Os 57 subtemas são alvos finos que o classificador ainda não usa. Detectar
+"trata de Justificação, capítulo 36" exige vocabulário por capítulo, não só
+por doutrina.
 
 ## ⬜ Fase 6 — Devocionais
 
