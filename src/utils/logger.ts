@@ -94,6 +94,49 @@ export const logDebug = (message: string, context?: string, data?: unknown): voi
   log('debug', message, context, data);
 
 // ──────────────────────────────────────────────────────────────────────────────
+// PROGRESSO
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Barra de progresso que se comporta conforme o destino da saída.
+ *
+ * No terminal, reescreve a mesma linha e fica animada. No log do contêiner,
+ * onde não há TTY, o `\r` não apaga nada e a linha vira um paredão do tipo
+ * "✓ 2000/31106 ✓ 4000/31106 ✓ 6000/31106..." — então lá ela imprime só
+ * marcos, de 25 em 25 por cento.
+ */
+export const progresso = (rotulo: string, total: number, context?: string) => {
+  const animado = Boolean(process.stdout.isTTY);
+  const largura = 24;
+  let ultimoMarco = 0;
+
+  return {
+    atualizar(feito: number) {
+      const fracao = total > 0 ? feito / total : 1;
+
+      if (animado) {
+        const cheio = Math.round(fracao * largura);
+        const barra = '█'.repeat(cheio) + '░'.repeat(largura - cheio);
+        const pct = String(Math.round(fracao * 100)).padStart(3);
+        process.stdout.write(`\r${colors.dim}   ${barra}${colors.reset} ${pct}% ${rotulo}`);
+        return;
+      }
+
+      const marco = Math.floor(fracao * 4); // 0, 25, 50, 75, 100%
+      if (marco > ultimoMarco) {
+        ultimoMarco = marco;
+        logInfo(`${rotulo}: ${Math.round(fracao * 100)}% (${feito}/${total})`, context);
+      }
+    },
+
+    concluir(mensagem: string) {
+      if (animado) process.stdout.write(`\r${' '.repeat(largura + 40)}\r`);
+      logSuccess(mensagem, context);
+    },
+  };
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
 // CLASSES DE ERRO
 // ──────────────────────────────────────────────────────────────────────────────
 

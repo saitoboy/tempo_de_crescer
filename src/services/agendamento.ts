@@ -36,10 +36,10 @@ export async function executarIngestao(): Promise<void> {
     const resultado = await ingerirNovos();
 
     if (resultado.novas === 0) {
-      logInfo(`nada novo (${resultado.noSitemap} posts no sitemap)`, CONTEXTO);
+      logInfo(`o blog não trouxe nada novo — ${resultado.noSitemap} resenhas já no banco`, CONTEXTO);
     } else {
       logSuccess(
-        `${resultado.gravadas} resenhas novas de ${resultado.novas} encontradas`,
+        `${resultado.gravadas} resenhas novas guardadas (de ${resultado.novas} encontradas no blog)`,
         CONTEXTO,
       );
     }

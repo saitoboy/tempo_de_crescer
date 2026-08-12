@@ -119,10 +119,37 @@ export async function listarUrls(): Promise<string[]> {
   return [...urls];
 }
 
-export async function baixarPost(url: string): Promise<PostBruto> {
-  const resposta = await fetch(url);
-  if (!resposta.ok) throw new Error(`post ${url}: HTTP ${resposta.status}`);
+/** Respostas que valem a pena tentar de novo: o blog está limitando a taxa. */
+const TENTAR_DE_NOVO = new Set([429, 500, 502, 503, 504]);
+const TENTATIVAS = 4;
 
+const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Busca uma página, insistindo quando o blog responde 503.
+ *
+ * Na carga inicial são 1409 páginas seguidas e o Blogger passa a recusar: sem
+ * insistir, 98 resenhas ficaram de fora. A espera dobra a cada tentativa
+ * (1s, 2s, 4s), o que basta para o blog voltar a responder.
+ */
+async function buscarComInsistencia(url: string): Promise<Response> {
+  let ultimoStatus = 0;
+
+  for (let tentativa = 0; tentativa < TENTATIVAS; tentativa++) {
+    if (tentativa > 0) await esperar(1000 * 2 ** (tentativa - 1));
+
+    const resposta = await fetch(url);
+    if (resposta.ok) return resposta;
+
+    ultimoStatus = resposta.status;
+    if (!TENTAR_DE_NOVO.has(resposta.status)) break;
+  }
+
+  throw new Error(`post ${url}: HTTP ${ultimoStatus}`);
+}
+
+export async function baixarPost(url: string): Promise<PostBruto> {
+  const resposta = await buscarComInsistencia(url);
   const pagina = await resposta.text();
   const corpo = extrairCorpo(pagina);
   if (!corpo) throw new Error(`post ${url}: post-body não encontrado`);

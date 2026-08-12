@@ -5,6 +5,7 @@ import { join } from 'path';
 import connection from '../connection';
 import type { PostBruto } from '../services/blog';
 import { carregarContexto, gravarPost, novaContagem } from '../services/ingestao';
+import { logInfo, logSuccess, logWarning, progresso } from '../utils/logger';
 
 /**
  * Carga inicial do acervo: 1409 posts, de 2012 a 2026.
@@ -28,12 +29,12 @@ async function main() {
   const contexto = await carregarContexto();
   const contagem = novaContagem();
 
+  const barra = progresso('resenhas do cache', posts.length, 'resenha');
   for (const post of posts) {
     await gravarPost(post, contexto, contagem);
-    if (contagem.gravadas % 100 === 0) {
-      process.stdout.write(`\r  ${contagem.gravadas}/${posts.length}`);
-    }
+    barra.atualizar(contagem.gravadas);
   }
+  barra.concluir(`${contagem.gravadas} resenhas processadas`);
 
   // Convidados que ficaram sem nenhuma resenha são sobra de uma carga anterior:
   // ou o nome era lixo que o parser aprendeu a rejeitar, ou virou alias de um
@@ -45,16 +46,21 @@ async function main() {
 
   const cultos = await connection.culto.count();
 
-  console.log(`\n\n✓ ${contagem.gravadas} resenhas`);
-  console.log(`  ${cultos} cultos`);
-  console.log(`  ${contagem.pregadoresNovos} pregadores novos cadastrados`);
-  console.log(`  ${orfaos.count} convidados sem resenha removidos`);
-  console.log(`  ${contagem.anosCorrigidos} anos corrigidos pelo dia da semana`);
-  console.log(`\n  incompletos, para revisão manual:`);
-  console.log(`    sem data      ${contagem.semData}`);
-  console.log(`    sem turno     ${contagem.semTurno}`);
-  console.log(`    sem pregador  ${contagem.semPregador}`);
-  console.log(`    sem referência bíblica ${contagem.semReferencia}`);
+  logSuccess(`${contagem.gravadas} resenhas e ${cultos} cultos no banco`, 'resenha');
+  if (contagem.pregadoresNovos > 0) {
+    logInfo(`${contagem.pregadoresNovos} pregadores novos cadastrados`, 'pregador');
+  }
+  if (orfaos.count > 0) logInfo(`${orfaos.count} convidados sem resenha removidos`, 'pregador');
+  if (contagem.anosCorrigidos > 0) {
+    logInfo(`${contagem.anosCorrigidos} anos corrigidos pelo dia da semana`, 'parser');
+  }
+
+  logWarning('o que ficou incompleto, para revisão manual:', 'resenha', {
+    'sem data': contagem.semData,
+    'sem turno': contagem.semTurno,
+    'sem pregador': contagem.semPregador,
+    'sem referência bíblica': contagem.semReferencia,
+  });
 }
 
 main()

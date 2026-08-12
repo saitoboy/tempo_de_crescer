@@ -1,5 +1,6 @@
 import connection from '../connection';
 import { baixarPost, listarUrls, type PostBruto } from './blog';
+import { progresso } from '../utils/logger';
 import { parsearResenha } from './parserResenha';
 import { chave, resolverPregador, type PregadorConhecido } from './pregadores';
 
@@ -163,7 +164,16 @@ export function urlsNovas(doSitemap: string[], jaNoBanco: string[]): string[] {
  * no primeiro arranque, em banco vazio, quando as 1409 páginas precisam ser
  * buscadas de uma vez.
  */
-const PARALELAS = 6;
+const PARALELAS = 4;
+
+/**
+ * Pausa entre lotes, para não levar 503 do blog.
+ *
+ * Na carga inicial são 1409 páginas em sequência. Sem pausa, o Blogger passou
+ * a recusar e 98 resenhas ficaram de fora. Junto com a insistência em
+ * `baixarPost`, isto mantém a carga completa.
+ */
+const PAUSA_ENTRE_LOTES_MS = 300;
 
 export type ResultadoIngestao = Contagem & {
   noSitemap: number;
@@ -196,6 +206,7 @@ export async function ingerirNovos(): Promise<ResultadoIngestao> {
 
   if (novas.length > 0) {
     const contexto = await carregarContexto();
+    const barra = progresso('resenhas', novas.length, 'ingestao');
 
     for (let i = 0; i < novas.length; i += PARALELAS) {
       const baixados = await Promise.all(
@@ -217,7 +228,12 @@ export async function ingerirNovos(): Promise<ResultadoIngestao> {
           falhas.push({ url: post.url, erro: (e as Error).message });
         }
       }
+
+      barra.atualizar(Math.min(i + PARALELAS, novas.length));
+      await new Promise((r) => setTimeout(r, PAUSA_ENTRE_LOTES_MS));
     }
+
+    barra.concluir(`${contagem.gravadas} resenhas gravadas`);
   }
 
   return { ...contagem, noSitemap: doSitemap.length, novas: novas.length, falhas };

@@ -1,5 +1,6 @@
 import connection from '../connection';
 import { TipoPregador } from '../generated/prisma/enums';
+import { logInfo, logSuccess, logWarning } from '../utils/logger';
 import { gerarHash } from '../utils/senha';
 
 /**
@@ -64,7 +65,7 @@ async function main() {
       create: doutrina,
     });
   }
-  console.log(`✓ ${DOUTRINAS.length} doutrinas`);
+  logSuccess(`${DOUTRINAS.length} doutrinas de Grudem prontas`, 'classificacao');
 
   for (const pregador of PREGADORES) {
     await connection.pregador.upsert({
@@ -73,7 +74,7 @@ async function main() {
       create: pregador,
     });
   }
-  console.log(`✓ ${PREGADORES.length} pregadores`);
+  logSuccess(`${PREGADORES.length} pregadores no cadastro`, 'pregador');
 
   await fundirDuplicados();
   await criarAdmin();
@@ -111,12 +112,12 @@ async function fundirDuplicados() {
         data: { pregadorId: destino.id },
       });
       await connection.pregador.delete({ where: { id: duplicado.id } });
-      console.log(`  ~ "${duplicado.nomeCanonico}" (${count}) → ${canonico.nomeCanonico}`);
+      logInfo(`"${duplicado.nomeCanonico}" (${count} resenhas) virou ${canonico.nomeCanonico}`, 'pregador');
       fundidos++;
     }
   }
 
-  if (fundidos > 0) console.log(`✓ ${fundidos} duplicados fundidos`);
+  if (fundidos > 0) logSuccess(`${fundidos} grafias duplicadas fundidas`, 'pregador');
 }
 
 /**
@@ -128,13 +129,13 @@ async function criarAdmin() {
   const senha = process.env.ADMIN_SENHA;
 
   if (!email || !senha) {
-    console.log('- ADMIN_EMAIL/ADMIN_SENHA não definidos no .env, admin não criado');
+    logWarning('sem ADMIN_EMAIL e ADMIN_SENHA no .env, nenhum administrador foi criado', 'auth');
     return;
   }
 
   const existente = await connection.usuario.findUnique({ where: { email } });
   if (existente) {
-    console.log(`- admin ${email} já existe, mantido como está`);
+    logInfo(`administrador ${email} já existe, senha preservada`, 'auth');
     return;
   }
 
@@ -146,7 +147,7 @@ async function criarAdmin() {
       papel: 'ADMIN',
     },
   });
-  console.log(`✓ admin ${email}`);
+  logSuccess(`administrador criado: ${email}`, 'auth');
 }
 
 main()

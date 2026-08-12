@@ -32,6 +32,8 @@ FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV TZ=America/Sao_Paulo
+ENV NPM_CONFIG_UPDATE_NOTIFIER=false
+ENV NPM_CONFIG_FUND=false
 
 # O CLI do Prisma fica na imagem de propósito: é ele que aplica as migrations
 # na partida. Por isso as dependências não são podadas.

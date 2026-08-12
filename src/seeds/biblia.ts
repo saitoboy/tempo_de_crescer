@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import connection from '../connection';
+import { logInfo, logSuccess, progresso } from '../utils/logger';
 import { aplicarProxy } from '../utils/proxy';
 
 /**
@@ -29,7 +30,7 @@ type LivroAcf = {
 
 async function baixarAcf(): Promise<LivroAcf[]> {
   const proxy = aplicarProxy();
-  if (proxy) console.log(`  via proxy ${proxy}`);
+  if (proxy) logInfo(`saindo pelo proxy ${proxy}`, 'proxy');
 
   const resposta = await fetch(FONTE);
   if (!resposta.ok) {
@@ -54,11 +55,11 @@ async function main() {
   // que já estão no banco só gastaria tempo e 3,9 MB de download.
   const jaImportados = await connection.versiculo.count();
   if (jaImportados === TOTAL_VERSICULOS && !process.argv.includes('--forcar')) {
-    console.log(`📖 Bíblia já importada (${jaImportados} versículos), nada a fazer`);
+    logSuccess(`Bíblia já está no banco, ${jaImportados} versículos — nada a fazer`, 'biblia');
     return;
   }
 
-  console.log('📖 Importando a Bíblia (ACF)');
+  logInfo('baixando a Almeida Corrigida Fiel...', 'biblia');
 
   const livros = await baixarAcf();
 
@@ -73,7 +74,7 @@ async function main() {
       testamento: indice + 1 <= ULTIMO_LIVRO_ANTIGO ? ('ANTIGO' as const) : ('NOVO' as const),
     })),
   });
-  console.log(`  ✓ ${livros.length} livros`);
+  logSuccess(`${livros.length} livros gravados`, 'biblia');
 
   const versiculos = livros.flatMap((livro, indice) =>
     livro.chapters.flatMap((capitulo, numeroCapitulo) =>
@@ -86,11 +87,12 @@ async function main() {
     ),
   );
 
+  const barra = progresso('versículos', versiculos.length, 'biblia');
   for (let i = 0; i < versiculos.length; i += TAMANHO_LOTE) {
     await connection.versiculo.createMany({ data: versiculos.slice(i, i + TAMANHO_LOTE) });
-    process.stdout.write(`\r  ✓ ${Math.min(i + TAMANHO_LOTE, versiculos.length)}/${versiculos.length} versículos`);
+    barra.atualizar(Math.min(i + TAMANHO_LOTE, versiculos.length));
   }
-  console.log('');
+  barra.concluir(`Bíblia completa: ${versiculos.length} versículos em ${livros.length} livros`);
 }
 
 main()
