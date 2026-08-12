@@ -173,6 +173,12 @@ model Resenha {
   pregadorBruto  String?
   pregadorOrigem OrigemPregador?
 
+  /// Quem redigiu e editou a resenha. Recebe crédito de redação no livro.
+  /// Hoje é sempre Elizabete Lacerda Paulo, que assina também como "Beth".
+  /// ponytail: coluna simples porque só há uma redatora; vira tabela própria
+  /// se aparecer uma segunda com aliases seus.
+  redator String?
+
   /// Referência bíblica extraída do título ("... - Lucas 2:41-52").
   textoBase  String?
   livro      String?

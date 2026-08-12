@@ -35,6 +35,10 @@ const PREGADORES: Array<{ nomeCanonico: string; tipo: TipoPregador; aliases: str
   { nomeCanonico: 'Jailson', tipo: 'PASTOR', aliases: ['jailson'] },
   { nomeCanonico: 'Daniel Monteiro', tipo: 'SEMINARISTA', aliases: ['daniel monteiro', 'daniel'] },
   { nomeCanonico: 'Jaine Feliciano', tipo: 'IRMAO', aliases: ['jaine feliciano', 'missionária jaine', 'missionaria jaine', 'jaine'] },
+
+  // Nomes que o blog escreve errado ou abreviado. O canônico é o correto.
+  { nomeCanonico: 'Guilherme de Souza Saito', tipo: 'IRMAO', aliases: ['guilherme saito', 'guilherme de souza saito', 'guilherme'] },
+  { nomeCanonico: 'Fernando Arêdes', tipo: 'PASTOR', aliases: ['fernando arede', 'fernando arêde', 'fernando aredes', 'fernando arêdes'] },
 ];
 
 async function main() {
