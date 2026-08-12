@@ -1,5 +1,6 @@
 import connection from '../connection';
 import { TipoPregador } from '../generated/prisma/enums';
+import { gerarHash } from '../utils/senha';
 
 /**
  * Seed fixo: as 8 doutrinas da Teologia Sistemática de Wayne Grudem
@@ -54,6 +55,38 @@ async function main() {
     });
   }
   console.log(`✓ ${PREGADORES.length} pregadores`);
+
+  await criarAdmin();
+}
+
+/**
+ * Cria o usuário administrador a partir do .env. Nunca sobrescreve a senha de
+ * um admin que já existe — rodar o seed de novo não reseta credencial.
+ */
+async function criarAdmin() {
+  const email = process.env.ADMIN_EMAIL;
+  const senha = process.env.ADMIN_SENHA;
+
+  if (!email || !senha) {
+    console.log('- ADMIN_EMAIL/ADMIN_SENHA não definidos no .env, admin não criado');
+    return;
+  }
+
+  const existente = await connection.usuario.findUnique({ where: { email } });
+  if (existente) {
+    console.log(`- admin ${email} já existe, mantido como está`);
+    return;
+  }
+
+  await connection.usuario.create({
+    data: {
+      email,
+      nome: process.env.ADMIN_NOME || 'Administrador',
+      senhaHash: gerarHash(senha),
+      papel: 'ADMIN',
+    },
+  });
+  console.log(`✓ admin ${email}`);
 }
 
 main()

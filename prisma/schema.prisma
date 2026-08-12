@@ -46,7 +46,30 @@ enum StatusDevocional {
   REVISADO
 }
 
+/// ADMIN faz tudo. PASTOR e LIDER só leem — o recorte fino do que cada um
+/// enxerga fica para depois; por ora o papel só está registrado.
+enum Papel {
+  ADMIN
+  PASTOR
+  LIDER
+}
+
 // ==================== MODELS ====================
+
+/// Quem acessa a API. Autenticação e autorização entram na Fase 7, junto com
+/// os endpoints que precisam ser protegidos — aqui só fica o cadastro.
+model Usuario {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  nome         String
+  senhaHash    String
+  papel        Papel    @default(LIDER)
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("usuario")
+}
 
 /// O culto ao vivo. Tem louvor, avisos e mais coisas além da pregação —
 /// por isso é separado da Resenha. O QR code do livro aponta para `youtubeUrl`.
