@@ -127,3 +127,6 @@ $RECYCLE.BIN/
 *.pem
 *.key
 *.crt
+
+# Cache local dos posts do blog
+.cache_blog/
