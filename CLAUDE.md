@@ -299,6 +299,36 @@ escatológica da igreja ao longo do tempo.
 
 ---
 
+## Deploy (EasyPanel)
+
+O `Dockerfile` produz uma imagem que **sobe populada**, sem passo manual:
+
+1. `prisma migrate deploy` aplica as migrations já criadas
+2. `seed.js` grava as 8 doutrinas, os pregadores canônicos e o admin
+3. `biblia.js` importa a ACF — e pula quando os 31.106 versículos já estão lá
+4. o servidor sobe e dispara `executarIngestao()` em segundo plano, que num
+   banco vazio carrega as 1409 resenhas e num banco cheio não baixa nada
+
+Todos os passos são idempotentes: reiniciar o contêiner não duplica nada.
+A ingestão roda fora do caminho do boot de propósito — se o blog ou o proxy
+estiverem fora, o servidor sobe assim mesmo.
+
+No EasyPanel: serviço PostgreSQL separado, aplicação apontando para este
+Dockerfile, e as variáveis abaixo no painel. `DATABASE_URL` usa o nome do
+serviço de banco como host.
+
+Detalhes que custaram tempo e não podem ser desfeitos sem quebrar produção:
+
+- O generator do Prisma 7 precisa de `moduleFormat = "cjs"`. Sem isso o client
+  sai em ESM, usa `import.meta`, e o build compilado quebra com `node`. O tsx
+  disfarça em desenvolvimento — o erro só aparece no contêiner.
+- O estágio de build define um `DATABASE_URL` de mentira. O `prisma.config.ts`
+  exige a variável só para carregar; `generate` não conecta em banco nenhum.
+- `prisma generate` roda **depois** de copiar o `src`, porque o client é
+  gerado dentro de `src/generated`.
+- O CLI do Prisma fica na imagem final de propósito: é ele que aplica as
+  migrations na partida. Por isso as dependências não são podadas.
+
 ## Variáveis de ambiente
 
 ```

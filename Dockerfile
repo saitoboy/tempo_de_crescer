@@ -16,6 +16,12 @@ COPY prisma ./prisma
 COPY prisma.config.ts tsconfig.json ./
 COPY src ./src
 
+# prisma.config.ts exige DATABASE_URL só para carregar. `generate` não conecta
+# em banco nenhum — lê o schema e escreve o client — mas o config falha antes
+# disso se a variável não existir. Este valor vale só neste estágio; quem roda
+# de verdade é o runtime, com a variável do EasyPanel.
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
+
 # Gera depois de copiar o src: o client sai em src/generated/prisma, e copiar
 # o src por cima de uma geração anterior é pedir confusão.
 RUN npx prisma generate
