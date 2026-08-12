@@ -5,6 +5,9 @@ import cors from 'cors';
 import { AddressInfo } from 'net';
 import connection from './connection';
 import { config } from './config';
+import { tratarErros } from './middlewares/erros';
+import { rotasPregadores } from './routes/pregadores';
+import { rotasResenhas } from './routes/resenhas';
 import { agendarIngestao, executarIngestao } from './services/agendamento';
 import { logInfo, logSuccess } from './utils/logger';
 import { aplicarProxy } from './utils/proxy';
@@ -12,6 +15,9 @@ import { aplicarProxy } from './utils/proxy';
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+app.use('/resenhas', rotasResenhas);
+app.use('/pregadores', rotasPregadores);
 
 app.get('/health', async (_req: Request, res: Response) => {
   try {
@@ -25,6 +31,9 @@ app.get('/health', async (_req: Request, res: Response) => {
     res.status(500).json({ ok: false, erro: (e as Error).message });
   }
 });
+
+// Depois das rotas, senão o Express não o reconhece como tratador de erro.
+app.use(tratarErros);
 
 const server = app.listen(config.PORT, () => {
   const address = server.address() as AddressInfo;

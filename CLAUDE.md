@@ -270,9 +270,34 @@ A lógica de gravação vive em `src/services/ingestao.ts` e é a mesma da carga
 inicial — só muda de onde vêm os posts (cache em disco na carga, blog na
 incremental).
 
-**Fase 3 — Pregador**
-Parser da assinatura no fim do texto, resolução de aliases para nome canônico,
-endpoint `PATCH /resenhas/:id/pregador` para as 82 pendentes.
+**Fase 3 — Curadoria manual (feita)**
+
+Rotas para corrigir o que a ingestão não conseguiu completar: 40 resenhas sem
+pregador e 297 sem data.
+
+| rota | o que faz |
+|---|---|
+| `GET /resenhas/pendentes` | a fila de revisão; filtros `semPregador`, `semData`, `ano` |
+| `GET /resenhas` | listagem, filtros `ano` e `pregadorId` |
+| `GET /resenhas/:id` | uma resenha com culto, classificação e devocional |
+| `PATCH /resenhas/:id` | corrige pregador, data, turno e natureza |
+| `GET /pregadores` | cadastro com a contagem de resenhas |
+| `POST /pregadores` | cadastra |
+| `POST /pregadores/:id/fundir` | funde duas grafias da mesma pessoa |
+
+Decisões que valem manter:
+
+- **Leitura aberta, escrita com token.** O conteúdo já é público no blog; a
+  escrita não pode ficar solta num host público. `API_TOKEN` no ambiente,
+  comparado em tempo constante. É provisório — o login por usuário e senha,
+  com os papéis que já estão no schema, entra na Fase 7 e substitui isto.
+- **Correção manual não inventa pregador.** Nome que não resolve pelos aliases
+  é recusado, com sugestão de quem se parece; cadastrar gente nova exige
+  `criarSeNaoExistir: true`. Sem essa trava, um erro de digitação numa
+  correção recria o problema que encheu o banco de "Deus" e "Nélio Monteiro
+  Noite" — e foi exatamente o que aconteceu no primeiro teste da rota.
+- **O que vem da API é marcado `MANUAL`**, separado do que o parser extraiu
+  do texto (`TEXTO`). A análise pode distinguir o confirmado do deduzido.
 
 **Fase 4 — YouTube e QR**
 Casar culto com stream do canal por data e horário via YouTube Data API.

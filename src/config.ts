@@ -21,6 +21,12 @@ const esquema = z.object({
   /** Expressão cron da ingestão. "off" desliga o agendamento. */
   CRON_INGESTAO: z.string().default('0 */4 * * *'),
 
+  /**
+   * Token das rotas de escrita. Sem ele, escrever fica bloqueado.
+   * Substituído por login de verdade na Fase 7.
+   */
+  API_TOKEN: z.string().min(16, 'use ao menos 16 caracteres').optional().or(z.literal('')),
+
   YOUTUBE_API_KEY: z.string().optional(),
   CHANNEL_HANDLE: z.string().default('@ibps.muriae'),
 
