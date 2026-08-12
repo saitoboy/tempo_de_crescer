@@ -279,12 +279,29 @@ model Devocional {
   resenhaId String  @unique
   resenha   Resenha @relation(fields: [resenhaId], references: [id], onDelete: Cascade)
 
-  titulo       String
-  textoBiblico String?
-  corpo        String
-  oracao       String?
+  /// Os campos abaixo são exatamente os blocos da página do livro —
+  /// ver CONTEXTO/modelo-pagina.jpeg.
+
+  /// Título em caixa alta no topo da página.
+  titulo String
+
+  /// Referência do versículo em destaque ("Salmos 23:1"). Pode ser mais
+  /// específica que a da resenha: a pregação foi sobre o Salmo 23 inteiro,
+  /// a página destaca o versículo 1.
+  referencia String?
+  /// Texto do versículo, impresso em itálico sob o título. Vem da tabela
+  /// Versiculo quando a referência resolve.
+  versiculo  String?
+
+  /// O bloco "REFLEXÃO DEVOCIONAL".
+  reflexao String
+  /// O bloco "PONTOS DE APLICAÇÃO PRÁTICA", um item por marcador.
+  pontosAplicacao String[]
+  /// O bloco "ORAÇÃO", em primeira pessoa do plural, como no modelo.
+  oracao String?
 
   status StatusDevocional @default(GERADO)
+  /// Quem escreveu: "claude-opus-5", "revisao-humana"...
   modelo String?
 
   geradoEm     DateTime @default(now())

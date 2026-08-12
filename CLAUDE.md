@@ -181,8 +181,10 @@ Classificacao
   resenhaId, doutrinaId, papel (PRINCIPAL | SECUNDARIO)
   zscore, densidade, subtemasDetectados (json)
 
-Devocional
-  resenhaId (unique), titulo, textoBiblico?, corpo, oracao?
+Devocional                               <- os campos são os blocos da página
+  resenhaId (unique), titulo
+  referencia?, versiculo?                <- versículo em destaque e seu texto
+  reflexao, pontosAplicacao[], oracao?
   status (GERADO | REVISADO), modelo, geradoEm
 ```
 
@@ -308,8 +310,19 @@ apontando para o vídeo.
 Implementar o score relativo, gravar tema principal, secundários e z-score.
 
 **Fase 6 — Devocional**
-Fila `Devocional.status = PENDENTE` consumida por um runner local que chama o
-Claude Code CLI em lote e grava o resultado. Estilo de escrita: Grudem como referência.
+
+A fila são as resenhas sem devocional, consumida por um runner local que chama
+o Claude Opus pelo CLI, em lote, e grava o resultado.
+
+**Dois autores, dois papéis — não confundir:**
+
+- **Grudem** é a referência de *classificação*: a taxonomia das 8 doutrinas.
+- **Tozer** é a referência de *escrita*: como o devocional deve soar.
+
+A amostra de estilo, a anatomia da página e a origem de cada bloco estão em
+`CONTEXTO/referencia-de-escrita.md`, com o escaneado em
+`CONTEXTO/modelo-pagina.jpeg`. Os campos de `Devocional` espelham os blocos da
+página um a um, de propósito.
 
 **Fase 7 — Análise**
 Endpoints de análise (temas por ano, por pregador, cobertura bíblica, progressão
