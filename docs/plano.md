@@ -8,8 +8,8 @@ Oito fases. Três prontas, uma parcial, quatro pela frente.
 | 2    | Ingestão incremental agendada             | ✅ pronta   |
 | 3    | Curadoria manual: pregador e data          | ✅ pronta   |
 | —   | Taxonomia de Grudem, 57 capítulos         | ✅ pronta   |
-| 4    | YouTube: casar culto com a live, QR code   | ⬜ próxima |
-| 5    | Classificação teológica                 | ⬜          |
+| 4    | YouTube: casar culto com a live, QR code   | ✅ pronta   |
+| 5    | Classificação teológica                 | ⬜ próxima |
 | 6    | Geração dos devocionais                  | ⬜          |
 | 7    | Análise e front                           | ⬜          |
 | 8    | Montagem do livro                          | ⬜          |
@@ -66,17 +66,51 @@ Fonte: relação de aulas do próprio autor em `waynegrudem.com`.
 
 ---
 
-## ⬜ Fase 4 — YouTube e QR code
+## ✅ Fase 4 — YouTube e QR code
 
-Casar cada culto com a live do canal [@ibps.muriae](https://www.youtube.com/@ibps.muriae/streams).
+`npm run youtube` casa cada culto com a transmissão do canal.
 
-- Buscar as lives por data e horário pela YouTube Data API
-- Confirmar ou corrigir pregador e data pelo título da live
-- Gravar `youtubeVideoId` e `youtubeUrl` no `Culto`
-- Gerar o QR code que vai na página do livro
+- [x] 934 vídeos lidos, com o **horário real** da live (`actualStartTime`)
+- [x] **620 dos 1.026 cultos** ganharam vídeo — 60%
+- [x] Pregador extraído do título da live
+- [x] QR code em SVG, gerado sob demanda
 
-Resolve parte das 297 resenhas sem data — mas só de 2020 em diante, quando o
-canal passou a transmitir. Para 2012–2016 não há live.
+### O horário da live dá o turno
+
+O YouTube devolve UTC; convertido para São Paulo, o culto da manhã começa por
+volta das 09h30 e o da noite às 19h20. A conversão importa: sem ela, um culto
+de domingo à noite viraria segunda-feira.
+
+### O pregador está no título
+
+```
+SEMENTES I Pr. Nélio Monteiro
+```
+
+O separador é um **I maiúsculo isolado**, não uma barra vertical. Preencheu 5
+resenhas que estavam sem assinatura.
+
+### Cobertura por ano
+
+| ano | cultos | com vídeo |
+|---|---:|---:|
+| 2012–2019 | 291 | 0 |
+| 2020 | 108 | 12 |
+| 2021 | 108 | 102 |
+| 2022 | 99 | 97 |
+| 2023 | 77 | 77 |
+| 2024 | 125 | 123 |
+| 2025 | 134 | 131 |
+| 2026 | 84 | 78 |
+
+O canal começou a transmitir em 2020, na pandemia. Antes disso não há live, e
+nenhuma quantidade de código resolve isso.
+
+### Divergência não sobrescreve
+
+Quando a assinatura da resenha e o título da live discordam sobre quem pregou,
+**nada é alterado** — a divergência é registrada para revisão humana. São duas
+fontes falíveis, e nenhuma é boa o bastante para calar a outra sozinha.
 
 ## ⬜ Fase 5 — Classificação teológica
 
@@ -128,6 +162,22 @@ confiáveis; a classificação usa as 1.409, porque não depende de data.
 - Seleção manual de quais devocionais entram
 - Diagramação A5, com o QR code do culto em cada página
 - Crédito de redação a Elizabete Lacerda Paulo
+
+### Dois formatos de saída
+
+| formato | para quê |
+|---|---|
+| **PDF** | ver o resultado, revisar, imprimir prova |
+| **`.idml`** | abrir no InDesign e o designer refinar o que falta |
+
+O `.idml` é o que fecha o ciclo: o backend gera a diagramação base — texto nos
+blocos certos, QR no lugar, paginação — e o designer recebe um arquivo **vivo**,
+não uma imagem achatada. Ele ajusta tipografia, viúvas e órfãs, respiros, e
+manda para a gráfica.
+
+`.idml` é um pacote ZIP de XML, então dá para gerar sem InDesign: monta-se a
+estrutura a partir de um template exportado uma vez pelo designer, com os
+blocos de `Devocional` preenchendo os quadros de texto nomeados.
 
 ## 🔭 Depois
 

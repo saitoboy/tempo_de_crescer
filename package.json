@@ -19,7 +19,8 @@
     "baixar:posts": "tsx src/scripts/baixarPosts.ts",
     "ingerir": "tsx src/scripts/ingerir.ts",
     "db:up": "docker compose up -d",
-    "db:down": "docker compose down"
+    "db:down": "docker compose down",
+    "youtube": "tsx src/scripts/casarYoutube.ts"
   },
   "repository": {
     "type": "git",
@@ -40,6 +41,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "node-cron": "^4.6.0",
+    "qrcode": "^1.5.4",
     "swagger-ui-express": "^5.0.1",
     "undici": "^8.10.0",
     "zod": "^4.4.3"
@@ -49,6 +51,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.2.0",
     "@types/node-cron": "^3.0.11",
+    "@types/qrcode": "^1.5.6",
     "@types/swagger-ui-express": "^4.1.8",
     "prisma": "^7.9.1",
     "tsx": "^4.23.12",

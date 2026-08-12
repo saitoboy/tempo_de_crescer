@@ -8,6 +8,7 @@ import swaggerUi from 'swagger-ui-express';
 import { config } from './config';
 import { BASE, especificacao } from './docs/openapi';
 import { tratarErros } from './middlewares/erros';
+import { rotasCultos } from './routes/cultos';
 import { rotasPregadores } from './routes/pregadores';
 import { rotasResenhas } from './routes/resenhas';
 import { agendarIngestao, executarIngestao } from './services/agendamento';
@@ -40,6 +41,7 @@ async function saude(_req: Request, res: Response) {
 app.get('/health', saude);
 app.get(`${BASE}/health`, saude);
 
+app.use(`${BASE}/cultos`, rotasCultos);
 app.use(`${BASE}/resenhas`, rotasResenhas);
 app.use(`${BASE}/pregadores`, rotasPregadores);
 

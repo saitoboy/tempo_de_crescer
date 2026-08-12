@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { filtroCultos } from '../routes/cultos';
 import { fusaoPregador, novoPregador } from '../routes/pregadores';
 import { correcaoResenha, filtroListagem, filtroPendentes } from '../routes/resenhas';
 
@@ -100,6 +101,7 @@ export const especificacao = {
   tags: [
     { name: 'Saúde', description: 'Estado do serviço' },
     { name: 'Resenhas', description: 'O texto publicado no blog sobre cada culto' },
+    { name: 'Cultos', description: 'O encontro, com a transmissão e o QR code' },
     { name: 'Pregadores', description: 'Quem pregou, com as grafias que o blog usa' },
   ],
   components: {
@@ -176,6 +178,33 @@ export const especificacao = {
         parameters: [idNaRota],
         requestBody: corpo(correcaoResenha),
         responses: { 200: { description: 'Resenha corrigida' }, ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/cultos': {
+      get: {
+        tags: ['Cultos'],
+        summary: 'Listagem de cultos',
+        description: 'Filtra por ano, turno, natureza e presença de vídeo.',
+        parameters: parametrosDeQuery(filtroCultos),
+        responses: { 200: { description: 'Página de cultos' } },
+      },
+    },
+
+    '/cultos/{id}/qrcode.svg': {
+      get: {
+        tags: ['Cultos'],
+        summary: 'QR code do culto, em SVG',
+        description: [
+          'Aponta para a transmissão no YouTube. Gerado na hora, não guardado:',
+          'a imagem é função da URL, e guardar arquivo só criaria a chance de',
+          'ele ficar desatualizado. SVG porque a página do livro é impressa.',
+        ].join(' '),
+        parameters: [idNaRota],
+        responses: {
+          200: { description: 'O QR code', content: { 'image/svg+xml': { schema: { type: 'string' } } } },
+          404: respostaErro('Culto não encontrado, ou sem vídeo no YouTube'),
+        },
       },
     },
 
