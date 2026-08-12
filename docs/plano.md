@@ -73,7 +73,19 @@ Fonte: relação de aulas do próprio autor em `waynegrudem.com`.
 - [x] 934 vídeos lidos, com o **horário real** da live (`actualStartTime`)
 - [x] **620 dos 1.026 cultos** ganharam vídeo — 60%
 - [x] Pregador extraído do título da live
-- [x] QR code em SVG, gerado sob demanda
+- [x] QR code em SVG, **guardado no banco** — 620 códigos, 1,4 MB no total
+
+### O QR fica guardado
+
+2,4 KB por culto em SVG. Guardado, e não gerado a cada leitura, porque a
+montagem do livro empacota centenas de páginas de uma vez para o designer —
+regerar tudo nessa hora seria desperdício, e guardar garante que o arquivo
+entregue e o banco mostrem o mesmo código.
+
+**SVG cru, não base64 de PNG:** é vetor, não perde na impressão em A5 e ocupa
+menos. A API devolve a forma embutível (`data:image/svg+xml;base64,…`) na
+listagem, que é o que o front e o InDesign consomem; a rota `qrcode.svg`
+devolve o vetor puro.
 
 ### O horário da live dá o turno
 

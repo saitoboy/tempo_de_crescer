@@ -118,6 +118,16 @@ model Culto {
   youtubeUrl     String?
   tituloLive     String?
 
+  /// QR code da transmissão, em SVG.
+  ///
+  /// Guardado em vez de gerado a cada leitura porque a montagem do livro vai
+  /// empacotar as páginas para o designer, e regerar centenas na hora seria
+  /// desperdício. SVG cru, não base64 de PNG: é vetor, não perde na impressão
+  /// em A5, ocupa menos, e virar `data:` URI é uma linha.
+  ///
+  /// Cerca de 2,4 KB cada; nos 620 cultos com vídeo, ~1,5 MB no total.
+  qrcodeSvg String?
+
   resenhas     Resenha[]
   criadoEm     DateTime  @default(now())
   atualizadoEm DateTime  @updatedAt

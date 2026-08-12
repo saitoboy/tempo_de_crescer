@@ -129,6 +129,33 @@ Sem essa trava, um erro de digitação recria o problema que encheu o banco de
 
 ---
 
+## Cultos
+
+### `GET /api/v1/cultos`
+
+Filtros: `ano`, `turno` (`DIA`/`NOITE`), `natureza`, `comVideo`, `pagina`, `porPagina`.
+
+Cada culto vem com as resenhas dele e com `qrcode` já em forma embutível:
+
+```json
+{
+  "data": "2026-08-09T00:00:00.000Z",
+  "turno": "NOITE",
+  "natureza": "CULTO",
+  "youtubeUrl": "https://www.youtube.com/watch?v=CqiCTBDIRVc",
+  "tituloLive": "AINDA HÁ LUGAR  I Pr. Nélio Monteiro",
+  "qrcode": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0i…",
+  "resenhas": [{ "titulo": "Ainda há lugar.", "textoBase": "Lucas 14:12-15" }]
+}
+```
+
+### `GET /api/v1/cultos/:id/qrcode.svg`
+
+O QR da transmissão, em SVG puro — para imprimir no livro.
+Devolve **404** quando o culto não tem vídeo (todos antes de 2020).
+
+---
+
 ## Pregadores
 
 ### `GET /api/v1/pregadores`

@@ -20,7 +20,8 @@
     "ingerir": "tsx src/scripts/ingerir.ts",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
-    "youtube": "tsx src/scripts/casarYoutube.ts"
+    "youtube": "tsx src/scripts/casarYoutube.ts",
+    "qrcodes": "tsx src/scripts/gerarQrCodes.ts"
   },
   "repository": {
     "type": "git",

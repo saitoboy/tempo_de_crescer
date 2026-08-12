@@ -1,6 +1,7 @@
 import connection from '../connection';
 import { logInfo, logSuccess, logWarning, progresso } from '../utils/logger';
 import { resolverPregador } from './pregadores';
+import { gerarSvg } from './qrcode';
 import { listarVideos, type VideoDoCanal } from './youtube';
 
 /**
@@ -79,7 +80,13 @@ async function casarUm(
   if (!culto.youtubeVideoId) {
     await connection.culto.update({
       where: { id: culto.id },
-      data: { youtubeVideoId: video.videoId, youtubeUrl: video.url, tituloLive: video.titulo },
+      data: {
+        youtubeVideoId: video.videoId,
+        youtubeUrl: video.url,
+        tituloLive: video.titulo,
+        // Gerado junto: o culto nunca fica com vídeo e sem QR.
+        qrcodeSvg: await gerarSvg(video.url),
+      },
     });
     resultado.cultosCasados++;
   }

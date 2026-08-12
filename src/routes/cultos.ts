@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import QRCode from 'qrcode';
 import { z } from 'zod';
 import connection from '../connection';
 import { assincrono } from '../middlewares/erros';
+import { comoDataUri, gerarSvg } from '../services/qrcode';
 import { NotFoundError } from '../utils/logger';
 
 export const rotasCultos = Router();
@@ -52,6 +52,7 @@ rotasCultos.get(
           natureza: true,
           youtubeUrl: true,
           tituloLive: true,
+          qrcodeSvg: true,
           resenhas: {
             select: {
               id: true,
@@ -64,7 +65,18 @@ rotasCultos.get(
       }),
     ]);
 
-    res.json({ total, pagina, porPagina, paginas: Math.ceil(total / porPagina), cultos });
+    res.json({
+      total,
+      pagina,
+      porPagina,
+      paginas: Math.ceil(total / porPagina),
+      // O SVG cru não vai na listagem: são 2,4 KB por culto e inflaria a
+      // resposta. Vai a forma embutível, que é o que o front e o InDesign usam.
+      cultos: cultos.map(({ qrcodeSvg, ...culto }) => ({
+        ...culto,
+        qrcode: qrcodeSvg ? comoDataUri(qrcodeSvg) : null,
+      })),
+    });
   }),
 );
 
@@ -82,7 +94,7 @@ rotasCultos.get(
 
     const culto = await connection.culto.findUnique({
       where: { id },
-      select: { youtubeUrl: true, data: true },
+      select: { youtubeUrl: true, data: true, qrcodeSvg: true },
     });
     if (!culto) throw new NotFoundError(`Culto ${id} não encontrado`);
 
@@ -92,13 +104,8 @@ rotasCultos.get(
       );
     }
 
-    const svg = await QRCode.toString(culto.youtubeUrl, {
-      type: 'svg',
-      margin: 1,
-      // Alta correção de erro: o QR vai impresso e pode ser lido de papel
-      // dobrado, com tinta falhada ou luz ruim.
-      errorCorrectionLevel: 'H',
-    });
+    // Serve o guardado; gera na hora só se este culto ainda não tiver o seu.
+    const svg = culto.qrcodeSvg ?? (await gerarSvg(culto.youtubeUrl));
 
     res.type('image/svg+xml').send(svg);
   }),
