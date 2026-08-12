@@ -98,6 +98,49 @@ Sondagem feita sobre os 956 registros existentes (2016–2026):
 
 Cultos acontecem às **quartas**, **domingo de manhã** e **domingo à noite**.
 
+### O acervo real é maior do que os JSONs antigos
+
+Os JSONs em `legacy/` têm 956 registros. **O blog tem 1409 posts.** O scraper antigo
+perdeu quase um terço do acervo.
+
+Contagem por ano, confirmada por duas fontes independentes (o widget de arquivo do blog
+e o `sitemap.xml`):
+
+| 2016 | 2017 | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|------|------|------|------|------|------|------|------|------|------|------|
+| 320  | 125  | 98   | 82   | 117  | 111  | 103  | 86   | 134  | 145  | 88   |
+
+**`https://pregacoesibps.blogspot.com/sitemap.xml` é a fonte canônica de enumeração.**
+Vem paginado em `?page=1` e `?page=2` e bate exatamente com o arquivo do blog.
+
+O feed JSON do Blogger (`/feeds/posts/default?alt=json`) é tentador — devolve título,
+data e conteúdo estruturados — mas **não devolve tudo**: a paginação por `start-index`
+traz 1285 e a busca por faixa de data traz números ainda diferentes, com o buraco todo
+em 2017–2019. Serve para inspeção rápida, não para ingestão.
+
+### 2016 usa outro formato
+
+Quase todo post de 2016 é pregação, mas sem o cabeçalho padrão. O título é a referência
+bíblica (`Josué 10:13-14 e Lucas 2:8-12`) e o texto começa direto no tema. O formato só
+se padroniza a partir de 2019. Filtrar por "Resenha do Culto" descarta 296 dos 320 posts
+de 2016 — **não usar esse filtro**.
+
+Variações do cabeçalho ao longo dos anos: `Resenha do Culto da noite de Domingo`,
+`Resenha da Manhã de`, `Culto da Noite de`, `Resenha da Vigília de Ano Novo`,
+`EBD da Manhã de Domingo`, `Reflexão de sexta-feira`. As duas últimas **não são culto**.
+
+A data e o tipo de culto aparecem ora no início, ora no fim do texto.
+
+### Cuidado ao limpar o HTML
+
+O blog tem tags no meio das palavras (resquício de edição no editor do Blogger). Trocar
+tag por espaço produz `R esenha`, `Rese nha` e datas como `1 9/10/2025`. **Remover as
+tags inline sem inserir espaço**; só `<br>`, `<p>`, `<div>` e cabeçalhos viram quebra
+de linha.
+
+O HTML da página renderizada vem em UTF-8 correto — o mojibake dos JSONs antigos era
+defeito do scraper, não do blog.
+
 ---
 
 ## Modelo de dados (rascunho)
@@ -124,6 +167,15 @@ Pregador
 
 Doutrina                                 <- seed fixo: as 8 de Grudem
   id, numero (1-8), nome, perguntaCentral
+
+Usuario
+  id, email (unique), nome, senhaHash, papel (ADMIN | PASTOR | LIDER), ativo
+
+LivroBiblico                             <- ACF completa, 66 livros
+  id (1-66, ordem canônica), abbrev, nome, testamento (ANTIGO | NOVO)
+
+Versiculo                                <- 31.106 linhas
+  livroId, capitulo, numero, texto
 
 Classificacao
   resenhaId, doutrinaId, papel (PRINCIPAL | SECUNDARIO)
@@ -194,9 +246,18 @@ pregador é de **análise** (agregar temas por quem pregou), não de baseline.
 - [x] Schema modelado, client gerado
 - [x] `docker-compose.yml` com Postgres 17
 - [x] Seed das 8 doutrinas de Grudem + 8 pregadores com aliases
-- [ ] Rodar a primeira migration (precisa do banco de pé)
-- [ ] Re-raspar as 956 resenhas com Firecrawl e gravar no banco
-- [ ] Validar: contagem por ano bate com os JSONs de `legacy/`, zero mojibake
+- [x] Migration aplicada no Postgres local
+- [x] Vitest configurado
+- [x] Bíblia ACF importada: 66 livros, 31.106 versículos
+- [x] Proxy corporativo funcionando (`aplicarProxy()` com undici)
+- [ ] Ingerir os **1409** posts do blog (não 956) e gravar no banco
+- [ ] Validar: contagem por ano bate com o `sitemap.xml`, zero mojibake
+
+### Proxy corporativo
+
+A rede exige proxy autenticado. Sem ele, chamadas externas voltam **407**.
+Qualquer script que use rede tem de chamar `aplicarProxy()` antes do primeiro `fetch` —
+inclusive o MCP do Firecrawl, que **não** passa pelo proxy e por isso falha aqui.
 
 **Fase 2 — Ingestão incremental**
 Job que busca só o que ainda não está no banco (dedupe por `urlBlog`) e insere.
