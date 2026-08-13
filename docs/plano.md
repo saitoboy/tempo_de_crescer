@@ -1,6 +1,6 @@
 # Plano de implementação
 
-Oito fases. Três prontas, uma parcial, quatro pela frente.
+Oito fases. Sete prontas no backend; falta o front.
 
 | fase | o que é                                   | estado      |
 | ---- | ------------------------------------------ | ----------- |
@@ -9,10 +9,10 @@ Oito fases. Três prontas, uma parcial, quatro pela frente.
 | 3    | Curadoria manual: pregador e data          | ✅ pronta   |
 | —   | Taxonomia de Grudem, 57 capítulos         | ✅ pronta   |
 | 4    | YouTube: casar culto com a live, QR code   | ✅ pronta   |
-| 5    | Classificação teológica                 | ⬜ próxima |
-| 6    | Geração dos devocionais                  | ⬜          |
-| 7    | Análise e front                           | ⬜          |
-| 8    | Montagem do livro                          | ⬜          |
+| 5    | Classificação teológica                 | ✅ pronta   |
+| 6    | Geração dos devocionais                  | ✅ pronta   |
+| 7    | Análise e login                            | ✅ backend  |
+| 8    | Montagem do livro                          | ✅ pronta   |
 
 ---
 
@@ -124,7 +124,7 @@ Quando a assinatura da resenha e o título da live discordam sobre quem pregou,
 **nada é alterado** — a divergência é registrada para revisão humana. São duas
 fontes falíveis, e nenhuma é boa o bastante para calar a outra sozinha.
 
-## ⬜ Fase 5 — Classificação teológica
+## ✅ Fase 5 — Classificação teológica
 
 O risco central: **uma pregação pode citar Jesus do começo ao fim sem ser sobre
 cristologia**. Contagem absoluta de marcadores erra nesse caso.
@@ -140,11 +140,52 @@ Jesus, a média de cristologia já é alta, e citar Jesus muito vira normal.
 4. Tema principal: maior `z`. Secundários: até 2 com `z ≥ 1.0`
 5. Nenhum passa do mínimo → **indefinido**, vai para revisão
 
-Continua auditável: dá para mostrar densidade, média e desvio de cada decisão.
+Continua auditável: `Classificacao` guarda o z-score e a densidade de cada
+decisão.
 
-Com os 57 subtemas, a classificação ganha alvos finos além das 8 doutrinas.
+### Resultado sobre as 1.409
 
-## ⬜ Fase 6 — Devocionais
+`npm run classificar` — **1.138 classificadas**, 271 indefinidas.
+
+| doutrina | como tema principal |
+|---|---:|
+| Cristo | 192 |
+| Homem | 163 |
+| Salvação | 161 |
+| Igreja | 140 |
+| Últimas Coisas | 138 |
+| Palavra de Deus | 133 |
+| Deus | 125 |
+| Espírito Santo | 86 |
+
+Cristo lidera, mas com 17% — não engole tudo, que é o que aconteceria com
+contagem bruta. **É a prova de que a abordagem funciona.**
+
+Aferição por amostra: a pneumatologia pegou Atos 1, Atos 2, Romanos 8 e
+Efésios 1:13-14 (o selo do Espírito); a eclesiologia pegou as Ceias do Senhor.
+São os textos canônicos de cada doutrina.
+
+### Duas correções que a execução real expôs
+
+**`vida eterna` mandava João 3 para escatologia.** O texto do novo nascimento
+virava Últimas Coisas porque a expressão só valia para lá. Virou ambígua,
+resolvida por contexto: com "nascer de novo" perto, é Salvação; com "juízo",
+é escatologia. João 3:1-10 agora é Salvação (z=5,5) com Espírito Santo como
+secundário — a regeneração é obra do Espírito.
+
+**A desambiguação não rodava.** `santificação`, `fé` e `vida eterna` estavam
+nas regras mas em nenhuma lista de marcadores, e o código só desambiguava o
+que já estava numa lista — o mesmo defeito do classificador antigo, onde as
+regras existiam e nunca eram chamadas. Agora as ambíguas são varridas à parte.
+Corrigir isso levou as classificadas de 1.061 para 1.138.
+
+### Ainda por fazer
+
+Os 57 subtemas são alvos finos que o classificador ainda não usa. Detectar
+"trata de Justificação, capítulo 36" exige vocabulário por capítulo, não só
+por doutrina.
+
+## ✅ Fase 6 — Devocionais
 
 A fila são as resenhas sem devocional, consumida por um runner local que chama
 o **Claude Opus pelo CLI**, em lote — a assinatura em vez da chave de API.
@@ -157,23 +198,90 @@ estão em `CONTEXTO/referencia-de-escrita.md`.
 
 > **Grudem classifica, Tozer escreve.** São papéis distintos.
 
-## ⬜ Fase 7 — Análise e front
+```bash
+npm run devocionais          # 5 resenhas
+npm run devocionais -- 20    # 20 resenhas
+```
 
-- Endpoints de análise: temas por ano, por pregador, cobertura bíblica,
-  progressão temporal
-- Front em Vite + shadcn/ui
-- **Login de verdade**, com os papéis `ADMIN`, `PASTOR` e `LIDER` que já estão
-  no schema — substitui o token único da Fase 3
+Cerca de 22 segundos por devocional. Interromper no meio não perde nada: cada
+um é gravado assim que fica pronto, e a execução seguinte continua de onde
+parou — a fila é "resenha sem devocional", não um status.
 
-A análise temporal filtra `origemData = 'TEXTO'` e trabalha com dados
-confiáveis; a classificação usa as 1.409, porque não depende de data.
+### O versículo nunca é escrito pelo modelo
 
-## ⬜ Fase 8 — O livro
+Ele indica a **referência**; o texto vem da tabela `Versiculo`, que tem a ACF
+inteira. Modelo citando Escritura de memória troca palavra, e num livro
+devocional isso é grave.
 
-- Temas do mês
-- Seleção manual de quais devocionais entram
-- Diagramação A5, com o QR code do culto em cada página
-- Crédito de redação a Elizabete Lacerda Paulo
+### O devocional nasce da resenha
+
+A resenha vai inteira no prompt, junto com o texto base, o pregador e a
+doutrina que a classificação apontou. O que o devocional diz tem de ser o que
+foi pregado naquele culto, não teologia genérica sobre a passagem.
+
+Funciona: no primeiro gerado, sobre Gênesis 13, a frase "andar de altar em
+altar, não de vitrine em vitrine" veio da pregação do Pr. Nélio — não do
+modelo.
+
+### O prompt vai pelo stdin
+
+Passar milhares de caracteres com quebras de linha e aspas na linha de comando
+do Windows não sobrevive: o CLI recebia vazio e respondia "Fala. Que precisa?".
+Pelo stdin não há o que escapar.
+
+O CLI também roda de uma **pasta vazia**, para não carregar o `CLAUDE.md` do
+projeto a cada chamada — eram 23 mil tokens de contexto desperdiçados, e ainda
+arriscava misturar as instruções do repositório com as do devocional.
+
+## ✅ Fase 7 — Análise e login *(backend)*
+
+- [x] `/analise/panorama` — números do acervo
+- [x] `/analise/doutrinas` — distribuição pelas 8
+- [x] `/analise/evolucao` — ênfase ano a ano
+- [x] `/analise/pregadores` — o que cada um enfatiza
+- [x] `/analise/biblia` — cobertura, e o que nunca foi pregado
+- [x] **Login com JWT** e os papéis `ADMIN`, `PASTOR`, `LIDER`
+- [ ] Front em Vite + shadcn/ui
+
+### O achado da cobertura bíblica
+
+**57 dos 66 livros já foram pregados (86%).** Nunca subiram ao púlpito:
+Esdras, Cânticos, Lamentações de Jeremias, Amós, Obadias, 2 Tessalonicenses,
+2 João, 3 João e Judas.
+
+Mais pregados: Mateus 154 · João 127 · Atos 108 · Lucas 94 · Salmos 76.
+
+### Regras da análise
+
+Só o tema **PRINCIPAL** conta nas distribuições — somar os secundários faria o
+total passar do número de pregações. E a série histórica usa apenas
+`origemData = 'TEXTO'`, para não misturar o que é firme com o que foi
+corrigido à mão.
+
+### O login
+
+JWT assinado com HMAC-SHA256 usando só a stdlib. Uma biblioteca de JWT traria
+verificação de algoritmo, `jku`, `kid` e uma dúzia de coisas que este projeto
+não usa — e cada uma já foi vetor de CVE. Aqui só existe um algoritmo, fixo no
+código. Há teste para o ataque do `alg: none`.
+
+O `API_TOKEN` continua aceito, para não quebrar quem já integrou. Some quando
+o front estiver de pé.
+
+## ✅ Fase 8 — O livro
+
+- [x] `/livro/paginas` — os blocos da página, em JSON
+- [x] `/livro/imprimir.html` — A5 pronto para imprimir
+- [x] `/livro/livro.idml` — para o designer refinar
+- [ ] Temas do mês e seleção manual de quais devocionais entram
+
+### Por que HTML, e não uma biblioteca de PDF
+
+A página tem texto justificado com hifenização, viúvas e órfãs controladas e um
+bloco de anotações. O motor de texto do navegador faz isso bem; montar em
+coordenadas à mão levaria muito mais código para um resultado pior. Abrir no
+navegador e imprimir para PDF dá o A5 final, e o QR vai embutido como SVG — o
+arquivo é autossuficiente.
 
 ### Dois formatos de saída
 
@@ -187,9 +295,24 @@ blocos certos, QR no lugar, paginação — e o designer recebe um arquivo **viv
 não uma imagem achatada. Ele ajusta tipografia, viúvas e órfãs, respiros, e
 manda para a gráfica.
 
-`.idml` é um pacote ZIP de XML, então dá para gerar sem InDesign: monta-se a
-estrutura a partir de um template exportado uma vez pelo designer, com os
-blocos de `Devocional` preenchendo os quadros de texto nomeados.
+### O IDML
+
+Um spread por página, com os quadros de texto nomeados: `Titulo`, `Versiculo`,
+`Creditos`, `Reflexao`, `PontosAplicacao`, `QRCode`, `Oracao`, `Anotacoes`.
+O pacote sai com `mimetype`, `designmap.xml`, `META-INF/container.xml`,
+`Resources/Styles.xml` e `Resources/Preferences.xml`.
+
+⚠️ **O arquivo não foi aberto no InDesign** — não há licença aqui para testar.
+A estrutura segue a especificação, mas até alguém abrir de verdade isso é
+promessa, não fato.
+
+O caminho seguro para produção é inverter: o designer exporta um template do
+InDesign uma vez, e o código preenche os quadros dele em vez de gerar o pacote
+do zero. Está marcado no código com um comentário `ponytail:`.
+
+O QR entra como URL no quadro, não como imagem embutida: embutir exigiria um
+`Graphic` com `Link` para um arquivo que o designer não teria, e o documento
+abriria quebrado.
 
 ## 🔭 Depois
 

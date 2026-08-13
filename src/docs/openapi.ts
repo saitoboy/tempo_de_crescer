@@ -1,5 +1,8 @@
 import { z } from 'zod';
+import { filtroPregadores } from '../routes/analise';
 import { filtroCultos } from '../routes/cultos';
+import { filtroLivro } from '../routes/livro';
+import { credenciais } from '../routes/sessao';
 import { fusaoPregador, novoPregador } from '../routes/pregadores';
 import { correcaoResenha, filtroListagem, filtroPendentes } from '../routes/resenhas';
 
@@ -101,6 +104,9 @@ export const especificacao = {
   tags: [
     { name: 'Saúde', description: 'Estado do serviço' },
     { name: 'Resenhas', description: 'O texto publicado no blog sobre cada culto' },
+    { name: 'Sessão', description: 'Login e identidade' },
+    { name: 'Análise', description: 'O que a igreja tem ensinado ao longo do tempo' },
+    { name: 'Livro', description: 'As páginas, o HTML para impressão e o IDML' },
     { name: 'Cultos', description: 'O encontro, com a transmissão e o QR code' },
     { name: 'Pregadores', description: 'Quem pregou, com as grafias que o blog usa' },
   ],
@@ -178,6 +184,91 @@ export const especificacao = {
         parameters: [idNaRota],
         requestBody: corpo(correcaoResenha),
         responses: { 200: { description: 'Resenha corrigida' }, ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/sessao/login': {
+      post: {
+        tags: ['Sessão'],
+        summary: 'Entra e recebe o token de sessão',
+        description:
+          'A resposta é a mesma para e-mail inexistente, senha errada e conta inativa: dizer qual dos três falhou entregaria quais e-mails existem.',
+        requestBody: corpo(credenciais),
+        responses: { 200: { description: 'Token e dados do usuário' }, 401: respostaErro('E-mail ou senha inválidos') },
+      },
+    },
+
+    '/sessao/eu': {
+      get: {
+        tags: ['Sessão'],
+        summary: 'Quem sou eu',
+        security: protegida,
+        responses: { 200: { description: 'O usuário da sessão' }, 401: respostaErro('Faça login') },
+      },
+    },
+
+    '/analise/panorama': {
+      get: { tags: ['Análise'], summary: 'Números do acervo', responses: { 200: { description: 'Panorama' } } },
+    },
+    '/analise/doutrinas': {
+      get: {
+        tags: ['Análise'],
+        summary: 'Distribuição por doutrina',
+        description: 'Só o tema PRINCIPAL conta; somar os secundários faria o total passar do número de pregações.',
+        responses: { 200: { description: 'As 8 doutrinas com contagem e percentual' } },
+      },
+    },
+    '/analise/evolucao': {
+      get: {
+        tags: ['Análise'],
+        summary: 'Ênfase doutrinária ano a ano',
+        description: 'Usa apenas data de origem TEXTO, para a série histórica não misturar o que é firme com o que foi inferido.',
+        responses: { 200: { description: 'Série por ano' } },
+      },
+    },
+    '/analise/pregadores': {
+      get: {
+        tags: ['Análise'],
+        summary: 'O que cada pregador enfatiza',
+        parameters: parametrosDeQuery(filtroPregadores),
+        responses: { 200: { description: 'Perfil por pregador' } },
+      },
+    },
+    '/analise/biblia': {
+      get: {
+        tags: ['Análise'],
+        summary: 'Cobertura bíblica',
+        description: 'A pergunta interessante não é qual livro aparece mais, e sim qual nunca apareceu — por isso os 66 vêm sempre.',
+        responses: { 200: { description: 'Cobertura, mais pregados e nunca pregados' } },
+      },
+    },
+
+    '/livro/paginas': {
+      get: {
+        tags: ['Livro'],
+        summary: 'As páginas do livro, em JSON',
+        parameters: parametrosDeQuery(filtroLivro),
+        responses: { 200: { description: 'Páginas montadas' } },
+      },
+    },
+    '/livro/imprimir.html': {
+      get: {
+        tags: ['Livro'],
+        summary: 'O livro em HTML, pronto para imprimir em A5',
+        description:
+          'Abrir no navegador e imprimir para PDF dá o arquivo final. O texto justificado, a hifenização, as viúvas e as órfãs ficam a cargo do motor de texto do navegador, que faz isso melhor do que montar em coordenadas à mão.',
+        parameters: parametrosDeQuery(filtroLivro),
+        responses: { 200: { description: 'HTML A5', content: { 'text/html': { schema: { type: 'string' } } } } },
+      },
+    },
+    '/livro/livro.idml': {
+      get: {
+        tags: ['Livro'],
+        summary: 'O livro em IDML, para o designer refinar no InDesign',
+        description:
+          'Pacote com um spread por página e os quadros de texto nomeados (Titulo, Versiculo, Creditos, Reflexao, PontosAplicacao, QRCode, Oracao, Anotacoes). NÃO foi aberto no InDesign — a estrutura segue a especificação, mas isso ainda é promessa, não fato.',
+        parameters: parametrosDeQuery(filtroLivro),
+        responses: { 200: { description: 'Pacote IDML' } },
       },
     },
 

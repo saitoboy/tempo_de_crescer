@@ -27,6 +27,11 @@ const esquema = z.object({
    */
   API_TOKEN: z.string().min(16, 'use ao menos 16 caracteres').optional().or(z.literal('')),
 
+  /** Segredo que assina os tokens de sessão. */
+  JWT_SEGREDO: z.string().min(32, 'use ao menos 32 caracteres').default('trocar-este-segredo-em-producao-agora'),
+  /** Quanto tempo a sessão dura. */
+  JWT_HORAS: z.coerce.number().int().min(1).max(720).default(12),
+
   YOUTUBE_API_KEY: z.string().optional(),
   CHANNEL_HANDLE: z.string().default('@ibps.muriae'),
 
