@@ -102,6 +102,46 @@ atualização diária.
 
 ---
 
+## Devocionais: geração local, dado versionado
+
+**Produção não gera devocional.** O CLI do Claude autentica com a sessão da
+máquina de quem escreve; dentro do contêiner não há login nenhum. Isso não é
+contornável por código — é como a assinatura funciona.
+
+O fluxo é:
+
+```
+sua máquina                    repositório              produção
+npm run devocionais       →    devocionais.json    →    npm run seed
+npm run exportar:devocionais   (versionado)             (carrega o arquivo)
+```
+
+Cultos novos são três por semana, ~12 por mês. Uma passada local mensal dá
+conta, e o deploy leva os textos junto.
+
+### A chave é o slug, nunca o id
+
+O `id` de um devocional é um uuid gerado por banco: o daqui não existe em
+produção. Se a importação casasse por id, criaria devocional órfão ou apontado
+para a resenha errada — no livro, isso é **o texto de uma pregação sob o
+título de outra**. Por isso a chave é `resenha.slug`, que é derivado da URL do
+blog e igual em qualquer banco.
+
+### A importação não sobrescreve
+
+Devocional que já existe no destino é preservado. Se alguém revisou um texto
+pela API, uma nova carga não desfaz a revisão: o arquivo é o ponto de partida,
+não a verdade final.
+
+### Se a chave da API entrar um dia
+
+Aí a geração pode subir para produção sem mudar mais nada além de trocar a
+chamada do CLI por uma chamada de API em `gerarDevocionais.ts`. O resto do
+caminho — fila, validação, gravação — já está pronto e não depende de quem
+escreve o texto.
+
+---
+
 ## Ingestão
 
 ```bash
