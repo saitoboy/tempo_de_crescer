@@ -275,6 +275,39 @@ o front estiver de pé.
 - [x] `/livro/livro.idml` — para o designer refinar
 - [ ] Temas do mês e seleção manual de quais devocionais entram
 
+### Dois modelos de miolo
+
+`?modelo=compacto` e `?modelo=largo`.
+
+| | compacto | largo |
+|---|---|---|
+| pontos de aplicação | coluna, ao lado do QR | largura total |
+| QR code | 25 mm, ao lado dos pontos | 14 mm, discreto no rodapé |
+| oração | metade da largura | largura total |
+| anotações | tem | não tem |
+
+O segundo dispensa o campo "Blog" do modelo escaneado: a URL ocupava três
+linhas e ninguém digita endereço de blog. O QR faz o mesmo trabalho em 14 mm.
+
+Título em **Bebas Neue**, com queda para Haettenschweiler e Arial Narrow. A
+fonte não é embutida — instalada na máquina, o navegador usa.
+
+### O que a medição na página revelou
+
+Renderizando o A5 de verdade e medindo com o navegador:
+
+- Os blocos fixos ocupavam **699px dos 695px úteis** — estouravam a página
+  **antes de qualquer texto**. Título a 27pt, QR de 34 mm e anotações de 30 mm
+  eram grandes demais. Reduzidos, os fixos caíram para **501px**.
+- Sobram **194px** para a reflexão, o que dá cerca de **1.250 caracteres**.
+  O prompt pedia 900 a 1400 e o modelo entregava até 1.864 — todas as páginas
+  estouravam. Agora pede 900 a 1100, com teto de 1.200 no Zod.
+- Depois do ajuste: 547px e 648px de 695. Cabe.
+
+O navegador **não imprime fundo por padrão**, então a faixa do cabeçalho e o
+bloco da oração saíam em branco. `print-color-adjust: exact` resolve sem o
+leitor precisar marcar nada.
+
 ### Por que HTML, e não uma biblioteca de PDF
 
 A página tem texto justificado com hifenização, viúvas e órfãs controladas e um

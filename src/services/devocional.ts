@@ -21,8 +21,14 @@ export const respostaDoModelo = z.object({
   titulo: z.string().trim().min(3).max(80),
   /** Referência do versículo em destaque: "Salmos 23:1". */
   referencia: z.string().trim().min(3).max(60),
-  reflexao: z.string().trim().min(200),
-  pontosAplicacao: z.array(z.string().trim().min(10)).min(3).max(5),
+  /**
+   * O teto foi medido na página A5 renderizada, não estimado: com os blocos
+   * fixos ocupando 501px dos 695px úteis, sobram 194px para a reflexão, o que
+   * dá cerca de 1.250 caracteres. O limite fica abaixo disso para o texto não
+   * encostar no rodapé.
+   */
+  reflexao: z.string().trim().min(200).max(1200),
+  pontosAplicacao: z.array(z.string().trim().min(10)).min(3).max(4),
   oracao: z.string().trim().min(50),
 });
 
@@ -80,10 +86,14 @@ Responda SOMENTE com JSON válido, sem cercas de código e sem comentário:
 {
   "titulo": "título curto e forte, até 60 caracteres, sem ponto final",
   "referencia": "a referência do versículo que resume a mensagem, ex: Salmos 23:1",
-  "reflexao": "2 a 3 parágrafos, 900 a 1400 caracteres, separados por \\n\\n",
-  "pontosAplicacao": ["3 a 5 aplicações práticas, uma frase cada, no imperativo"],
-  "oracao": "oração curta, primeira pessoa do PLURAL, 200 a 400 caracteres"
+  "reflexao": "2 a 3 parágrafos, 900 a 1100 caracteres NO TOTAL, separados por \\n\\n",
+  "pontosAplicacao": ["exatamente 3 aplicações, uma linha curta cada, no imperativo"],
+  "oracao": "oração curta, primeira pessoa do PLURAL, 180 a 260 caracteres"
 }
+
+Os limites de tamanho são rígidos: tudo isso precisa caber em UMA página A5
+impressa, junto com o versículo, o QR code e um espaço para anotações. Texto
+mais longo do que o pedido não cabe e será cortado.
 
 A "referencia" deve ser um único versículo ou um trecho curto de um capítulo
 só, e precisa existir na Bíblia. Não escreva o texto do versículo: apenas a

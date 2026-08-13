@@ -11,6 +11,12 @@ export const rotasLivro = Router();
 export const filtroLivro = z.object({
   ano: z.coerce.number().int().min(2000).max(2100).optional(),
   limite: z.coerce.number().int().min(1).max(400).default(50),
+  /**
+   * Dois desenhos de miolo:
+   * - `compacto`: QR ao lado dos pontos, com espaço para anotações
+   * - `largo`: pontos e oração em largura total, QR discreto no rodapé
+   */
+  modelo: z.enum(['compacto', 'largo']).default('compacto'),
 });
 
 /** Os dados de uma página, para quem quiser diagramar por conta própria. */
@@ -46,7 +52,7 @@ rotasLivro.get(
     const lista = await paginas(filtro);
     if (lista.length === 0) throw new NotFoundError('Nenhum devocional para montar o livro');
 
-    res.type('text/html; charset=utf-8').send(montarHtml(lista));
+    res.type('text/html; charset=utf-8').send(montarHtml(lista, filtro.modelo));
   }),
 );
 

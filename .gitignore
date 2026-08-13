@@ -130,3 +130,9 @@ $RECYCLE.BIN/
 
 # Cache local dos posts do blog
 .cache_blog/
+
+# Arquivos gerados do livro
+saida/
+
+# Saidas do Playwright
+.playwright-mcp/
