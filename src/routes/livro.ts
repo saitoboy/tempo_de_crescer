@@ -17,6 +17,11 @@ export const filtroLivro = z.object({
    * - `largo`: pontos e oração em largura total, QR discreto no rodapé
    */
   modelo: z.enum(['compacto', 'largo']).default('compacto'),
+  /**
+   * Quantas páginas cada devocional ocupa no IDML.
+   * `uma` é o formato do Tozer; `duas` abre em páginas encaradas.
+   */
+  formato: z.enum(['uma', 'duas']).default('uma'),
 });
 
 /** Os dados de uma página, para quem quiser diagramar por conta própria. */
@@ -67,6 +72,6 @@ rotasLivro.get(
     res
       .type('application/vnd.adobe.indesign-idml-package')
       .set('Content-Disposition', 'attachment; filename="tempo-de-crescer.idml"')
-      .send(await montarIdml(lista));
+      .send(await montarIdml(lista, filtro.formato));
   }),
 );

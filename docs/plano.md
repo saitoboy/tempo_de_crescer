@@ -335,13 +335,27 @@ Um spread por página, com os quadros de texto nomeados: `Titulo`, `Versiculo`,
 O pacote sai com `mimetype`, `designmap.xml`, `META-INF/container.xml`,
 `Resources/Styles.xml` e `Resources/Preferences.xml`.
 
-⚠️ **O arquivo não foi aberto no InDesign** — não há licença aqui para testar.
-A estrutura segue a especificação, mas até alguém abrir de verdade isso é
-promessa, não fato.
+**Aberto e conferido no InDesign.** A primeira versão abriu, com os quadros na
+posição certa, e expôs três defeitos — todos corrigidos:
 
-O caminho seguro para produção é inverter: o designer exporta um template do
-InDesign uma vez, e o código preenche os quadros dele em vez de gerar o pacote
-do zero. Está marcado no código com um comentário `ponytail:`.
+| defeito | causa | correção |
+|---|---|---|
+| páginas em branco na frente | `PagesPerDocument` com o total criava as páginas do documento **além** dos spreads | fixo em 1; as páginas vêm dos spreads |
+| parágrafos colados numa linha | faltava o `<Br/>`, terminador de parágrafo do IDML | `<Br/>` ao fim de cada parágrafo |
+| marcador saía como caractere inválido | `▪` não existe nas fontes padrão | `•` |
+
+### Uma ou duas páginas por devocional
+
+`?formato=uma` e `?formato=duas`.
+
+`uma` é o formato do Tozer e o padrão: título, versículo, reflexão, pontos, QR
+e oração numa página só. `duas` abre em páginas encaradas — a esquerda com o
+título, o versículo e a reflexão, a direita com a aplicação, a oração e o QR.
+Serve quando a pregação é longa ou quando o pastor quer o livro mais espaçado.
+
+O caminho ainda mais seguro seria inverter: o designer exporta um template do
+InDesign uma vez, e o código preenche os quadros dele. Está marcado no código
+com um comentário `ponytail:`.
 
 O QR entra como URL no quadro, não como imagem embutida: embutir exigiria um
 `Graphic` com `Link` para um arquivo que o designer não teria, e o documento

@@ -9,14 +9,19 @@ import { dataPorExtenso, type PaginaDoLivro } from './livro';
  * posição do modelo, já preenchidos. O designer ajusta tipografia, viúvas,
  * órfãs e respiros, e manda para a gráfica. É um arquivo vivo, não uma imagem.
  *
- * ⚠️ Este gerador **não foi aberto no InDesign** — não há licença aqui para
- * testar. A estrutura segue a especificação IDML, mas até alguém abrir o
- * arquivo de verdade isso é promessa, não fato. O caminho seguro para produção
- * é o designer exportar um template do InDesign uma vez e este código preencher
- * os quadros dele, em vez de gerar o pacote do zero.
+ * **Aberto e conferido no InDesign.** A primeira tentativa abriu, com os
+ * quadros na posição certa, e expôs três defeitos que já estão corrigidos:
  *
- * ponytail: gerar IDML do zero é o caminho arriscado; preencher template
- * exportado é o barato. Trocar quando houver um template.
+ * 1. `PagesPerDocument` com o total criava as páginas do documento ALÉM dos
+ *    spreads, e o arquivo abria com um bloco de páginas em branco na frente.
+ * 2. Faltava o `<Br/>` terminador de parágrafo, então o InDesign emendava
+ *    tudo numa linha: "REFLEXÃO DEVOCIONAL:Ouvi, céus, e escuta...".
+ * 3. O marcador "▪" saía como caractere inválido; "•" existe nas fontes
+ *    padrão.
+ *
+ * ponytail: gerar IDML do zero funciona, mas preencher um template exportado
+ * pelo designer é menos código e sobrevive melhor a mudança de layout. Trocar
+ * quando houver um template.
  */
 
 /** A5 em pontos: 148 × 210 mm. */
@@ -33,11 +38,18 @@ function escapar(texto: string): string {
     .replace(/'/g, '&apos;');
 }
 
-/** Um parágrafo dentro de uma Story. */
-function paragrafo(texto: string, estilo: string): string {
+/**
+ * Um parágrafo dentro de uma Story.
+ *
+ * O `<Br/>` no fim é o terminador de parágrafo do IDML. Sem ele o InDesign
+ * emenda tudo numa linha só — foi o que aconteceu na primeira tentativa, e o
+ * texto saiu como "REFLEXÃO DEVOCIONAL:Ouvi, céus, e escuta...".
+ */
+function paragrafo(texto: string, estilo: string, ultimo: boolean): string {
+  const quebra = ultimo ? '' : '<Br/>';
   return `<ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/${estilo}">
       <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/$ID/[No character style]">
-        <Content>${escapar(texto)}</Content>
+        <Content>${escapar(texto)}</Content>${quebra}
       </CharacterStyleRange>
     </ParagraphStyleRange>`;
 }
@@ -47,7 +59,7 @@ function story(id: string, paragrafos: Array<{ texto: string; estilo: string }>)
 <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="18.0">
   <Story Self="${id}" AppliedTOCStyle="n" TrackChanges="false" StoryTitle="" AppliedNamedGrid="n">
     <StoryPreference OpticalMarginAlignment="false" OpticalMarginSize="12" FrameType="TextFrameType" StoryOrientation="Horizontal" StoryDirection="LeftToRightDirection"/>
-    ${paragrafos.map((p) => paragrafo(p.texto, p.estilo)).join('\n    ')}
+    ${paragrafos.map((p, i) => paragrafo(p.texto, p.estilo, i === paragrafos.length - 1)).join('\n    ')}
   </Story>
 </idPkg:Story>`;
 }
@@ -89,6 +101,17 @@ type Bloco = {
   paragrafos: string[];
 };
 
+/**
+ * Quantas páginas cada devocional ocupa.
+ *
+ * `uma` é o padrão e o formato do Tozer: título, versículo, reflexão, pontos,
+ * QR e oração numa página só. `duas` abre em páginas encaradas — a esquerda
+ * recebe o título, o versículo e a reflexão, com espaço para respirar, e a
+ * direita recebe a aplicação, a oração e o QR. Serve quando a pregação é longa
+ * ou quando o pastor quer o livro mais espaçado.
+ */
+export type PaginasPorDevocional = 'uma' | 'duas';
+
 /** Os blocos da página, na posição do modelo escaneado. */
 function blocosDaPagina(p: PaginaDoLivro): Bloco[] {
   const util = LARGURA - MARGEM * 2;
@@ -119,7 +142,10 @@ function blocosDaPagina(p: PaginaDoLivro): Bloco[] {
       nome: 'Creditos',
       estilo: 'Creditos',
       caixa: { x: MARGEM, y: 142, largura: util, altura: 30 },
-      paragrafos: [`Data: ${dataPorExtenso(p.data)}`, `Pastor: ${p.pregador ?? '—'}`],
+      paragrafos: [
+        ...(p.data ? [`Data: ${dataPorExtenso(p.data)}`] : []),
+        `Pastor: ${p.pregador ?? '—'}`,
+      ],
     },
     {
       nome: 'Reflexao',
@@ -131,7 +157,7 @@ function blocosDaPagina(p: PaginaDoLivro): Bloco[] {
       nome: 'PontosAplicacao',
       estilo: 'Corpo',
       caixa: { x: MARGEM, y: 376, largura: colunaLarga, altura: 130 },
-      paragrafos: ['PONTOS DE APLICAÇÃO PRÁTICA:', ...p.pontosAplicacao.map((i) => `▪ ${i}`)],
+      paragrafos: ['PONTOS DE APLICAÇÃO PRÁTICA:', ...p.pontosAplicacao.map((i) => `• ${i}`)],
     },
     {
       nome: 'QRCode',
@@ -159,6 +185,81 @@ function blocosDaPagina(p: PaginaDoLivro): Bloco[] {
   return blocos.filter((b) => b.paragrafos.length > 0);
 }
 
+/** Página esquerda do modelo de duas: o texto respira. */
+function blocosDaEsquerda(p: PaginaDoLivro): Bloco[] {
+  const util = LARGURA - MARGEM * 2;
+
+  const blocos: Bloco[] = [
+    {
+      nome: 'Titulo',
+      estilo: 'Titulo',
+      caixa: { x: MARGEM, y: 40, largura: util, altura: 70 },
+      paragrafos: [p.titulo.toUpperCase()],
+    },
+  ];
+
+  if (p.versiculo) {
+    blocos.push({
+      nome: 'Versiculo',
+      estilo: 'Versiculo',
+      caixa: { x: MARGEM, y: 116, largura: util, altura: 46 },
+      paragrafos: [`"${p.versiculo}" - ${p.referencia ?? ''}`],
+    });
+  }
+
+  blocos.push(
+    {
+      nome: 'Creditos',
+      estilo: 'Creditos',
+      caixa: { x: MARGEM, y: 170, largura: util, altura: 34 },
+      paragrafos: [
+        ...(p.data ? [`Data: ${dataPorExtenso(p.data)}`] : []),
+        `Pastor: ${p.pregador ?? '—'}`,
+      ],
+    },
+    {
+      nome: 'Reflexao',
+      estilo: 'Corpo',
+      caixa: { x: MARGEM, y: 214, largura: util, altura: 340 },
+      paragrafos: ['REFLEXÃO DEVOCIONAL:', ...p.reflexao],
+    },
+  );
+
+  return blocos.filter((b) => b.paragrafos.length > 0);
+}
+
+/** Página direita do modelo de duas: aplicação, oração e QR. */
+function blocosDaDireita(p: PaginaDoLivro): Bloco[] {
+  const util = LARGURA - MARGEM * 2;
+
+  return [
+    {
+      nome: 'PontosAplicacao',
+      estilo: 'Corpo',
+      caixa: { x: MARGEM, y: 60, largura: util, altura: 200 },
+      paragrafos: ['PONTOS DE APLICAÇÃO PRÁTICA:', ...p.pontosAplicacao.map((i) => `• ${i}`)],
+    },
+    {
+      nome: 'Oracao',
+      estilo: 'Oracao',
+      caixa: { x: MARGEM, y: 280, largura: util, altura: 120 },
+      paragrafos: p.oracao ? [`ORAÇÃO: "${p.oracao}"`] : [],
+    },
+    {
+      nome: 'QRCode',
+      estilo: 'Creditos',
+      caixa: { x: MARGEM, y: 420, largura: util, altura: 70 },
+      paragrafos: ['ASSISTA ON-LINE:', p.youtubeUrl ?? ''],
+    },
+    {
+      nome: 'Anotacoes',
+      estilo: 'Creditos',
+      caixa: { x: MARGEM, y: 506, largura: util, altura: 70 },
+      paragrafos: ['ANOTAÇÕES:'],
+    },
+  ].filter((b) => b.paragrafos.length > 0);
+}
+
 const ESTILOS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <idPkg:Styles xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="18.0">
   <RootCharacterStyleGroup Self="u1">
@@ -179,7 +280,10 @@ const ESTILOS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
  *
  * Uma página por spread, na ordem em que as páginas foram passadas.
  */
-export async function montarIdml(paginas: PaginaDoLivro[]): Promise<Buffer> {
+export async function montarIdml(
+  paginas: PaginaDoLivro[],
+  formato: PaginasPorDevocional = 'uma',
+): Promise<Buffer> {
   const zip = new JSZip();
 
   // O mimetype precisa ser o primeiro arquivo e sem compressão — é assim que
@@ -189,11 +293,16 @@ export async function montarIdml(paginas: PaginaDoLivro[]): Promise<Buffer> {
   const spreads: string[] = [];
   const stories: string[] = [];
 
-  paginas.forEach((p, indice) => {
+  // Um devocional pode virar uma folha ou duas encaradas.
+  const folhas = paginas.flatMap((p) =>
+    formato === 'duas' ? [blocosDaEsquerda(p), blocosDaDireita(p)] : [blocosDaPagina(p)],
+  );
+
+  folhas.forEach((blocos, indice) => {
     const spreadId = `spread${indice}`;
     const quadros: string[] = [];
 
-    blocosDaPagina(p).forEach((bloco, ordem) => {
+    blocos.forEach((bloco, ordem) => {
       const storyId = `story${indice}_${ordem}`;
       stories.push(storyId);
       zip.file(
@@ -236,7 +345,12 @@ export async function montarIdml(paginas: PaginaDoLivro[]): Promise<Buffer> {
     'Resources/Preferences.xml',
     `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <idPkg:Preferences xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="18.0">
-  <DocumentPreference PageWidth="${LARGURA}" PageHeight="${ALTURA}" FacingPages="false" PagesPerDocument="${paginas.length}"/>
+  <!--
+    PagesPerDocument fica em 1: as páginas de verdade vêm dos spreads. Com o
+    total aqui, o InDesign criava as páginas do documento E os spreads, e o
+    arquivo abria com um bloco de páginas em branco na frente.
+  -->
+  <DocumentPreference PageWidth="${LARGURA}" PageHeight="${ALTURA}" FacingPages="false" PagesPerDocument="1"/>
   <ViewPreference HorizontalMeasurementUnits="Points" VerticalMeasurementUnits="Points"/>
 </idPkg:Preferences>`,
   );
