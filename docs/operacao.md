@@ -58,6 +58,18 @@ Dois detalhes que custaram tempo:
 O MCP do Firecrawl não passa pelo proxy e por isso falha aqui — as chamadas ao
 Firecrawl saem do nosso próprio código.
 
+### Subprocesso não herda o dispatcher
+
+`aplicarProxy()` troca o dispatcher do undici, e isso vale só para o `fetch`
+**deste** processo. O CLI do Claude é outro processo: sai pela rede sozinho e
+lê `HTTPS_PROXY` do ambiente. Por isso `gerarDevocionais.ts` monta o env do
+filho com a URL do proxy.
+
+Sem isso o script funcionava ou não conforme o terminal de onde foi chamado —
+num que já tivesse a variável exportada, sim; num terminal limpo, o CLI voltava
+**407 em ~5 segundos**, com o erro no **stdout** e o stderr vazio. Ler só o
+stderr dava `CLI saiu com código 1:` e mais nada.
+
 ---
 
 ## Deploy no EasyPanel

@@ -14,6 +14,7 @@ import {
   type ResenhaParaDevocional,
 } from '../services/devocional';
 import { logError, logInfo, logSuccess, logWarning } from '../utils/logger';
+import { urlDoProxy } from '../utils/proxy';
 
 /**
  * Escreve os devocionais chamando o Claude Opus pelo CLI local.
@@ -31,6 +32,15 @@ import { logError, logInfo, logSuccess, logWarning } from '../utils/logger';
 
 const MODELO = 'claude-opus-5';
 const LOTE_PADRAO = 5;
+/**
+ * Quantas falhas seguidas derrubam o lote.
+ *
+ * Falha isolada é normal — o modelo devolve um texto longo demais e o Zod
+ * recusa. Falha atrás de falha é outra coisa: conta sem uso disponível, sessão
+ * do CLI expirada, rede fora. Nesses casos o lote inteiro falharia igual, e um
+ * lote de mil itens levaria horas para descobrir isso.
+ */
+const FALHAS_SEGUIDAS_PARA_ABORTAR = 3;
 /** Uma resenha longa com um devocional inteiro de volta leva bem mais que o padrão. */
 const TEMPO_LIMITE_MS = 5 * 60 * 1000;
 
@@ -40,6 +50,28 @@ const TEMPO_LIMITE_MS = 5 * 60 * 1000;
  * devocional — então ele roda de uma pasta vazia.
  */
 const PASTA_NEUTRA = mkdtempSync(join(tmpdir(), 'devocional-'));
+
+/**
+ * O ambiente do CLI, com o proxy corporativo repassado.
+ *
+ * `aplicarProxy()` não serve aqui: ele troca o dispatcher do undici, que vale
+ * só para o `fetch` deste processo. O `claude` é outro processo e sai pela rede
+ * por conta própria — lê `HTTPS_PROXY` do ambiente e nada mais.
+ *
+ * Sem isso o comportamento depende de onde o script foi chamado: num terminal
+ * que já tenha a variável exportada funciona, num terminal limpo o CLI volta
+ * 407 em poucos segundos, com o erro no stdout e o stderr vazio. Foi
+ * exatamente esse o sintoma que custou um lote inteiro.
+ *
+ * Aqui a URL leva a senha percent-encoded, ao contrário do header Basic do
+ * undici: é a forma `http://user:pass@host:porta` que o CLI espera.
+ */
+function ambienteDoCli(): NodeJS.ProcessEnv {
+  const proxy = urlDoProxy();
+  if (!proxy) return process.env;
+
+  return { ...process.env, HTTP_PROXY: proxy, HTTPS_PROXY: proxy };
+}
 
 /**
  * O prompt vai pelo stdin, não como argumento.
@@ -52,6 +84,7 @@ function pedirAoClaude(prompt: string): Promise<string> {
   return new Promise((resolver, rejeitar) => {
     const processo = spawn('claude', ['-p', '--output-format', 'json', '--model', MODELO], {
       cwd: PASTA_NEUTRA,
+      env: ambienteDoCli(),
       shell: true,
       timeout: TEMPO_LIMITE_MS,
     });
@@ -64,7 +97,11 @@ function pedirAoClaude(prompt: string): Promise<string> {
     processo.on('error', rejeitar);
     processo.on('close', (codigo) => {
       if (codigo !== 0) {
-        return rejeitar(new Error(`CLI saiu com código ${codigo}: ${erro.slice(0, 200)}`));
+        // O CLI descreve a falha no stdout, e o stderr costuma vir vazio. Ler
+        // só o stderr produzia "CLI saiu com código 1:" e mais nada — mensagem
+        // que não diz se foi proxy, conta sem uso ou prompt recusado.
+        const motivo = [erro.trim(), saida.trim()].filter(Boolean).join(' | ');
+        return rejeitar(new Error(`CLI saiu com código ${codigo}: ${motivo.slice(0, 300)}`));
       }
 
       try {
@@ -102,6 +139,7 @@ async function main() {
 
   const fila = await filaDeGeracao(limite);
   let feitos = 0;
+  let seguidas = 0;
   const falhas: string[] = [];
 
   for (const [i, item] of fila.entries()) {
@@ -119,10 +157,26 @@ async function main() {
     try {
       await gerarUm(resenha);
       feitos++;
+      seguidas = 0;
     } catch (e) {
       // Uma falha não derruba o lote: o resto continua, e esta volta na
       // próxima execução, porque a fila é "resenha sem devocional".
-      falhas.push(`${resenha.titulo.slice(0, 40)}: ${(e as Error).message.slice(0, 120)}`);
+      const motivo = (e as Error).message.slice(0, 200);
+      falhas.push(`${resenha.titulo.slice(0, 40)}: ${motivo}`);
+      seguidas++;
+
+      // Na hora, não só no fim: guardar o motivo para o resumo final já custou
+      // um lote inteiro rodando às cegas com a conta sem uso disponível.
+      logWarning(`falhou: ${motivo}`, 'devocional');
+
+      if (seguidas >= FALHAS_SEGUIDAS_PARA_ABORTAR) {
+        logError(
+          `${seguidas} falhas seguidas — o lote parou. Confira a conta do CLI ` +
+            `(\`claude\` na mão) antes de rodar de novo; nada do que já foi gravado se perde.`,
+          'devocional',
+        );
+        break;
+      }
     }
   }
 
