@@ -11,6 +11,28 @@ export const rotasLivro = Router();
 export const filtroLivro = z.object({
   ano: z.coerce.number().int().min(2000).max(2100).optional(),
   limite: z.coerce.number().int().min(1).max(400).default(50),
+  /**
+   * Dois desenhos de miolo:
+   * - `compacto`: QR ao lado dos pontos, com espaço para anotações
+   * - `largo`: pontos e oração em largura total, QR discreto no rodapé
+   */
+  /**
+   * `largo` é o modelo escolhido pelo pastor: pontos e oração em largura
+   * total, sem bloco de anotações, QR discreto no rodapé.
+   */
+  modelo: z.enum(['largo', 'compacto']).default('largo'),
+  /**
+   * Quantas páginas cada devocional ocupa no IDML.
+   * `auto` decide por devocional pelo tamanho do texto; `uma` é o formato do
+   * Tozer; `duas` abre em páginas encaradas.
+   */
+  formato: z.enum(['auto', 'uma', 'duas']).default('auto'),
+  /**
+   * Monta a partir da curadoria — os temas do mês e os devocionais escolhidos,
+   * na ordem definida. Exige `ano`. Sem isto, sai a prévia com os mais
+   * recentes, que serve para conferir diagramação.
+   */
+  edicao: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
 });
 
 /** Os dados de uma página, para quem quiser diagramar por conta própria. */
@@ -46,7 +68,7 @@ rotasLivro.get(
     const lista = await paginas(filtro);
     if (lista.length === 0) throw new NotFoundError('Nenhum devocional para montar o livro');
 
-    res.type('text/html; charset=utf-8').send(montarHtml(lista));
+    res.type('text/html; charset=utf-8').send(montarHtml(lista, filtro.modelo));
   }),
 );
 
@@ -61,6 +83,6 @@ rotasLivro.get(
     res
       .type('application/vnd.adobe.indesign-idml-package')
       .set('Content-Disposition', 'attachment; filename="tempo-de-crescer.idml"')
-      .send(await montarIdml(lista));
+      .send(await montarIdml(lista, filtro.formato));
   }),
 );

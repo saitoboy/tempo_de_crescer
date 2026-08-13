@@ -203,6 +203,21 @@ model Resenha {
 
   status StatusResenha @default(INGERIDA)
 
+  /// Vetor semântico do texto, 384 dimensões, normalizado.
+  ///
+  /// Serve para achar pregações parecidas com um tema que a classificação não
+  /// cobre — "Novos Recomeços" não é nenhuma das 8 doutrinas, mas se parece
+  /// com arrependimento e conversão, e o vetor enxerga isso.
+  ///
+  /// Coluna de float comum, sem pgvector: 1.409 vetores dão 4 MB, cabem na
+  /// memória e o cosseno sobre eles leva milissegundos. A extensão só passa a
+  /// valer com dezenas de milhares de registros, quando o índice importa —
+  /// aí vira `Unsupported("vector(384)")` e a busca vai para o SQL.
+  /// O padrão de lista vazia importa: sem ele a coluna nasce NULL nas linhas
+  /// que já existiam, e o filtro `isEmpty` não casa com NULL — a vetorização
+  /// achava que não havia nada a fazer.
+  embedding Float[] @default([])
+
   classificacoes Classificacao[]
   devocional     Devocional?
 
@@ -228,6 +243,7 @@ model Doutrina {
 
   subtemas       Subtema[]
   classificacoes Classificacao[]
+  temasDoMes     TemaMes[]
 
   @@map("doutrina")
 }
@@ -307,6 +323,62 @@ model Versiculo {
   @@map("versiculo")
 }
 
+/// O tema de um mês do livro.
+///
+/// O livro é lido mês a mês, cada um sob um assunto. É aqui que a igreja
+/// decide o que quer ensinar em janeiro, e quais devocionais servem a isso —
+/// a seleção é humana, não sai da classificação automática.
+model TemaMes {
+  id   String @id @default(uuid())
+  ano  Int
+  /// 1 a 12.
+  mes  Int
+  tema String
+  /// Versículo que abre o mês, se houver.
+  versiculo  String?
+  referencia String?
+  descricao  String?
+
+  /// Doutrina que o tema puxa, quando há uma. Escatologia, Eclesiologia e
+  /// Cristologia mapeiam direto; "Família" e "Novas Gerações" não mapeiam em
+  /// nenhuma, e ficam null. Serve para sugerir devocionais candidatos.
+  doutrinaId String?
+  doutrina   Doutrina? @relation(fields: [doutrinaId], references: [id], onDelete: SetNull)
+
+  paginas PaginaLivro[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@unique([ano, mes])
+  @@index([ano])
+  @@map("tema_mes")
+}
+
+/// Um devocional escolhido para o livro, na posição em que aparece.
+///
+/// A ordem é explícita e não segue a data da pregação: o mês é montado por
+/// quem edita, que pode abrir com uma mensagem de dezembro se ela servir
+/// melhor ao tema.
+model PaginaLivro {
+  id        String  @id @default(uuid())
+  temaMesId String
+  temaMes   TemaMes @relation(fields: [temaMesId], references: [id], onDelete: Cascade)
+
+  devocionalId String
+  devocional   Devocional @relation(fields: [devocionalId], references: [id], onDelete: Cascade)
+
+  /// Posição dentro do mês, a partir de 1.
+  ordem Int
+
+  criadoEm DateTime @default(now())
+
+  /// O mesmo devocional não entra duas vezes no mesmo mês.
+  @@unique([temaMesId, devocionalId])
+  @@unique([temaMesId, ordem])
+  @@map("pagina_livro")
+}
+
 /// Texto devocional gerado a partir da resenha. A fila de geração são as
 /// resenhas SEM devocional — por isso não existe status PENDENTE aqui.
 model Devocional {
@@ -338,6 +410,8 @@ model Devocional {
   status StatusDevocional @default(GERADO)
   /// Quem escreveu: "claude-opus-5", "revisao-humana"...
   modelo String?
+
+  paginas PaginaLivro[]
 
   geradoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt

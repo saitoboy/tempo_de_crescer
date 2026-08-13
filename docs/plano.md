@@ -275,6 +275,39 @@ o front estiver de pé.
 - [x] `/livro/livro.idml` — para o designer refinar
 - [ ] Temas do mês e seleção manual de quais devocionais entram
 
+### Dois modelos de miolo
+
+`?modelo=compacto` e `?modelo=largo`.
+
+| | compacto | largo |
+|---|---|---|
+| pontos de aplicação | coluna, ao lado do QR | largura total |
+| QR code | 25 mm, ao lado dos pontos | 14 mm, discreto no rodapé |
+| oração | metade da largura | largura total |
+| anotações | tem | não tem |
+
+O segundo dispensa o campo "Blog" do modelo escaneado: a URL ocupava três
+linhas e ninguém digita endereço de blog. O QR faz o mesmo trabalho em 14 mm.
+
+Título em **Bebas Neue**, com queda para Haettenschweiler e Arial Narrow. A
+fonte não é embutida — instalada na máquina, o navegador usa.
+
+### O que a medição na página revelou
+
+Renderizando o A5 de verdade e medindo com o navegador:
+
+- Os blocos fixos ocupavam **699px dos 695px úteis** — estouravam a página
+  **antes de qualquer texto**. Título a 27pt, QR de 34 mm e anotações de 30 mm
+  eram grandes demais. Reduzidos, os fixos caíram para **501px**.
+- Sobram **194px** para a reflexão, o que dá cerca de **1.250 caracteres**.
+  O prompt pedia 900 a 1400 e o modelo entregava até 1.864 — todas as páginas
+  estouravam. Agora pede 900 a 1100, com teto de 1.200 no Zod.
+- Depois do ajuste: 547px e 648px de 695. Cabe.
+
+O navegador **não imprime fundo por padrão**, então a faixa do cabeçalho e o
+bloco da oração saíam em branco. `print-color-adjust: exact` resolve sem o
+leitor precisar marcar nada.
+
 ### Por que HTML, e não uma biblioteca de PDF
 
 A página tem texto justificado com hifenização, viúvas e órfãs controladas e um
@@ -302,20 +335,90 @@ Um spread por página, com os quadros de texto nomeados: `Titulo`, `Versiculo`,
 O pacote sai com `mimetype`, `designmap.xml`, `META-INF/container.xml`,
 `Resources/Styles.xml` e `Resources/Preferences.xml`.
 
-⚠️ **O arquivo não foi aberto no InDesign** — não há licença aqui para testar.
-A estrutura segue a especificação, mas até alguém abrir de verdade isso é
-promessa, não fato.
+**Aberto e conferido no InDesign.** A primeira versão abriu, com os quadros na
+posição certa, e expôs três defeitos — todos corrigidos:
 
-O caminho seguro para produção é inverter: o designer exporta um template do
-InDesign uma vez, e o código preenche os quadros dele em vez de gerar o pacote
-do zero. Está marcado no código com um comentário `ponytail:`.
+| defeito | causa | correção |
+|---|---|---|
+| páginas em branco na frente | `PagesPerDocument` com o total criava as páginas do documento **além** dos spreads | fixo em 1; as páginas vêm dos spreads |
+| parágrafos colados numa linha | faltava o `<Br/>`, terminador de parágrafo do IDML | `<Br/>` ao fim de cada parágrafo |
+| marcador saía como caractere inválido | `▪` não existe nas fontes padrão | `•` |
+
+### Uma ou duas páginas por devocional
+
+`?formato=auto` (padrão), `uma` ou `duas`.
+
+O acervo tem pregações curtas e longas, e forçar o mesmo formato deixaria umas
+apertadas e outras com metade da página vazia. O `auto` decide **por
+devocional**: até 1.150 caracteres de reflexão mais aplicação, cabe numa
+página; acima disso, abre em duas encaradas — a esquerda com título, versículo
+e reflexão, a direita com aplicação, oração e QR.
+
+Sobre 6 devocionais: `auto` deu 11 páginas, `uma` deu 6, `duas` deu 12.
+
+### Fidelidade ao modelo do designer
+
+O segundo print do InDesign mostrou três desvios do modelo, todos corrigidos:
+
+| defeito | causa |
+|---|---|
+| `REFLEXÃO DEVOCIONAL:` espalhado de ponta a ponta | era parágrafo próprio e justificado; no modelo é **negrito inline** abrindo o texto |
+| `PONTOS DE APLICAÇÃO PRÁTICA:` idem | cabeçalho de seção não pode ser justificado |
+| `FixeoolharemCristoantesdetentar…` | sem `MinimumWordSpacing`, o InDesign espremia os espaços até sumirem |
+
+Também entraram `SpaceAfter` para separar parágrafos e recuo pendente nos
+marcadores, como no escaneado.
+
+O QR fica como **link escrito** no quadro `QRCode`: o designer gera o código na
+diagramação. Foi a preferência da igreja.
+
+O caminho ainda mais seguro seria inverter: o designer exporta um template do
+InDesign uma vez, e o código preenche os quadros dele. Está marcado no código
+com um comentário `ponytail:`.
 
 O QR entra como URL no quadro, não como imagem embutida: embutir exigiria um
 `Graphic` com `Link` para um arquivo que o designer não teria, e o documento
 abriria quebrado.
 
+## ✅ Busca semântica
+
+`npm run vetorizar` — 1.409 resenhas em 2min20s.
+
+Existe por causa dos meses que **não são doutrina**: Novos Recomeços, As
+Mulheres da Bíblia, Família, Novas Gerações. Grudem não os cobre; o significado
+do texto, sim.
+
+O modelo roda **local**, pelo transformers.js: 384 dimensões, ~9 ms por texto,
+nada sai da máquina, sem chave e sem custo por uso.
+
+### Sem pgvector, de propósito
+
+1.409 vetores de 384 dimensões dão 4 MB. Cabem na memória, e o cosseno sobre
+eles leva milissegundos. O índice vetorial só passa a compensar com dezenas de
+milhares de registros — e o Postgres local nem tem a extensão. Fica como
+caminho de upgrade documentado no schema.
+
+### A porcentagem é relativa, não absoluta
+
+O cosseno deste modelo **se agrupa entre 85% e 90%** — tudo parece parecido com
+tudo, e o número absoluto não informa nada. O que vale é a ordem. Por isso a
+API devolve `afinidade`: o melhor do conjunto vira 100, o pior vira 0.
+
+### O que funciona, e o que não
+
+| tema | achou |
+|---|---|
+| Novos Recomeços | *"Ano Novo - Tempo de recomeçar"*, *"Ano Novo, vida nova"* ✅ |
+| As Mulheres da Bíblia | *2 Reis 4:1-7* (a viúva e o azeite), *Provérbios 31* ✅ |
+| Família | *"Família sob pressão"*, *Atos 2:46* (as casas) ✅ |
+| Novas Gerações | Josué 3, Apocalipse 21 — **não convenceu** ⚠️ |
+
+Três de quatro acertam. "Novas Gerações" é abstrato demais para o vetor pegar
+sozinho; ali a busca por palavra ("filhos", "criança", "jovens") ajuda mais.
+
 ## 🔭 Depois
 
 Mapa vetorial dos textos bíblicos já pregados, para enxergar a linha teológica
 e escatológica da igreja ao longo do tempo — e quais passagens nunca subiram ao
-púlpito.
+púlpito. Os vetores das resenhas já estão no banco; falta cruzar com a tabela
+`Versiculo`.

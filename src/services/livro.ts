@@ -87,8 +87,23 @@ export async function pagina(devocionalId: string): Promise<PaginaDoLivro | null
   return d ? montar(d) : null;
 }
 
-/** As páginas de um período, na ordem em que o livro as apresenta. */
-export async function paginas(filtro: { ano?: number; limite: number }): Promise<PaginaDoLivro[]> {
+/**
+ * As páginas do livro.
+ *
+ * Com `edicao`, monta a partir da **curadoria**: os meses do ano, na ordem,
+ * com os devocionais que foram escolhidos e na posição em que foram postos.
+ * É assim que o livro de verdade sai.
+ *
+ * Sem `edicao`, devolve os devocionais mais recentes — serve para conferir a
+ * diagramação antes de haver curadoria, e é o que o preview usa.
+ */
+export async function paginas(filtro: {
+  ano?: number;
+  limite: number;
+  edicao?: boolean;
+}): Promise<PaginaDoLivro[]> {
+  if (filtro.edicao && filtro.ano) return paginasDaEdicao(filtro.ano);
+
   const devocionais = await connection.devocional.findMany({
     where: filtro.ano ? { resenha: { ano: filtro.ano } } : {},
     orderBy: [{ resenha: { dataPregacao: 'asc' } }],
@@ -96,6 +111,22 @@ export async function paginas(filtro: { ano?: number; limite: number }): Promise
     select: SELECAO,
   });
   return devocionais.map(montar);
+}
+
+/** O livro montado como a igreja escolheu: mês a mês, na ordem definida. */
+async function paginasDaEdicao(ano: number): Promise<PaginaDoLivro[]> {
+  const temas = await connection.temaMes.findMany({
+    where: { ano },
+    orderBy: { mes: 'asc' },
+    select: {
+      paginas: {
+        orderBy: { ordem: 'asc' },
+        select: { devocional: { select: SELECAO } },
+      },
+    },
+  });
+
+  return temas.flatMap((t) => t.paginas.map((p) => montar(p.devocional)));
 }
 
 const MESES = [
