@@ -136,3 +136,6 @@ saida/
 
 # Saidas do Playwright
 .playwright-mcp/
+
+# Os devocionais custam assinatura para gerar: o arquivo e versionado
+# de proposito. Nao ignorar.

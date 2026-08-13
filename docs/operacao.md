@@ -58,6 +58,18 @@ Dois detalhes que custaram tempo:
 O MCP do Firecrawl não passa pelo proxy e por isso falha aqui — as chamadas ao
 Firecrawl saem do nosso próprio código.
 
+### Subprocesso não herda o dispatcher
+
+`aplicarProxy()` troca o dispatcher do undici, e isso vale só para o `fetch`
+**deste** processo. O CLI do Claude é outro processo: sai pela rede sozinho e
+lê `HTTPS_PROXY` do ambiente. Por isso `gerarDevocionais.ts` monta o env do
+filho com a URL do proxy.
+
+Sem isso o script funcionava ou não conforme o terminal de onde foi chamado —
+num que já tivesse a variável exportada, sim; num terminal limpo, o CLI voltava
+**407 em ~5 segundos**, com o erro no **stdout** e o stderr vazio. Ler só o
+stderr dava `CLI saiu com código 1:` e mais nada.
+
 ---
 
 ## Deploy no EasyPanel
@@ -99,6 +111,71 @@ atualização diária.
   dentro de `src/generated`.
 - O CLI do Prisma fica na imagem final de propósito — é ele que aplica as
   migrations na partida. Por isso as dependências não são podadas.
+
+---
+
+## Devocionais: geração local, dado versionado
+
+**Produção não gera devocional.** O CLI do Claude autentica com a sessão da
+máquina de quem escreve; dentro do contêiner não há login nenhum. Isso não é
+contornável por código — é como a assinatura funciona.
+
+O fluxo é:
+
+```
+sua máquina                    repositório              produção
+npm run devocionais       →    devocionais.json    →    npm run seed
+npm run exportar:devocionais   (versionado)             (carrega o arquivo)
+```
+
+Cultos novos são três por semana, ~12 por mês. Uma passada local mensal dá
+conta, e o deploy leva os textos junto.
+
+### Gerar por tema do mês, não a fila inteira
+
+Medido: **~28k tokens de entrada por devocional**, e a cota rende cerca de
+**18 por janela** de 5 horas. A fila inteira levaria meses — e não faz sentido,
+porque o livro usa doze meses por edição, não mil páginas.
+
+```bash
+npm run devocionais -- 20 2027-5 --pregador "Nélio Monteiro" --listar
+npm run devocionais -- 20 2027-5 --pregador "Nélio Monteiro"
+```
+
+Com um mês, a fila deixa de ser "as mais recentes" e passa a ser "as que mais
+se parecem com o tema", pelo mesmo vetor que a curadoria usa. `--listar` mostra
+a escolha sem gastar nada — 20 devocionais são ~560k tokens, mais do que cabe
+numa janela.
+
+O grosso dos 28k é o system prompt do próprio CLI: o nosso prompt são ~3k.
+Encurtar a resenha não adianta; o custo é por invocação. As duas alavancas
+reais são gerar menos e gerar o certo.
+
+`--pregador` aceita o nome canônico ou qualquer alias do cadastro. É bandeira
+explícita, e não padrão, porque uma pregação de visitante pode ser escolhida de
+propósito — mas o corpo do livro é do Pr. Nélio, e sem a bandeira a fila mistura
+todo mundo.
+
+### A chave é o slug, nunca o id
+
+O `id` de um devocional é um uuid gerado por banco: o daqui não existe em
+produção. Se a importação casasse por id, criaria devocional órfão ou apontado
+para a resenha errada — no livro, isso é **o texto de uma pregação sob o
+título de outra**. Por isso a chave é `resenha.slug`, que é derivado da URL do
+blog e igual em qualquer banco.
+
+### A importação não sobrescreve
+
+Devocional que já existe no destino é preservado. Se alguém revisou um texto
+pela API, uma nova carga não desfaz a revisão: o arquivo é o ponto de partida,
+não a verdade final.
+
+### Se a chave da API entrar um dia
+
+Aí a geração pode subir para produção sem mudar mais nada além de trocar a
+chamada do CLI por uma chamada de API em `gerarDevocionais.ts`. O resto do
+caminho — fila, validação, gravação — já está pronto e não depende de quem
+escreve o texto.
 
 ---
 
