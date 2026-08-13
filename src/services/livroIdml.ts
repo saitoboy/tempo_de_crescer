@@ -39,27 +39,43 @@ function escapar(texto: string): string {
 }
 
 /**
+ * Um trecho de texto dentro de um parágrafo.
+ *
+ * Os rótulos do modelo — "REFLEXÃO DEVOCIONAL:", "ORAÇÃO:" — são negrito
+ * **dentro** do parágrafo, não linha própria. Como linha própria e com o
+ * parágrafo justificado, o InDesign espalhava "REFLEXÃO" na esquerda e
+ * "DEVOCIONAL:" na direita, de ponta a ponta.
+ */
+export type Trecho = { texto: string; negrito?: boolean };
+
+function trechoXml({ texto, negrito }: Trecho): string {
+  const estilo = negrito ? 'CharacterStyle/Negrito' : 'CharacterStyle/$ID/[No character style]';
+  return `<CharacterStyleRange AppliedCharacterStyle="${estilo}">
+          <Content>${escapar(texto)}</Content>
+        </CharacterStyleRange>`;
+}
+
+/**
  * Um parágrafo dentro de uma Story.
  *
  * O `<Br/>` no fim é o terminador de parágrafo do IDML. Sem ele o InDesign
  * emenda tudo numa linha só — foi o que aconteceu na primeira tentativa, e o
  * texto saiu como "REFLEXÃO DEVOCIONAL:Ouvi, céus, e escuta...".
  */
-function paragrafo(texto: string, estilo: string, ultimo: boolean): string {
+function paragrafo(trechos: Trecho[], estilo: string, ultimo: boolean): string {
   const quebra = ultimo ? '' : '<Br/>';
+  const corpo = trechos.map(trechoXml).join('\n        ');
   return `<ParagraphStyleRange AppliedParagraphStyle="ParagraphStyle/${estilo}">
-      <CharacterStyleRange AppliedCharacterStyle="CharacterStyle/$ID/[No character style]">
-        <Content>${escapar(texto)}</Content>${quebra}
-      </CharacterStyleRange>
-    </ParagraphStyleRange>`;
+        ${corpo}${quebra}
+      </ParagraphStyleRange>`;
 }
 
-function story(id: string, paragrafos: Array<{ texto: string; estilo: string }>): string {
+function story(id: string, paragrafos: Array<{ trechos: Trecho[]; estilo: string }>): string {
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <idPkg:Story xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="18.0">
   <Story Self="${id}" AppliedTOCStyle="n" TrackChanges="false" StoryTitle="" AppliedNamedGrid="n">
     <StoryPreference OpticalMarginAlignment="false" OpticalMarginSize="12" FrameType="TextFrameType" StoryOrientation="Horizontal" StoryDirection="LeftToRightDirection"/>
-    ${paragrafos.map((p, i) => paragrafo(p.texto, p.estilo, i === paragrafos.length - 1)).join('\n    ')}
+    ${paragrafos.map((p, i) => paragrafo(p.trechos, p.estilo, i === paragrafos.length - 1)).join('\n    ')}
   </Story>
 </idPkg:Story>`;
 }
@@ -94,184 +110,238 @@ function quadro(
     </TextFrame>`;
 }
 
+type ParagrafoDoBloco = { trechos: Trecho[]; estilo: string };
+
 type Bloco = {
   nome: string;
-  estilo: string;
   caixa: { x: number; y: number; largura: number; altura: number };
-  paragrafos: string[];
+  paragrafos: ParagrafoDoBloco[];
 };
+
+/** Atalhos para montar os parágrafos do modelo sem repetição. */
+const texto = (t: string, estilo = 'Corpo'): ParagrafoDoBloco => ({ trechos: [{ texto: t }], estilo });
+const titulado = (rotulo: string, corpo: string, estilo = 'Corpo'): ParagrafoDoBloco => ({
+  trechos: [{ texto: `${rotulo} `, negrito: true }, { texto: corpo }],
+  estilo,
+});
+const cabecalhoDeSecao = (t: string): ParagrafoDoBloco => ({
+  trechos: [{ texto: t, negrito: true }],
+  estilo: 'Secao',
+});
 
 /**
  * Quantas páginas cada devocional ocupa.
  *
- * `uma` é o padrão e o formato do Tozer: título, versículo, reflexão, pontos,
- * QR e oração numa página só. `duas` abre em páginas encaradas — a esquerda
- * recebe o título, o versículo e a reflexão, com espaço para respirar, e a
- * direita recebe a aplicação, a oração e o QR. Serve quando a pregação é longa
- * ou quando o pastor quer o livro mais espaçado.
+ * `uma` é o formato do Tozer: título, versículo, reflexão, pontos, QR e
+ * oração numa página só. `duas` abre em páginas encaradas — a esquerda recebe
+ * o título, o versículo e a reflexão, com espaço para respirar, e a direita
+ * recebe a aplicação, a oração e o QR.
+ *
+ * `auto` é o padrão e decide por devocional: o acervo tem pregações curtas e
+ * longas, e forçar o mesmo formato para todas deixaria umas apertadas e outras
+ * com metade da página vazia.
  */
-export type PaginasPorDevocional = 'uma' | 'duas';
+export type PaginasPorDevocional = 'uma' | 'duas' | 'auto';
+
+/**
+ * Acima disto o devocional não cabe numa página só.
+ *
+ * O número saiu de medir a página A5 renderizada: os blocos fixos ocupam 501px
+ * dos 695px úteis, sobram 194px para a reflexão, e isso dá cerca de 1.250
+ * caracteres. A margem é para o texto não encostar no rodapé.
+ */
+const LIMITE_DE_UMA_PAGINA = 1150;
+
+function cabeEmUmaPagina(p: PaginaDoLivro): boolean {
+  const reflexao = p.reflexao.join(' ').length;
+  const aplicacao = p.pontosAplicacao.join(' ').length;
+  return reflexao + aplicacao <= LIMITE_DE_UMA_PAGINA;
+}
 
 /** Os blocos da página, na posição do modelo escaneado. */
 function blocosDaPagina(p: PaginaDoLivro): Bloco[] {
   const util = LARGURA - MARGEM * 2;
   const colunaLarga = util * 0.6;
-  const colunaEstreita = util * 0.35;
+  const colunaEstreita = util * 0.34;
   const direita = MARGEM + util - colunaEstreita;
 
+  return [
+    ...cabecalhoEcreditos(p, MARGEM, util),
+    {
+      nome: 'Reflexao',
+      caixa: { x: MARGEM, y: 186, largura: util, altura: 196 },
+      paragrafos: reflexaoComRotulo(p),
+    },
+    {
+      nome: 'PontosAplicacao',
+      caixa: { x: MARGEM, y: 392, largura: colunaLarga, altura: 122 },
+      paragrafos: [cabecalhoDeSecao('PONTOS DE APLICAÇÃO PRÁTICA:'), ...marcadores(p)],
+    },
+    {
+      nome: 'QRCode',
+      caixa: { x: direita, y: 392, largura: colunaEstreita, altura: 122 },
+      // O link fica escrito para o designer gerar o QR na diagramação.
+      paragrafos: [
+        cabecalhoDeSecao('ASSISTA ON-LINE:'),
+        ...(p.youtubeUrl ? [texto(p.youtubeUrl, 'Nota')] : []),
+      ],
+    },
+    {
+      nome: 'Oracao',
+      caixa: { x: MARGEM, y: 524, largura: colunaLarga, altura: 56 },
+      paragrafos: p.oracao ? [titulado('ORAÇÃO:', `"${p.oracao}"`, 'Oracao')] : [],
+    },
+    {
+      nome: 'Anotacoes',
+      caixa: { x: direita, y: 524, largura: colunaEstreita, altura: 56 },
+      paragrafos: [cabecalhoDeSecao('ANOTAÇÕES:')],
+    },
+  ].filter((b) => b.paragrafos.length > 0);
+}
+
+/** Título, versículo e créditos — iguais nos dois modelos. */
+function cabecalhoEcreditos(p: PaginaDoLivro, x: number, largura: number): Bloco[] {
   const blocos: Bloco[] = [
     {
       nome: 'Titulo',
-      estilo: 'Titulo',
-      caixa: { x: MARGEM, y: 40, largura: util, altura: 60 },
-      paragrafos: [p.titulo.toUpperCase()],
+      caixa: { x, y: 44, largura, altura: 56 },
+      paragrafos: [{ trechos: [{ texto: p.titulo.toUpperCase() }], estilo: 'Titulo' }],
     },
   ];
 
   if (p.versiculo) {
     blocos.push({
       nome: 'Versiculo',
-      estilo: 'Versiculo',
-      caixa: { x: MARGEM, y: 102, largura: util, altura: 34 },
-      paragrafos: [`"${p.versiculo}" - ${p.referencia ?? ''}`],
+      caixa: { x, y: 104, largura, altura: 38 },
+      paragrafos: [
+        {
+          trechos: [
+            { texto: `"${p.versiculo}" ` },
+            { texto: `- ${p.referencia ?? ''}`, negrito: true },
+          ],
+          estilo: 'Versiculo',
+        },
+      ],
     });
   }
 
-  blocos.push(
-    {
-      nome: 'Creditos',
-      estilo: 'Creditos',
-      caixa: { x: MARGEM, y: 142, largura: util, altura: 30 },
-      paragrafos: [
-        ...(p.data ? [`Data: ${dataPorExtenso(p.data)}`] : []),
-        `Pastor: ${p.pregador ?? '—'}`,
-      ],
-    },
-    {
-      nome: 'Reflexao',
-      estilo: 'Corpo',
-      caixa: { x: MARGEM, y: 178, largura: util, altura: 190 },
-      paragrafos: ['REFLEXÃO DEVOCIONAL:', ...p.reflexao],
-    },
-    {
-      nome: 'PontosAplicacao',
-      estilo: 'Corpo',
-      caixa: { x: MARGEM, y: 376, largura: colunaLarga, altura: 130 },
-      paragrafos: ['PONTOS DE APLICAÇÃO PRÁTICA:', ...p.pontosAplicacao.map((i) => `• ${i}`)],
-    },
-    {
-      nome: 'QRCode',
-      estilo: 'Creditos',
-      caixa: { x: direita, y: 376, largura: colunaEstreita, altura: 130 },
-      // O QR entra como URL: o designer coloca a imagem, ou o InDesign gera.
-      // Embutir SVG dentro de IDML exige um Graphic com Link, e um link para
-      // arquivo que o designer não tem quebraria ao abrir.
-      paragrafos: ['ASSISTA ON-LINE:', p.youtubeUrl ?? ''],
-    },
-    {
-      nome: 'Oracao',
-      estilo: 'Oracao',
-      caixa: { x: MARGEM, y: 512, largura: colunaLarga, altura: 60 },
-      paragrafos: p.oracao ? [`ORAÇÃO: "${p.oracao}"`] : [],
-    },
-    {
-      nome: 'Anotacoes',
-      estilo: 'Creditos',
-      caixa: { x: direita, y: 512, largura: colunaEstreita, altura: 60 },
-      paragrafos: ['ANOTAÇÕES:'],
-    },
-  );
+  blocos.push({
+    nome: 'Creditos',
+    caixa: { x, y: 146, largura, altura: 34 },
+    paragrafos: [
+      ...(p.data ? [titulado('Data:', dataPorExtenso(p.data), 'Creditos')] : []),
+      titulado('Pastor:', p.pregador ?? '—', 'Creditos'),
+    ],
+  });
 
-  return blocos.filter((b) => b.paragrafos.length > 0);
+  return blocos;
+}
+
+/** O rótulo abre o primeiro parágrafo em negrito, como no modelo. */
+function reflexaoComRotulo(p: PaginaDoLivro): ParagrafoDoBloco[] {
+  const [primeiro, ...resto] = p.reflexao;
+  return [
+    titulado('REFLEXÃO DEVOCIONAL:', primeiro ?? ''),
+    ...resto.map((paragrafo) => texto(paragrafo)),
+  ];
+}
+
+function marcadores(p: PaginaDoLivro): ParagrafoDoBloco[] {
+  return p.pontosAplicacao.map((item) => texto(`• ${item}`, 'Marcador'));
 }
 
 /** Página esquerda do modelo de duas: o texto respira. */
 function blocosDaEsquerda(p: PaginaDoLivro): Bloco[] {
   const util = LARGURA - MARGEM * 2;
-
-  const blocos: Bloco[] = [
-    {
-      nome: 'Titulo',
-      estilo: 'Titulo',
-      caixa: { x: MARGEM, y: 40, largura: util, altura: 70 },
-      paragrafos: [p.titulo.toUpperCase()],
-    },
-  ];
-
-  if (p.versiculo) {
-    blocos.push({
-      nome: 'Versiculo',
-      estilo: 'Versiculo',
-      caixa: { x: MARGEM, y: 116, largura: util, altura: 46 },
-      paragrafos: [`"${p.versiculo}" - ${p.referencia ?? ''}`],
-    });
-  }
-
-  blocos.push(
-    {
-      nome: 'Creditos',
-      estilo: 'Creditos',
-      caixa: { x: MARGEM, y: 170, largura: util, altura: 34 },
-      paragrafos: [
-        ...(p.data ? [`Data: ${dataPorExtenso(p.data)}`] : []),
-        `Pastor: ${p.pregador ?? '—'}`,
-      ],
-    },
+  return [
+    ...cabecalhoEcreditos(p, MARGEM, util),
     {
       nome: 'Reflexao',
-      estilo: 'Corpo',
-      caixa: { x: MARGEM, y: 214, largura: util, altura: 340 },
-      paragrafos: ['REFLEXÃO DEVOCIONAL:', ...p.reflexao],
+      caixa: { x: MARGEM, y: 190, largura: util, altura: 368 },
+      paragrafos: reflexaoComRotulo(p),
     },
-  );
-
-  return blocos.filter((b) => b.paragrafos.length > 0);
+  ].filter((b) => b.paragrafos.length > 0);
 }
 
 /** Página direita do modelo de duas: aplicação, oração e QR. */
 function blocosDaDireita(p: PaginaDoLivro): Bloco[] {
   const util = LARGURA - MARGEM * 2;
-
   return [
     {
       nome: 'PontosAplicacao',
-      estilo: 'Corpo',
       caixa: { x: MARGEM, y: 60, largura: util, altura: 200 },
-      paragrafos: ['PONTOS DE APLICAÇÃO PRÁTICA:', ...p.pontosAplicacao.map((i) => `• ${i}`)],
+      paragrafos: [cabecalhoDeSecao('PONTOS DE APLICAÇÃO PRÁTICA:'), ...marcadores(p)],
     },
     {
       nome: 'Oracao',
-      estilo: 'Oracao',
-      caixa: { x: MARGEM, y: 280, largura: util, altura: 120 },
-      paragrafos: p.oracao ? [`ORAÇÃO: "${p.oracao}"`] : [],
+      caixa: { x: MARGEM, y: 286, largura: util, altura: 110 },
+      paragrafos: p.oracao ? [titulado('ORAÇÃO:', `"${p.oracao}"`, 'Oracao')] : [],
     },
     {
       nome: 'QRCode',
-      estilo: 'Creditos',
-      caixa: { x: MARGEM, y: 420, largura: util, altura: 70 },
-      paragrafos: ['ASSISTA ON-LINE:', p.youtubeUrl ?? ''],
+      caixa: { x: MARGEM, y: 420, largura: util, altura: 66 },
+      paragrafos: [
+        cabecalhoDeSecao('ASSISTA ON-LINE:'),
+        ...(p.youtubeUrl ? [texto(p.youtubeUrl, 'Nota')] : []),
+      ],
     },
     {
       nome: 'Anotacoes',
-      estilo: 'Creditos',
-      caixa: { x: MARGEM, y: 506, largura: util, altura: 70 },
-      paragrafos: ['ANOTAÇÕES:'],
+      caixa: { x: MARGEM, y: 500, largura: util, altura: 76 },
+      paragrafos: [cabecalhoDeSecao('ANOTAÇÕES:')],
     },
   ].filter((b) => b.paragrafos.length > 0);
 }
 
+/**
+ * Estilos de parágrafo e caractere.
+ *
+ * Três decisões vieram do arquivo aberto no InDesign:
+ *
+ * - **Cabeçalho de seção nunca é justificado.** Justificado e sozinho na
+ *   linha, "PONTOS DE APLICAÇÃO PRÁTICA:" saía espalhado de ponta a ponta.
+ * - **A justificação tem limite de compressão.** Sem `MinimumWordSpacing`, o
+ *   InDesign espremia os espaços até sumirem, e o texto virava
+ *   "FixeoolharemCristoantesdetentarqualqueravanço".
+ * - **`SpaceAfter` separa os parágrafos.** Sem ele o texto vira um bloco só.
+ */
 const ESTILOS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <idPkg:Styles xmlns:idPkg="http://ns.adobe.com/AdobeInDesign/idml/1.0/packaging" DOMVersion="18.0">
   <RootCharacterStyleGroup Self="u1">
     <CharacterStyle Self="CharacterStyle/$ID/[No character style]" Name="$ID/[No character style]"/>
+    <CharacterStyle Self="CharacterStyle/Negrito" Name="Negrito" FontStyle="Bold"/>
   </RootCharacterStyleGroup>
   <RootParagraphStyleGroup Self="u2">
     <ParagraphStyle Self="ParagraphStyle/$ID/[No paragraph style]" Name="$ID/[No paragraph style]"/>
-    <ParagraphStyle Self="ParagraphStyle/Titulo" Name="Titulo" PointSize="27" Justification="LeftAlign" Capitalization="AllCaps"/>
-    <ParagraphStyle Self="ParagraphStyle/Versiculo" Name="Versiculo" PointSize="10" FontStyle="Italic"/>
-    <ParagraphStyle Self="ParagraphStyle/Creditos" Name="Creditos" PointSize="10"/>
-    <ParagraphStyle Self="ParagraphStyle/Corpo" Name="Corpo" PointSize="10" Justification="FullyJustified" Hyphenation="true"/>
-    <ParagraphStyle Self="ParagraphStyle/Oracao" Name="Oracao" PointSize="10" FontStyle="Italic" Justification="FullyJustified"/>
+
+    <ParagraphStyle Self="ParagraphStyle/Titulo" Name="Titulo"
+      PointSize="30" Leading="32" Justification="LeftAlign" Capitalization="AllCaps" Hyphenation="false"/>
+
+    <ParagraphStyle Self="ParagraphStyle/Versiculo" Name="Versiculo"
+      PointSize="9.5" Leading="12" FontStyle="Italic" Justification="LeftAlign" Hyphenation="false"/>
+
+    <ParagraphStyle Self="ParagraphStyle/Creditos" Name="Creditos"
+      PointSize="10" Leading="13" Justification="LeftAlign" Hyphenation="false"/>
+
+    <ParagraphStyle Self="ParagraphStyle/Corpo" Name="Corpo"
+      PointSize="9.5" Leading="12.5" Justification="LeftJustified" Hyphenation="true"
+      SpaceAfter="5" MinimumWordSpacing="85" DesiredWordSpacing="100" MaximumWordSpacing="133"
+      MinimumGlyphScaling="98" MaximumGlyphScaling="102"/>
+
+    <ParagraphStyle Self="ParagraphStyle/Secao" Name="Secao"
+      PointSize="9.5" Leading="12.5" Justification="LeftAlign" Hyphenation="false" SpaceAfter="3"/>
+
+    <ParagraphStyle Self="ParagraphStyle/Marcador" Name="Marcador"
+      PointSize="9.5" Leading="12.5" Justification="LeftAlign" Hyphenation="false"
+      SpaceAfter="3" LeftIndent="10" FirstLineIndent="-10"
+      MinimumWordSpacing="90" DesiredWordSpacing="100" MaximumWordSpacing="120"/>
+
+    <ParagraphStyle Self="ParagraphStyle/Oracao" Name="Oracao"
+      PointSize="9.5" Leading="12.5" FontStyle="Italic" Justification="LeftJustified" Hyphenation="true"
+      MinimumWordSpacing="85" DesiredWordSpacing="100" MaximumWordSpacing="133"/>
+
+    <ParagraphStyle Self="ParagraphStyle/Nota" Name="Nota"
+      PointSize="7.5" Leading="9.5" Justification="LeftAlign" Hyphenation="false"/>
   </RootParagraphStyleGroup>
 </idPkg:Styles>`;
 
@@ -282,7 +352,7 @@ const ESTILOS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
  */
 export async function montarIdml(
   paginas: PaginaDoLivro[],
-  formato: PaginasPorDevocional = 'uma',
+  formato: PaginasPorDevocional = 'auto',
 ): Promise<Buffer> {
   const zip = new JSZip();
 
@@ -294,9 +364,10 @@ export async function montarIdml(
   const stories: string[] = [];
 
   // Um devocional pode virar uma folha ou duas encaradas.
-  const folhas = paginas.flatMap((p) =>
-    formato === 'duas' ? [blocosDaEsquerda(p), blocosDaDireita(p)] : [blocosDaPagina(p)],
-  );
+  const folhas = paginas.flatMap((p) => {
+    const emDuas = formato === 'duas' || (formato === 'auto' && !cabeEmUmaPagina(p));
+    return emDuas ? [blocosDaEsquerda(p), blocosDaDireita(p)] : [blocosDaPagina(p)];
+  });
 
   folhas.forEach((blocos, indice) => {
     const spreadId = `spread${indice}`;
@@ -307,10 +378,7 @@ export async function montarIdml(
       stories.push(storyId);
       zip.file(
         `Stories/Story_${storyId}.xml`,
-        story(
-          storyId,
-          bloco.paragrafos.map((texto) => ({ texto, estilo: bloco.estilo })),
-        ),
+        story(storyId, bloco.paragrafos),
       );
       quadros.push(quadro(`frame${indice}_${ordem}`, storyId, bloco.caixa, bloco.nome));
     });

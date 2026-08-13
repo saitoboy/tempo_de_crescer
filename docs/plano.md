@@ -346,12 +346,31 @@ posição certa, e expôs três defeitos — todos corrigidos:
 
 ### Uma ou duas páginas por devocional
 
-`?formato=uma` e `?formato=duas`.
+`?formato=auto` (padrão), `uma` ou `duas`.
 
-`uma` é o formato do Tozer e o padrão: título, versículo, reflexão, pontos, QR
-e oração numa página só. `duas` abre em páginas encaradas — a esquerda com o
-título, o versículo e a reflexão, a direita com a aplicação, a oração e o QR.
-Serve quando a pregação é longa ou quando o pastor quer o livro mais espaçado.
+O acervo tem pregações curtas e longas, e forçar o mesmo formato deixaria umas
+apertadas e outras com metade da página vazia. O `auto` decide **por
+devocional**: até 1.150 caracteres de reflexão mais aplicação, cabe numa
+página; acima disso, abre em duas encaradas — a esquerda com título, versículo
+e reflexão, a direita com aplicação, oração e QR.
+
+Sobre 6 devocionais: `auto` deu 11 páginas, `uma` deu 6, `duas` deu 12.
+
+### Fidelidade ao modelo do designer
+
+O segundo print do InDesign mostrou três desvios do modelo, todos corrigidos:
+
+| defeito | causa |
+|---|---|
+| `REFLEXÃO DEVOCIONAL:` espalhado de ponta a ponta | era parágrafo próprio e justificado; no modelo é **negrito inline** abrindo o texto |
+| `PONTOS DE APLICAÇÃO PRÁTICA:` idem | cabeçalho de seção não pode ser justificado |
+| `FixeoolharemCristoantesdetentar…` | sem `MinimumWordSpacing`, o InDesign espremia os espaços até sumirem |
+
+Também entraram `SpaceAfter` para separar parágrafos e recuo pendente nos
+marcadores, como no escaneado.
+
+O QR fica como **link escrito** no quadro `QRCode`: o designer gera o código na
+diagramação. Foi a preferência da igreja.
 
 O caminho ainda mais seguro seria inverter: o designer exporta um template do
 InDesign uma vez, e o código preenche os quadros dele. Está marcado no código

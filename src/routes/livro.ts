@@ -19,9 +19,10 @@ export const filtroLivro = z.object({
   modelo: z.enum(['compacto', 'largo']).default('compacto'),
   /**
    * Quantas páginas cada devocional ocupa no IDML.
-   * `uma` é o formato do Tozer; `duas` abre em páginas encaradas.
+   * `auto` decide por devocional pelo tamanho do texto; `uma` é o formato do
+   * Tozer; `duas` abre em páginas encaradas.
    */
-  formato: z.enum(['uma', 'duas']).default('uma'),
+  formato: z.enum(['auto', 'uma', 'duas']).default('auto'),
 });
 
 /** Os dados de uma página, para quem quiser diagramar por conta própria. */
