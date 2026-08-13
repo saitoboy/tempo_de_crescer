@@ -95,15 +95,39 @@ function motivoDaFalha(saida: string, erro: string): string {
 }
 
 /**
+ * Os argumentos do CLI.
+ *
+ * `--strict-mcp-config` sem nenhum `--mcp-config` desliga **todos** os MCP.
+ * Não é detalhe: a pasta neutra evita o CLAUDE.md do projeto, mas as settings
+ * do usuário continuam valendo, e com elas entram firecrawl, playwright e
+ * context7 — dezenas de definições de ferramenta, reenviadas a cada chamada.
+ *
+ * Escrever devocional não usa ferramenta nenhuma. Medido numa chamada com os
+ * MCP ligados: ~30k tokens de entrada, dos quais só ~3k eram o nosso prompt.
+ * O resto era catálogo de ferramenta que o modelo jamais usaria.
+ */
+const ARGUMENTOS = [
+  '-p',
+  '--output-format',
+  'json',
+  '--model',
+  MODELO,
+  '--strict-mcp-config',
+];
+
+/** O que uma chamada custou, para somar no fim do lote. */
+type Gasto = { entrada: number; saida: number };
+
+/**
  * O prompt vai pelo stdin, não como argumento.
  *
  * Passar um texto de milhares de caracteres, com quebras de linha e aspas, na
  * linha de comando do Windows não sobrevive: o CLI recebia vazio e respondia
  * "Fala. Que precisa?". Pelo stdin não há o que escapar.
  */
-function pedirAoClaude(prompt: string): Promise<string> {
+function pedirAoClaude(prompt: string): Promise<{ texto: string; gasto: Gasto }> {
   return new Promise((resolver, rejeitar) => {
-    const processo = spawn('claude', ['-p', '--output-format', 'json', '--model', MODELO], {
+    const processo = spawn('claude', ARGUMENTOS, {
       cwd: PASTA_NEUTRA,
       env: ambienteDoCli(),
       shell: true,
@@ -122,11 +146,33 @@ function pedirAoClaude(prompt: string): Promise<string> {
       }
 
       try {
-        const envelope = JSON.parse(saida) as { is_error?: boolean; result?: string };
+        const envelope = JSON.parse(saida) as {
+          is_error?: boolean;
+          result?: string;
+          usage?: {
+            input_tokens?: number;
+            cache_creation_input_tokens?: number;
+            cache_read_input_tokens?: number;
+            output_tokens?: number;
+          };
+        };
         if (envelope.is_error || !envelope.result) {
           return rejeitar(new Error(`CLI devolveu erro: ${motivoDaFalha(saida, erro)}`));
         }
-        resolver(envelope.result);
+
+        const u = envelope.usage ?? {};
+        resolver({
+          texto: envelope.result,
+          gasto: {
+            // Cache criado e cache lido contam: os dois são entrada, e é a
+            // soma que consome a cota da assinatura.
+            entrada:
+              (u.input_tokens ?? 0) +
+              (u.cache_creation_input_tokens ?? 0) +
+              (u.cache_read_input_tokens ?? 0),
+            saida: u.output_tokens ?? 0,
+          },
+        });
       } catch (e) {
         rejeitar(new Error(`resposta do CLI não é JSON: ${saida.slice(0, 200)}`));
       }
@@ -150,15 +196,17 @@ function eLimiteDaConta(motivo: string): boolean {
   return /\b(session|usage|rate) limit\b/i.test(motivo);
 }
 
-async function gerarUm(resenha: ResenhaParaDevocional): Promise<void> {
-  const bruto = await pedirAoClaude(montarPrompt(resenha));
-  const resposta = respostaDoModelo.parse(extrairJson(bruto));
+async function gerarUm(resenha: ResenhaParaDevocional): Promise<Gasto> {
+  const { texto, gasto } = await pedirAoClaude(montarPrompt(resenha));
+  const resposta = respostaDoModelo.parse(extrairJson(texto));
   const devocional = await guardarDevocional(resenha.id, resposta, MODELO);
 
   logSuccess(`"${devocional.titulo}" — ${devocional.referencia}`, 'devocional');
   if (!devocional.versiculo) {
     logWarning(`referência "${devocional.referencia}" não resolveu na ACF`, 'devocional');
   }
+
+  return gasto;
 }
 
 async function main() {
@@ -170,6 +218,8 @@ async function main() {
   const fila = await filaDeGeracao(limite);
   let feitos = 0;
   let seguidas = 0;
+  let entrada = 0;
+  let saidaTokens = 0;
   const falhas: string[] = [];
 
   for (const [i, item] of fila.entries()) {
@@ -185,7 +235,9 @@ async function main() {
     logInfo(`[${i + 1}/${fila.length}] ${resenha.titulo.slice(0, 55)}`, 'devocional');
 
     try {
-      await gerarUm(resenha);
+      const gasto = await gerarUm(resenha);
+      entrada += gasto.entrada;
+      saidaTokens += gasto.saida;
       feitos++;
       seguidas = 0;
     } catch (e) {
@@ -220,6 +272,19 @@ async function main() {
   }
 
   logSuccess(`${feitos} devocionais escritos`, 'devocional');
+
+  // O que decide quantos cabem numa janela da assinatura é o custo por
+  // devocional, não o número de itens. Sem medir, não dá para planejar o lote.
+  if (feitos > 0) {
+    const porItem = Math.round(entrada / feitos);
+    logInfo(
+      `${entrada.toLocaleString('pt-BR')} tokens de entrada e ` +
+        `${saidaTokens.toLocaleString('pt-BR')} de saída — ` +
+        `${porItem.toLocaleString('pt-BR')} de entrada por devocional`,
+      'devocional',
+    );
+  }
+
   if (falhas.length > 0) {
     logWarning(`${falhas.length} falharam e voltam na próxima execução`, 'devocional', falhas);
   }
