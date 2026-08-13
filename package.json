@@ -43,6 +43,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "jszip": "^3.10.1",
     "node-cron": "^4.6.0",
     "qrcode": "^1.5.4",
     "swagger-ui-express": "^5.0.1",

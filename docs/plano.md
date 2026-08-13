@@ -1,6 +1,6 @@
 # Plano de implementação
 
-Oito fases. Três prontas, uma parcial, quatro pela frente.
+Oito fases. Sete prontas no backend; falta o front.
 
 | fase | o que é                                   | estado      |
 | ---- | ------------------------------------------ | ----------- |
@@ -11,8 +11,8 @@ Oito fases. Três prontas, uma parcial, quatro pela frente.
 | 4    | YouTube: casar culto com a live, QR code   | ✅ pronta   |
 | 5    | Classificação teológica                 | ✅ pronta   |
 | 6    | Geração dos devocionais                  | ✅ pronta   |
-| 7    | Análise e front                           | ⬜ próxima |
-| 8    | Montagem do livro                          | ⬜          |
+| 7    | Análise e login                            | ✅ backend  |
+| 8    | Montagem do livro                          | ✅ pronta   |
 
 ---
 
@@ -233,23 +233,55 @@ O CLI também roda de uma **pasta vazia**, para não carregar o `CLAUDE.md` do
 projeto a cada chamada — eram 23 mil tokens de contexto desperdiçados, e ainda
 arriscava misturar as instruções do repositório com as do devocional.
 
-## ⬜ Fase 7 — Análise e front
+## ✅ Fase 7 — Análise e login *(backend)*
 
-- Endpoints de análise: temas por ano, por pregador, cobertura bíblica,
-  progressão temporal
-- Front em Vite + shadcn/ui
-- **Login de verdade**, com os papéis `ADMIN`, `PASTOR` e `LIDER` que já estão
-  no schema — substitui o token único da Fase 3
+- [x] `/analise/panorama` — números do acervo
+- [x] `/analise/doutrinas` — distribuição pelas 8
+- [x] `/analise/evolucao` — ênfase ano a ano
+- [x] `/analise/pregadores` — o que cada um enfatiza
+- [x] `/analise/biblia` — cobertura, e o que nunca foi pregado
+- [x] **Login com JWT** e os papéis `ADMIN`, `PASTOR`, `LIDER`
+- [ ] Front em Vite + shadcn/ui
 
-A análise temporal filtra `origemData = 'TEXTO'` e trabalha com dados
-confiáveis; a classificação usa as 1.409, porque não depende de data.
+### O achado da cobertura bíblica
 
-## ⬜ Fase 8 — O livro
+**57 dos 66 livros já foram pregados (86%).** Nunca subiram ao púlpito:
+Esdras, Cânticos, Lamentações de Jeremias, Amós, Obadias, 2 Tessalonicenses,
+2 João, 3 João e Judas.
 
-- Temas do mês
-- Seleção manual de quais devocionais entram
-- Diagramação A5, com o QR code do culto em cada página
-- Crédito de redação a Elizabete Lacerda Paulo
+Mais pregados: Mateus 154 · João 127 · Atos 108 · Lucas 94 · Salmos 76.
+
+### Regras da análise
+
+Só o tema **PRINCIPAL** conta nas distribuições — somar os secundários faria o
+total passar do número de pregações. E a série histórica usa apenas
+`origemData = 'TEXTO'`, para não misturar o que é firme com o que foi
+corrigido à mão.
+
+### O login
+
+JWT assinado com HMAC-SHA256 usando só a stdlib. Uma biblioteca de JWT traria
+verificação de algoritmo, `jku`, `kid` e uma dúzia de coisas que este projeto
+não usa — e cada uma já foi vetor de CVE. Aqui só existe um algoritmo, fixo no
+código. Há teste para o ataque do `alg: none`.
+
+O `API_TOKEN` continua aceito, para não quebrar quem já integrou. Some quando
+o front estiver de pé.
+
+## ✅ Fase 8 — O livro
+
+- [x] `/livro/paginas` — os blocos da página, em JSON
+- [x] `/livro/imprimir.html` — A5 pronto para imprimir
+- [x] `/livro/livro.idml` — para o designer refinar
+- [ ] Temas do mês e seleção manual de quais devocionais entram
+
+### Por que HTML, e não uma biblioteca de PDF
+
+A página tem texto justificado com hifenização, viúvas e órfãs controladas e um
+bloco de anotações. O motor de texto do navegador faz isso bem; montar em
+coordenadas à mão levaria muito mais código para um resultado pior. Abrir no
+navegador e imprimir para PDF dá o A5 final, e o QR vai embutido como SVG — o
+arquivo é autossuficiente.
 
 ### Dois formatos de saída
 
@@ -263,9 +295,24 @@ blocos certos, QR no lugar, paginação — e o designer recebe um arquivo **viv
 não uma imagem achatada. Ele ajusta tipografia, viúvas e órfãs, respiros, e
 manda para a gráfica.
 
-`.idml` é um pacote ZIP de XML, então dá para gerar sem InDesign: monta-se a
-estrutura a partir de um template exportado uma vez pelo designer, com os
-blocos de `Devocional` preenchendo os quadros de texto nomeados.
+### O IDML
+
+Um spread por página, com os quadros de texto nomeados: `Titulo`, `Versiculo`,
+`Creditos`, `Reflexao`, `PontosAplicacao`, `QRCode`, `Oracao`, `Anotacoes`.
+O pacote sai com `mimetype`, `designmap.xml`, `META-INF/container.xml`,
+`Resources/Styles.xml` e `Resources/Preferences.xml`.
+
+⚠️ **O arquivo não foi aberto no InDesign** — não há licença aqui para testar.
+A estrutura segue a especificação, mas até alguém abrir de verdade isso é
+promessa, não fato.
+
+O caminho seguro para produção é inverter: o designer exporta um template do
+InDesign uma vez, e o código preenche os quadros dele em vez de gerar o pacote
+do zero. Está marcado no código com um comentário `ponytail:`.
+
+O QR entra como URL no quadro, não como imagem embutida: embutir exigiria um
+`Graphic` com `Link` para um arquivo que o designer não teria, e o documento
+abriria quebrado.
 
 ## 🔭 Depois
 
