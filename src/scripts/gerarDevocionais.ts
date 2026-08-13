@@ -74,6 +74,27 @@ function ambienteDoCli(): NodeJS.ProcessEnv {
 }
 
 /**
+ * O que de fato deu errado, em uma linha legível.
+ *
+ * O CLI descreve a falha no **stdout**, num envelope JSON, e deixa o stderr
+ * vazio — ler só o stderr produzia `CLI saiu com código 1:` e mais nada. E o
+ * envelope é longo: truncar o começo mostra `is_error`, `session_id` e
+ * contadores zerados, nunca a frase que explica o motivo. Ela vive no campo
+ * `result`, lá no fim.
+ */
+function motivoDaFalha(saida: string, erro: string): string {
+  try {
+    const envelope = JSON.parse(saida) as { result?: string; error?: string };
+    const texto = envelope.result || envelope.error;
+    if (texto) return texto.slice(0, 400);
+  } catch {
+    // Não era JSON — cai para a saída crua.
+  }
+
+  return [erro.trim(), saida.trim()].filter(Boolean).join(' | ').slice(0, 400) || '(sem mensagem)';
+}
+
+/**
  * O prompt vai pelo stdin, não como argumento.
  *
  * Passar um texto de milhares de caracteres, com quebras de linha e aspas, na
@@ -97,17 +118,13 @@ function pedirAoClaude(prompt: string): Promise<string> {
     processo.on('error', rejeitar);
     processo.on('close', (codigo) => {
       if (codigo !== 0) {
-        // O CLI descreve a falha no stdout, e o stderr costuma vir vazio. Ler
-        // só o stderr produzia "CLI saiu com código 1:" e mais nada — mensagem
-        // que não diz se foi proxy, conta sem uso ou prompt recusado.
-        const motivo = [erro.trim(), saida.trim()].filter(Boolean).join(' | ');
-        return rejeitar(new Error(`CLI saiu com código ${codigo}: ${motivo.slice(0, 300)}`));
+        return rejeitar(new Error(`CLI saiu com código ${codigo}: ${motivoDaFalha(saida, erro)}`));
       }
 
       try {
         const envelope = JSON.parse(saida) as { is_error?: boolean; result?: string };
         if (envelope.is_error || !envelope.result) {
-          return rejeitar(new Error(`CLI devolveu erro: ${saida.slice(0, 200)}`));
+          return rejeitar(new Error(`CLI devolveu erro: ${motivoDaFalha(saida, erro)}`));
         }
         resolver(envelope.result);
       } catch (e) {
@@ -118,6 +135,19 @@ function pedirAoClaude(prompt: string): Promise<string> {
     processo.stdin.write(prompt);
     processo.stdin.end();
   });
+}
+
+/**
+ * Reconhece o fim da cota da assinatura.
+ *
+ * A mensagem vem em inglês, do próprio CLI, e traz a hora do reset:
+ * `You've hit your session limit · resets 12:30pm (America/Sao_Paulo)`.
+ *
+ * Isso não é falha de um item: nenhum dos seguintes vai passar. Insistir só
+ * gasta tempo, então o lote para na primeira, sem esperar as três seguidas.
+ */
+function eLimiteDaConta(motivo: string): boolean {
+  return /\b(session|usage|rate) limit\b/i.test(motivo);
 }
 
 async function gerarUm(resenha: ResenhaParaDevocional): Promise<void> {
@@ -161,13 +191,22 @@ async function main() {
     } catch (e) {
       // Uma falha não derruba o lote: o resto continua, e esta volta na
       // próxima execução, porque a fila é "resenha sem devocional".
-      const motivo = (e as Error).message.slice(0, 200);
+      const motivo = (e as Error).message.slice(0, 400);
       falhas.push(`${resenha.titulo.slice(0, 40)}: ${motivo}`);
       seguidas++;
 
       // Na hora, não só no fim: guardar o motivo para o resumo final já custou
       // um lote inteiro rodando às cegas com a conta sem uso disponível.
       logWarning(`falhou: ${motivo}`, 'devocional');
+
+      if (eLimiteDaConta(motivo)) {
+        logError(
+          `cota da assinatura esgotada — o lote parou aqui. ` +
+            `Os ${feitos} já gravados ficam; a fila retoma sozinha depois do reset.`,
+          'devocional',
+        );
+        break;
+      }
 
       if (seguidas >= FALHAS_SEGUIDAS_PARA_ABORTAR) {
         logError(
