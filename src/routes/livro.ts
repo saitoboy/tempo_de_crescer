@@ -23,6 +23,12 @@ export const filtroLivro = z.object({
    * Tozer; `duas` abre em páginas encaradas.
    */
   formato: z.enum(['auto', 'uma', 'duas']).default('auto'),
+  /**
+   * Monta a partir da curadoria — os temas do mês e os devocionais escolhidos,
+   * na ordem definida. Exige `ano`. Sem isto, sai a prévia com os mais
+   * recentes, que serve para conferir diagramação.
+   */
+  edicao: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
 });
 
 /** Os dados de uma página, para quem quiser diagramar por conta própria. */

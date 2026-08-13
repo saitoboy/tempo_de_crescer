@@ -228,6 +228,7 @@ model Doutrina {
 
   subtemas       Subtema[]
   classificacoes Classificacao[]
+  temasDoMes     TemaMes[]
 
   @@map("doutrina")
 }
@@ -307,6 +308,62 @@ model Versiculo {
   @@map("versiculo")
 }
 
+/// O tema de um mês do livro.
+///
+/// O livro é lido mês a mês, cada um sob um assunto. É aqui que a igreja
+/// decide o que quer ensinar em janeiro, e quais devocionais servem a isso —
+/// a seleção é humana, não sai da classificação automática.
+model TemaMes {
+  id   String @id @default(uuid())
+  ano  Int
+  /// 1 a 12.
+  mes  Int
+  tema String
+  /// Versículo que abre o mês, se houver.
+  versiculo  String?
+  referencia String?
+  descricao  String?
+
+  /// Doutrina que o tema puxa, quando há uma. Escatologia, Eclesiologia e
+  /// Cristologia mapeiam direto; "Família" e "Novas Gerações" não mapeiam em
+  /// nenhuma, e ficam null. Serve para sugerir devocionais candidatos.
+  doutrinaId String?
+  doutrina   Doutrina? @relation(fields: [doutrinaId], references: [id], onDelete: SetNull)
+
+  paginas PaginaLivro[]
+
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@unique([ano, mes])
+  @@index([ano])
+  @@map("tema_mes")
+}
+
+/// Um devocional escolhido para o livro, na posição em que aparece.
+///
+/// A ordem é explícita e não segue a data da pregação: o mês é montado por
+/// quem edita, que pode abrir com uma mensagem de dezembro se ela servir
+/// melhor ao tema.
+model PaginaLivro {
+  id        String  @id @default(uuid())
+  temaMesId String
+  temaMes   TemaMes @relation(fields: [temaMesId], references: [id], onDelete: Cascade)
+
+  devocionalId String
+  devocional   Devocional @relation(fields: [devocionalId], references: [id], onDelete: Cascade)
+
+  /// Posição dentro do mês, a partir de 1.
+  ordem Int
+
+  criadoEm DateTime @default(now())
+
+  /// O mesmo devocional não entra duas vezes no mesmo mês.
+  @@unique([temaMesId, devocionalId])
+  @@unique([temaMesId, ordem])
+  @@map("pagina_livro")
+}
+
 /// Texto devocional gerado a partir da resenha. A fila de geração são as
 /// resenhas SEM devocional — por isso não existe status PENDENTE aqui.
 model Devocional {
@@ -338,6 +395,8 @@ model Devocional {
   status StatusDevocional @default(GERADO)
   /// Quem escreveu: "claude-opus-5", "revisao-humana"...
   modelo String?
+
+  paginas PaginaLivro[]
 
   geradoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt

@@ -23,7 +23,8 @@
     "youtube": "tsx src/scripts/casarYoutube.ts",
     "qrcodes": "tsx src/scripts/gerarQrCodes.ts",
     "classificar": "tsx src/scripts/classificar.ts",
-    "devocionais": "tsx src/scripts/gerarDevocionais.ts"
+    "devocionais": "tsx src/scripts/gerarDevocionais.ts",
+    "seed:temas": "tsx src/scripts/semearTemas.ts"
   },
   "repository": {
     "type": "git",

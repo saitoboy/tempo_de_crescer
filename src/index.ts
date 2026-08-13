@@ -13,6 +13,7 @@ import { rotasCultos } from './routes/cultos';
 import { rotasLivro } from './routes/livro';
 import { rotasPregadores } from './routes/pregadores';
 import { rotasResenhas } from './routes/resenhas';
+import { rotasTemas } from './routes/temas';
 import { rotasSessao } from './routes/sessao';
 import { agendarIngestao, executarIngestao } from './services/agendamento';
 import { logInfo, logSuccess } from './utils/logger';
@@ -48,6 +49,7 @@ app.use(`${BASE}/sessao`, rotasSessao);
 app.use(`${BASE}/analise`, rotasAnalise);
 app.use(`${BASE}/cultos`, rotasCultos);
 app.use(`${BASE}/livro`, rotasLivro);
+app.use(`${BASE}/temas`, rotasTemas);
 app.use(`${BASE}/resenhas`, rotasResenhas);
 app.use(`${BASE}/pregadores`, rotasPregadores);
 
