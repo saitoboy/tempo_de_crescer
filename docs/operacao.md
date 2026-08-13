@@ -131,6 +131,31 @@ npm run exportar:devocionais   (versionado)             (carrega o arquivo)
 Cultos novos são três por semana, ~12 por mês. Uma passada local mensal dá
 conta, e o deploy leva os textos junto.
 
+### Gerar por tema do mês, não a fila inteira
+
+Medido: **~28k tokens de entrada por devocional**, e a cota rende cerca de
+**18 por janela** de 5 horas. A fila inteira levaria meses — e não faz sentido,
+porque o livro usa doze meses por edição, não mil páginas.
+
+```bash
+npm run devocionais -- 20 2027-5 --pregador "Nélio Monteiro" --listar
+npm run devocionais -- 20 2027-5 --pregador "Nélio Monteiro"
+```
+
+Com um mês, a fila deixa de ser "as mais recentes" e passa a ser "as que mais
+se parecem com o tema", pelo mesmo vetor que a curadoria usa. `--listar` mostra
+a escolha sem gastar nada — 20 devocionais são ~560k tokens, mais do que cabe
+numa janela.
+
+O grosso dos 28k é o system prompt do próprio CLI: o nosso prompt são ~3k.
+Encurtar a resenha não adianta; o custo é por invocação. As duas alavancas
+reais são gerar menos e gerar o certo.
+
+`--pregador` aceita o nome canônico ou qualquer alias do cadastro. É bandeira
+explícita, e não padrão, porque uma pregação de visitante pode ser escolhida de
+propósito — mas o corpo do livro é do Pr. Nélio, e sem a bandeira a fila mistura
+todo mundo.
+
 ### A chave é o slug, nunca o id
 
 O `id` de um devocional é um uuid gerado por banco: o daqui não existe em

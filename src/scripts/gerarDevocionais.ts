@@ -8,11 +8,13 @@ import connection from '../connection';
 import {
   extrairJson,
   filaDeGeracao,
+  filaDoTema,
   guardarDevocional,
   montarPrompt,
   respostaDoModelo,
   type ResenhaParaDevocional,
 } from '../services/devocional';
+import { MESES } from '../services/curadoriaDoLivro';
 import { logError, logInfo, logSuccess, logWarning } from '../utils/logger';
 import { urlDoProxy } from '../utils/proxy';
 
@@ -22,12 +24,18 @@ import { urlDoProxy } from '../utils/proxy';
  * Usa a assinatura, não a chave de API. Por isso é um script de lote rodado à
  * mão, e não algo que a API dispara: quem controla o gasto é você.
  *
- *     npm run devocionais           # 5 resenhas
- *     npm run devocionais -- 20     # 20 resenhas
+ *     npm run devocionais                    # 5, das mais recentes
+ *     npm run devocionais -- 20              # 20, das mais recentes
+ *     npm run devocionais -- 20 2027-6       # 20 para o mês de Escatologia
  *
  * A fila são as resenhas sem devocional. Interromper no meio não perde nada:
  * cada uma é gravada assim que fica pronta, e a execução seguinte continua de
  * onde parou.
+ *
+ * **Com um mês, a fila muda de critério**: em vez das mais recentes, as que
+ * mais se parecem com o tema. É o modo que vale a pena — a cota rende cerca de
+ * 18 devocionais por janela, e gastá-la escrevendo texto que nenhum mês do
+ * livro vai usar é o desperdício que este parâmetro existe para evitar.
  */
 
 const MODELO = 'claude-opus-5';
@@ -209,13 +217,83 @@ async function gerarUm(resenha: ResenhaParaDevocional): Promise<Gasto> {
   return gasto;
 }
 
+/**
+ * Resolve `2027-6` no tema daquele mês. Aceita também o uuid direto, que é o
+ * que a API devolve.
+ */
+async function acharTema(argumento: string) {
+  const anoMes = argumento.match(/^(\d{4})-(\d{1,2})$/);
+
+  const tema = anoMes
+    ? await connection.temaMes.findUnique({
+        where: { ano_mes: { ano: Number(anoMes[1]), mes: Number(anoMes[2]) } },
+        select: { id: true, ano: true, mes: true, tema: true },
+      })
+    : await connection.temaMes.findUnique({
+        where: { id: argumento },
+        select: { id: true, ano: true, mes: true, tema: true },
+      });
+
+  if (!tema) {
+    throw new Error(
+      `Nenhum tema em "${argumento}". Use ano-mês, como 2027-6, ` +
+        `e rode \`npm run seed:temas -- 2027\` se o ano ainda não foi semeado.`,
+    );
+  }
+
+  return tema;
+}
+
+/**
+ * O pregador pedido em `--pregador "Nélio Monteiro"`, resolvido pelo nome
+ * canônico ou por qualquer um dos aliases.
+ */
+async function acharPregador(nome: string) {
+  const alvo = nome.toLowerCase();
+
+  const pregador = await connection.pregador.findFirst({
+    where: {
+      OR: [{ nomeCanonico: { equals: nome, mode: 'insensitive' } }, { aliases: { has: alvo } }],
+    },
+    select: { id: true, nomeCanonico: true },
+  });
+
+  if (!pregador) throw new Error(`Pregador "${nome}" não está no cadastro`);
+  return pregador;
+}
+
 async function main() {
   const limite = Number(process.argv[2]) || LOTE_PADRAO;
+  const alvo = process.argv[3]?.startsWith('--') ? undefined : process.argv[3];
+
+  const pedido = process.argv.indexOf('--pregador');
+  const pregador = pedido > -1 ? await acharPregador(process.argv[pedido + 1] ?? '') : null;
 
   const pendentes = await connection.resenha.count({ where: { devocional: null } });
   logInfo(`${pendentes} resenhas ainda sem devocional; gerando ${Math.min(limite, pendentes)}`, 'devocional');
 
-  const fila = await filaDeGeracao(limite);
+  let fila;
+  if (alvo) {
+    const tema = await acharTema(alvo);
+    fila = (await filaDoTema(tema.id, limite, pregador?.id)).fila;
+    logInfo(
+      `por afinidade com ${MESES[tema.mes - 1]}/${tema.ano} — "${tema.tema}"` +
+        (pregador ? `, só de ${pregador.nomeCanonico}` : ''),
+      'devocional',
+    );
+  } else {
+    fila = await filaDeGeracao(limite);
+  }
+
+  // Conferir antes de gastar: 20 devocionais são ~560k tokens de entrada, mais
+  // do que cabe numa janela da assinatura. Ver a lista custa zero.
+  if (process.argv.includes('--listar')) {
+    for (const [i, r] of fila.entries()) {
+      logInfo(`${String(i + 1).padStart(3)}. ${r.titulo}`, 'devocional');
+    }
+    logSuccess(`${fila.length} na fila — nada gerado, isto foi só a lista`, 'devocional');
+    return;
+  }
   let feitos = 0;
   let seguidas = 0;
   let entrada = 0;

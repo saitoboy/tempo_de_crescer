@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import connection from '../connection';
+import { comoConsulta, maisParecidos } from './vetores';
 
 /**
  * Transforma a resenha de um culto em devocional para o livro.
@@ -168,21 +169,76 @@ export async function buscarVersiculo(referencia: string): Promise<string | null
  */
 export function filaDeGeracao(limite: number) {
   return connection.resenha.findMany({
-    where: { devocional: null, conteudoLimpo: { not: '' }, dataPregacao: { not: null } },
+    where: PENDENTES,
     orderBy: [{ dataPregacao: 'desc' }],
     take: limite,
-    select: {
-      id: true,
-      titulo: true,
-      conteudoLimpo: true,
-      textoBase: true,
-      pregador: { select: { nomeCanonico: true } },
-      classificacoes: {
-        where: { papel: 'PRINCIPAL' },
-        select: { doutrina: { select: { nome: true } } },
-      },
-    },
+    select: CAMPOS_DA_FILA,
   });
+}
+
+/** Quem ainda não virou devocional e tem material para virar. */
+const PENDENTES = {
+  devocional: null,
+  conteudoLimpo: { not: '' },
+  dataPregacao: { not: null },
+} as const;
+
+const CAMPOS_DA_FILA = {
+  id: true,
+  titulo: true,
+  conteudoLimpo: true,
+  textoBase: true,
+  pregador: { select: { nomeCanonico: true } },
+  classificacoes: {
+    where: { papel: 'PRINCIPAL' as const },
+    select: { doutrina: { select: { nome: true } } },
+  },
+} as const;
+
+/**
+ * A fila de um mês do livro: as resenhas cujo texto mais se parece com o tema.
+ *
+ * Existe porque gerar a fila inteira não é viável. Cada devocional custa ~28k
+ * tokens de entrada, e a cota da assinatura rende cerca de 18 por janela — mil
+ * resenhas levariam meses. Mas o livro não precisa de mil: precisa das doze
+ * dúzias que o pastor vai montar. Gerar o que vai ser usado, e só isso.
+ *
+ * A ordenação é a mesma da curadoria (`porSemelhanca`), com o alvo invertido:
+ * lá a busca é sobre quem **já tem** devocional, para escolher a página; aqui é
+ * sobre quem **ainda não tem**, para escrevê-la.
+ *
+ * A comparação é sobre o vetor da resenha, não do devocional — que nem existe
+ * ainda. É a pregação inteira que carrega o assunto.
+ */
+export async function filaDoTema(temaMesId: string, limite: number, pregadorId?: string) {
+  const tema = await connection.temaMes.findUnique({
+    where: { id: temaMesId },
+    select: { tema: true, descricao: true },
+  });
+  if (!tema) throw new Error(`Tema ${temaMesId} não encontrado`);
+
+  const consulta = await comoConsulta([tema.tema, tema.descricao].filter(Boolean).join('. '));
+
+  // Só id e vetor: trazer o conteúdo de mil resenhas para ordenar seria
+  // carregar megabytes de texto e descartar quase tudo.
+  const candidatas = await connection.resenha.findMany({
+    where: { ...PENDENTES, ...(pregadorId ? { pregadorId } : {}) },
+    select: { id: true, embedding: true },
+  });
+
+  const ranking = maisParecidos(consulta, candidatas, limite);
+
+  const resenhas = await connection.resenha.findMany({
+    where: { id: { in: ranking.map((r) => r.id) } },
+    select: CAMPOS_DA_FILA,
+  });
+
+  // O `IN` volta em ordem de banco; a de afinidade é a que importa.
+  const porId = new Map(resenhas.map((r) => [r.id, r]));
+  return {
+    tema: tema.tema,
+    fila: ranking.map((r) => porId.get(r.id)!).filter(Boolean),
+  };
 }
 
 export async function guardarDevocional(
