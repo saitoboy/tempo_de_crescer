@@ -16,7 +16,11 @@ export const filtroLivro = z.object({
    * - `compacto`: QR ao lado dos pontos, com espaço para anotações
    * - `largo`: pontos e oração em largura total, QR discreto no rodapé
    */
-  modelo: z.enum(['compacto', 'largo']).default('compacto'),
+  /**
+   * `largo` é o modelo escolhido pelo pastor: pontos e oração em largura
+   * total, sem bloco de anotações, QR discreto no rodapé.
+   */
+  modelo: z.enum(['largo', 'compacto']).default('largo'),
   /**
    * Quantas páginas cada devocional ocupa no IDML.
    * `auto` decide por devocional pelo tamanho do texto; `uma` é o formato do

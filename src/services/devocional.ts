@@ -18,7 +18,8 @@ import connection from '../connection';
 
 /** Os blocos da página do livro — ver CONTEXTO/modelo-pagina.jpeg. */
 export const respostaDoModelo = z.object({
-  titulo: z.string().trim().min(3).max(80),
+  // Acima de ~34 o título quebra em duas linhas e empurra a página para fora.
+  titulo: z.string().trim().min(3).max(48),
   /** Referência do versículo em destaque: "Salmos 23:1". */
   referencia: z.string().trim().min(3).max(60),
   /**
@@ -27,7 +28,7 @@ export const respostaDoModelo = z.object({
    * dá cerca de 1.250 caracteres. O limite fica abaixo disso para o texto não
    * encostar no rodapé.
    */
-  reflexao: z.string().trim().min(200).max(1200),
+  reflexao: z.string().trim().min(200).max(1050),
   pontosAplicacao: z.array(z.string().trim().min(10)).min(3).max(4),
   oracao: z.string().trim().min(50),
 });
@@ -84,9 +85,9 @@ ${resenha.conteudoLimpo}
 Responda SOMENTE com JSON válido, sem cercas de código e sem comentário:
 
 {
-  "titulo": "título curto e forte, até 60 caracteres, sem ponto final",
+  "titulo": "título curto e forte, até 34 caracteres, para caber em UMA linha",
   "referencia": "a referência do versículo que resume a mensagem, ex: Salmos 23:1",
-  "reflexao": "2 a 3 parágrafos, 900 a 1100 caracteres NO TOTAL, separados por \\n\\n",
+  "reflexao": "2 a 3 parágrafos, 800 a 950 caracteres NO TOTAL, separados por \\n\\n",
   "pontosAplicacao": ["exatamente 3 aplicações, uma linha curta cada, no imperativo"],
   "oracao": "oração curta, primeira pessoa do PLURAL, 180 a 260 caracteres"
 }
@@ -152,10 +153,22 @@ export async function buscarVersiculo(referencia: string): Promise<string | null
   return versiculos.length > 0 ? versiculos.map((v) => v.texto).join(' ') : null;
 }
 
-/** As resenhas que ainda não viraram devocional. É a fila, e não um status. */
+/**
+ * As resenhas que ainda não viraram devocional. É a fila, e não um status.
+ *
+ * **Resenha sem data fica de fora.** No Postgres, `ORDER BY data DESC` põe os
+ * NULL primeiro, e a fila estava servindo justamente as 297 sem data — que são
+ * as piores candidatas: sem data não há culto, sem culto não há QR code, e a
+ * página do livro sai sem os dois. Elas voltam à fila depois que a curadoria
+ * manual preencher a data.
+ *
+ * A ordem decrescente também é intencional: o canal do YouTube só começou a
+ * transmitir em 2020, então as pregações recentes são as que têm culto casado
+ * e QR code. Começar pelas novas rende página completa desde o primeiro lote.
+ */
 export function filaDeGeracao(limite: number) {
   return connection.resenha.findMany({
-    where: { devocional: null, conteudoLimpo: { not: '' } },
+    where: { devocional: null, conteudoLimpo: { not: '' }, dataPregacao: { not: null } },
     orderBy: [{ dataPregacao: 'desc' }],
     take: limite,
     select: {

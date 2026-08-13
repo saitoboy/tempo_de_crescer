@@ -380,8 +380,45 @@ O QR entra como URL no quadro, não como imagem embutida: embutir exigiria um
 `Graphic` com `Link` para um arquivo que o designer não teria, e o documento
 abriria quebrado.
 
+## ✅ Busca semântica
+
+`npm run vetorizar` — 1.409 resenhas em 2min20s.
+
+Existe por causa dos meses que **não são doutrina**: Novos Recomeços, As
+Mulheres da Bíblia, Família, Novas Gerações. Grudem não os cobre; o significado
+do texto, sim.
+
+O modelo roda **local**, pelo transformers.js: 384 dimensões, ~9 ms por texto,
+nada sai da máquina, sem chave e sem custo por uso.
+
+### Sem pgvector, de propósito
+
+1.409 vetores de 384 dimensões dão 4 MB. Cabem na memória, e o cosseno sobre
+eles leva milissegundos. O índice vetorial só passa a compensar com dezenas de
+milhares de registros — e o Postgres local nem tem a extensão. Fica como
+caminho de upgrade documentado no schema.
+
+### A porcentagem é relativa, não absoluta
+
+O cosseno deste modelo **se agrupa entre 85% e 90%** — tudo parece parecido com
+tudo, e o número absoluto não informa nada. O que vale é a ordem. Por isso a
+API devolve `afinidade`: o melhor do conjunto vira 100, o pior vira 0.
+
+### O que funciona, e o que não
+
+| tema | achou |
+|---|---|
+| Novos Recomeços | *"Ano Novo - Tempo de recomeçar"*, *"Ano Novo, vida nova"* ✅ |
+| As Mulheres da Bíblia | *2 Reis 4:1-7* (a viúva e o azeite), *Provérbios 31* ✅ |
+| Família | *"Família sob pressão"*, *Atos 2:46* (as casas) ✅ |
+| Novas Gerações | Josué 3, Apocalipse 21 — **não convenceu** ⚠️ |
+
+Três de quatro acertam. "Novas Gerações" é abstrato demais para o vetor pegar
+sozinho; ali a busca por palavra ("filhos", "criança", "jovens") ajuda mais.
+
 ## 🔭 Depois
 
 Mapa vetorial dos textos bíblicos já pregados, para enxergar a linha teológica
 e escatológica da igreja ao longo do tempo — e quais passagens nunca subiram ao
-púlpito.
+púlpito. Os vetores das resenhas já estão no banco; falta cruzar com a tabela
+`Versiculo`.

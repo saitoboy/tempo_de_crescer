@@ -203,6 +203,21 @@ model Resenha {
 
   status StatusResenha @default(INGERIDA)
 
+  /// Vetor semântico do texto, 384 dimensões, normalizado.
+  ///
+  /// Serve para achar pregações parecidas com um tema que a classificação não
+  /// cobre — "Novos Recomeços" não é nenhuma das 8 doutrinas, mas se parece
+  /// com arrependimento e conversão, e o vetor enxerga isso.
+  ///
+  /// Coluna de float comum, sem pgvector: 1.409 vetores dão 4 MB, cabem na
+  /// memória e o cosseno sobre eles leva milissegundos. A extensão só passa a
+  /// valer com dezenas de milhares de registros, quando o índice importa —
+  /// aí vira `Unsupported("vector(384)")` e a busca vai para o SQL.
+  /// O padrão de lista vazia importa: sem ele a coluna nasce NULL nas linhas
+  /// que já existiam, e o filtro `isEmpty` não casa com NULL — a vetorização
+  /// achava que não havia nada a fazer.
+  embedding Float[] @default([])
+
   classificacoes Classificacao[]
   devocional     Devocional?
 

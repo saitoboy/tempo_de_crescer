@@ -178,45 +178,39 @@ function cabeEmUmaPagina(p: PaginaDoLivro): boolean {
   return reflexao + aplicacao <= LIMITE_DE_UMA_PAGINA;
 }
 
-/** Os blocos da página, na posição do modelo escaneado. */
+/**
+ * Os blocos da página, no modelo escolhido pelo pastor.
+ *
+ * Pontos de aplicação e oração ocupam a largura toda, não há bloco de
+ * anotações, e o link da transmissão fica discreto no rodapé — foi a versão
+ * que a igreja preferiu entre as duas apresentadas.
+ */
 function blocosDaPagina(p: PaginaDoLivro): Bloco[] {
   const util = LARGURA - MARGEM * 2;
-  const colunaLarga = util * 0.6;
-  const colunaEstreita = util * 0.34;
-  const direita = MARGEM + util - colunaEstreita;
 
   return [
     ...cabecalhoEcreditos(p, MARGEM, util),
     {
       nome: 'Reflexao',
-      caixa: { x: MARGEM, y: 186, largura: util, altura: 196 },
+      caixa: { x: MARGEM, y: 186, largura: util, altura: 230 },
       paragrafos: reflexaoComRotulo(p),
     },
     {
       nome: 'PontosAplicacao',
-      caixa: { x: MARGEM, y: 392, largura: colunaLarga, altura: 122 },
+      caixa: { x: MARGEM, y: 428, largura: util, altura: 104 },
       paragrafos: [cabecalhoDeSecao('PONTOS DE APLICAÇÃO PRÁTICA:'), ...marcadores(p)],
     },
     {
-      nome: 'QRCode',
-      caixa: { x: direita, y: 392, largura: colunaEstreita, altura: 122 },
-      // O link fica escrito para o designer gerar o QR na diagramação.
-      paragrafos: [
-        cabecalhoDeSecao('ASSISTA ON-LINE:'),
-        ...(p.youtubeUrl ? [texto(p.youtubeUrl, 'Nota')] : []),
-      ],
-    },
-    {
       nome: 'Oracao',
-      caixa: { x: MARGEM, y: 512, largura: colunaLarga, altura: 58 },
+      caixa: { x: MARGEM, y: 486, largura: util, altura: 62 },
       paragrafos: p.oracao ? [titulado('ORAÇÃO:', `"${p.oracao}"`, 'Oracao')] : [],
       fundo: true,
     },
     {
-      nome: 'Anotacoes',
-      caixa: { x: direita, y: 512, largura: colunaEstreita, altura: 58 },
-      paragrafos: [cabecalhoDeSecao('ANOTAÇÕES:')],
-      fundo: true,
+      nome: 'QRCode',
+      caixa: { x: MARGEM, y: 556, largura: util * 0.62, altura: 22 },
+      // O link fica escrito para o designer gerar o QR na diagramação.
+      paragrafos: p.youtubeUrl ? [texto(p.youtubeUrl, 'Nota')] : [],
     },
     numeroDaPagina(),
   ].filter((b) => b.paragrafos.length > 0);

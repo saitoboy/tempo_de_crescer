@@ -72,6 +72,11 @@ export const filtroDeEscolha = z.object({
   /** Ano da pregação, não do livro. */
   anoDaPregacao: z.coerce.number().int().min(2000).max(2100).optional(),
   busca: z.string().trim().min(2).max(80).optional(),
+  /**
+   * Ordena por semelhança de significado com o tema.
+   * É o caminho para os meses que não são doutrina.
+   */
+  semantica: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
   limite: z.coerce.number().int().min(1).max(100).default(20),
 });
 

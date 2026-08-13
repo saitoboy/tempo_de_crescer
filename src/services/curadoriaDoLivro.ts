@@ -1,5 +1,6 @@
 import connection from '../connection';
 import { NotFoundError, ValidationError } from '../utils/logger';
+import { comoConsulta, emAfinidade, maisParecidos } from './vetores';
 
 /**
  * Curadoria do livro: quais devocionais entram, sob qual tema, em que ordem.
@@ -90,6 +91,14 @@ export type FiltroDeEscolha = {
   anoDaPregacao?: number;
   /** Busca no título do devocional e da resenha. */
   busca?: string;
+  /**
+   * Ordena por semelhança de significado com o tema, em vez de por doutrina.
+   *
+   * É o caminho para os meses que não são doutrina — "Novos Recomeços",
+   * "As Mulheres da Bíblia", "Família", "Novas Gerações". A classificação de
+   * Grudem não os cobre; o significado do texto, sim.
+   */
+  semantica?: boolean;
   limite: number;
 };
 
@@ -101,6 +110,12 @@ export type Candidato = {
   pregador: string | null;
   doutrina: string | null;
   zscore: number | null;
+  /**
+   * Quanto o texto se aproxima do tema **em relação aos outros encontrados**,
+   * de 0 a 100. Só na busca semântica. O cosseno cru se agrupa entre 85% e 90%
+   * e não distinguiria nada; aqui o melhor do conjunto vira 100.
+   */
+  afinidade: number | null;
   /** Em qual mês já foi usado, se já foi. */
   jaUsadoEm: string | null;
 };
@@ -120,7 +135,7 @@ export type Candidato = {
 export async function sugerir(temaMesId: string, filtro: FiltroDeEscolha): Promise<Candidato[]> {
   const tema = await connection.temaMes.findUnique({
     where: { id: temaMesId },
-    select: { id: true, ano: true, doutrinaId: true },
+    select: { id: true, ano: true, tema: true, descricao: true, doutrinaId: true },
   });
   if (!tema) throw new NotFoundError(`Tema ${temaMesId} não encontrado`);
 
@@ -129,6 +144,8 @@ export async function sugerir(temaMesId: string, filtro: FiltroDeEscolha): Promi
     select: { devocionalId: true, temaMes: { select: { mes: true, tema: true } } },
   });
   const onde = new Map(usadas.map((p) => [p.devocionalId, `${MESES[p.temaMes.mes - 1]} — ${p.temaMes.tema}`]));
+
+  if (filtro.semantica) return porSemelhanca(tema, filtro, onde);
 
   // A doutrina do tema é o ponto de partida, não uma amarra.
   const doutrinaId = filtro.semDoutrina ? undefined : (filtro.doutrinaId ?? tema.doutrinaId ?? undefined);
@@ -178,6 +195,7 @@ export async function sugerir(temaMesId: string, filtro: FiltroDeEscolha): Promi
       pregador: d.resenha.pregador?.nomeCanonico ?? null,
       doutrina: principal?.doutrina.nome ?? null,
       zscore: principal?.zscore ?? null,
+      afinidade: null,
       jaUsadoEm: onde.get(d.id) ?? null,
     };
   });
@@ -187,6 +205,68 @@ export async function sugerir(temaMesId: string, filtro: FiltroDeEscolha): Promi
   return doutrinaId
     ? candidatos.sort((a, b) => (b.zscore ?? 0) - (a.zscore ?? 0))
     : candidatos;
+}
+
+/**
+ * Os devocionais cujo texto mais se parece com o tema.
+ *
+ * A consulta é o tema mais a descrição — "Novas Gerações. A fé transmitida aos
+ * que vêm depois." — e a comparação é sobre o vetor da resenha inteira, não do
+ * devocional: a resenha tem a pregação toda, e é ela que carrega o assunto.
+ *
+ * Só entram resenhas que já viraram devocional, porque é o devocional que vai
+ * para a página.
+ */
+async function porSemelhanca(
+  tema: { id: string; ano: number; tema: string; descricao: string | null },
+  filtro: FiltroDeEscolha,
+  onde: Map<string, string>,
+): Promise<Candidato[]> {
+  const consulta = await comoConsulta([tema.tema, tema.descricao].filter(Boolean).join('. '));
+
+  const comDevocional = await connection.resenha.findMany({
+    where: {
+      devocional: { isNot: null },
+      ...(filtro.pregadorId ? { pregadorId: filtro.pregadorId } : {}),
+      ...(filtro.anoDaPregacao ? { ano: filtro.anoDaPregacao } : {}),
+    },
+    select: {
+      id: true,
+      embedding: true,
+      dataPregacao: true,
+      pregador: { select: { nomeCanonico: true } },
+      devocional: { select: { id: true, titulo: true, referencia: true } },
+      classificacoes: {
+        where: { papel: 'PRINCIPAL' },
+        select: { zscore: true, doutrina: { select: { nome: true } } },
+      },
+    },
+  });
+
+  const ranking = maisParecidos(
+    consulta,
+    comDevocional.map((r) => ({ id: r.id, embedding: r.embedding })),
+    filtro.limite,
+  );
+
+  const porId = new Map(comDevocional.map((r) => [r.id, r]));
+  const afinidades = emAfinidade(ranking.map((r) => r.semelhanca));
+
+  return ranking.map((posicao, i) => {
+    const r = porId.get(posicao.id)!;
+    const principal = r.classificacoes[0];
+    return {
+      id: r.devocional!.id,
+      titulo: r.devocional!.titulo,
+      referencia: r.devocional!.referencia,
+      data: r.dataPregacao?.toISOString().slice(0, 10) ?? null,
+      pregador: r.pregador?.nomeCanonico ?? null,
+      doutrina: principal?.doutrina.nome ?? null,
+      zscore: principal?.zscore ?? null,
+      afinidade: afinidades[i],
+      jaUsadoEm: onde.get(r.devocional!.id) ?? null,
+    };
+  });
 }
 
 /** Põe um devocional no fim do mês. */

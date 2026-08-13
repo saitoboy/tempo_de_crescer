@@ -82,7 +82,7 @@ const ESTILO_COMUM = `
   .cabecalho {
     background: linear-gradient(180deg, #e4e4e4 0%, #f4f4f4 100%);
     margin: -14mm -13mm 0;
-    padding: 15mm 13mm 3.5mm;
+    padding: 14mm 13mm 3mm;
   }
 
   h1 {
@@ -140,11 +140,11 @@ const ESTILO_COMPACTO = `
   .colunas { display: flex; gap: 7mm; margin-top: 3.5mm; align-items: flex-start; }
   .coluna-larga { flex: 1.55; }
   .coluna-estreita { flex: 1; text-align: center; }
-  .qrcode svg { width: 25mm; height: 25mm; }
+  .qrcode svg { width: 21mm; height: 21mm; }
 
   .rodape { display: flex; gap: 7mm; margin-top: auto; padding-top: 3.5mm; align-items: stretch; }
   .rodape .oracao { flex: 1.55; }
-  .anotacoes { flex: 1; background: #efefef; padding: 2.8mm; min-height: 20mm; }
+  .anotacoes { flex: 1; background: #efefef; padding: 2.8mm; min-height: 17mm; }
 `;
 
 /**
@@ -258,7 +258,7 @@ function paginaLarga(p: PaginaDoLivro, numero: number): string {
 
 export function montarHtml(
   paginas: PaginaDoLivro[],
-  modelo: Modelo = 'compacto',
+  modelo: Modelo = 'largo',
   titulo = 'Tempo de Crescer',
 ): string {
   const montarPagina = modelo === 'largo' ? paginaLarga : paginaCompacta;
