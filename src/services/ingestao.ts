@@ -14,6 +14,7 @@ import { chave, resolverPregador, type PregadorConhecido } from './pregadores';
 
 export type Contagem = {
   gravadas: number;
+  duplicadas: number;
   semData: number;
   semTurno: number;
   semPregador: number;
@@ -25,6 +26,7 @@ export type Contagem = {
 export function novaContagem(): Contagem {
   return {
     gravadas: 0,
+    duplicadas: 0,
     semData: 0,
     semTurno: 0,
     semPregador: 0,
@@ -142,6 +144,11 @@ export async function gravarPost(
     versiculos: dados.versiculos,
   };
 
+  if (await eCopiaDeOutra(post.url, post.texto)) {
+    contagem.duplicadas++;
+    return;
+  }
+
   await connection.resenha.upsert({
     where: { urlBlog: post.url },
     update: campos,
@@ -149,6 +156,39 @@ export async function gravarPost(
   });
 
   contagem.gravadas++;
+}
+
+/**
+ * Texto curto demais para servir de impressão digital.
+ *
+ * Resenha vazia ou de uma linha bate com qualquer outra vazia, e a
+ * deduplicação passaria a recusar post legítimo.
+ */
+const MINIMO_PARA_COMPARAR = 200;
+
+/**
+ * O mesmo texto já está no banco, sob outra URL?
+ *
+ * O blog republica o mesmo post em endereços diferentes: `Efésios 5:22-32`
+ * está lá **seis vezes**, todas de 2017-11-12, byte a byte iguais, com slugs
+ * `_12`, `_15`, `_40`, `_43`, `_70`. A deduplicação da ingestão é por
+ * `urlBlog`, e URL distinta ela deixa passar.
+ *
+ * O custo disso não é espaço em disco: são seis páginas idênticas no livro e
+ * ~166 mil tokens de cota gastos escrevendo o mesmo devocional seis vezes.
+ *
+ * A comparação é pelo texto limpo, não pelo HTML — o Blogger varia atributo e
+ * espaçamento entre uma cópia e outra, e o bruto quase nunca bate.
+ */
+async function eCopiaDeOutra(url: string, texto: string): Promise<boolean> {
+  if (texto.length < MINIMO_PARA_COMPARAR) return false;
+
+  const gemea = await connection.resenha.findFirst({
+    where: { conteudoLimpo: texto, urlBlog: { not: url } },
+    select: { id: true },
+  });
+
+  return gemea !== null;
 }
 
 /** Quais URLs do sitemap ainda não estão no banco. */

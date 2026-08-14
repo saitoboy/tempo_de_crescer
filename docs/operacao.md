@@ -170,6 +170,30 @@ Devocional que já existe no destino é preservado. Se alguém revisou um texto
 pela API, uma nova carga não desfaz a revisão: o arquivo é o ponto de partida,
 não a verdade final.
 
+### A fila de um mês não repete assunto
+
+```bash
+npm run devocionais -- 20 2027-8 --pregador "Nélio Monteiro"
+npm run devocionais -- 20 2027-8 --listar    # confere sem gastar cota
+```
+
+Com um mês, a fila deixa de ser "as mais recentes" e passa a ser "as que mais
+se parecem com o tema". Só que semelhança pura agrupa: Agosto/2027 é
+"Eclesiologia", e a busca devolvia **oito das vinte falando de Ceia do
+Senhor** — todas boas, todas a mesma mensagem, e um mês do livro com oito
+páginas iguais.
+
+A escolha agora é gulosa: percorre o ranking do mais parecido para o menos e
+descarta quem já se parece demais com algo escolhido, ou com o que já virou
+devocional em outro mês. **O melhor de cada grupo sobrevive** e o resto cede
+lugar ao próximo assunto. Agosto caiu de oito páginas de Ceia para uma.
+
+O limiar é **0,92**, medido — não estimado. Sobre 190 pares do topo de
+Eclesiologia, o cosseno deste modelo ocupa a faixa de 0,857 a 0,943: o bloco da
+Ceia fica todo acima de 0,923, assuntos distintos ficam entre 0,857 e 0,87.
+Num espaço que começa em 0,857, os 0,95 que a intuição sugeriria não filtrariam
+quase nada.
+
 ### Se a chave da API entrar um dia
 
 Aí a geração pode subir para produção sem mudar mais nada além de trocar a
@@ -196,6 +220,17 @@ que ainda não está gravado.
 Uma execução não começa enquanto a anterior não termina, e erro na ingestão não
 derruba o servidor.
 
+### Cópia do mesmo post
+
+A deduplicação é por `urlBlog`, e o blog republica o mesmo texto em endereços
+diferentes: `Efésios 5:22-32` estava lá **seis vezes**, todas de 2017-11-12,
+byte a byte iguais. URL distinta, então passavam todas.
+
+O custo não era disco: eram seis páginas idênticas no livro e ~166 mil tokens
+de cota escrevendo o mesmo devocional seis vezes. Agora a ingestão compara
+também o **texto limpo** (não o HTML — o Blogger varia atributo entre uma cópia
+e outra) e ignora o que já está gravado sob outra URL.
+
 ---
 
 ## Comandos
@@ -204,7 +239,7 @@ derruba o servidor.
 |---|---|
 | `npm run dev` | servidor com recarga automática |
 | `npm run build` / `npm start` | compila e roda o build |
-| `npm test` | 84 testes |
+| `npm test` | 142 testes |
 | `npm run typecheck` | só a checagem de tipos |
 | `npm run ingerir` | ingestão incremental |
 | `npm run seed` | doutrinas, subtemas, pregadores, admin |

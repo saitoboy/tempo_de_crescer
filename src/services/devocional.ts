@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import connection from '../connection';
-import { comoConsulta, maisParecidos } from './vetores';
+import { comoConsulta, maisParecidos, semRedundancia } from './vetores';
 
 /**
  * Transforma a resenha de um culto em devocional para o livro.
@@ -226,10 +226,26 @@ export async function filaDoTema(temaMesId: string, limite: number, pregadorId?:
     select: { id: true, embedding: true },
   });
 
-  const ranking = maisParecidos(consulta, candidatas, limite);
+  // O que já virou devocional entra como assunto coberto: sem isso, um mês
+  // repetiria a mensagem que o mês anterior já usou, e a fila — que só enxerga
+  // quem não tem devocional — nunca perceberia.
+  const jaEscritas = await connection.resenha.findMany({
+    where: { devocional: { isNot: null } },
+    select: { embedding: true },
+  });
+
+  // O ranking inteiro, não os `limite` primeiros: quem for descartado por
+  // redundância precisa ter quem o substitua logo abaixo.
+  const ranking = maisParecidos(consulta, candidatas, candidatas.length);
+  const escolhidos = semRedundancia(
+    ranking,
+    new Map(candidatas.map((c) => [c.id, c.embedding])),
+    limite,
+    jaEscritas.map((r) => r.embedding).filter((v) => v.length > 0),
+  );
 
   const resenhas = await connection.resenha.findMany({
-    where: { id: { in: ranking.map((r) => r.id) } },
+    where: { id: { in: escolhidos.map((r) => r.id) } },
     select: CAMPOS_DA_FILA,
   });
 
@@ -237,7 +253,7 @@ export async function filaDoTema(temaMesId: string, limite: number, pregadorId?:
   const porId = new Map(resenhas.map((r) => [r.id, r]));
   return {
     tema: tema.tema,
-    fila: ranking.map((r) => porId.get(r.id)!).filter(Boolean),
+    fila: escolhidos.map((r) => porId.get(r.id)!).filter(Boolean),
   };
 }
 
