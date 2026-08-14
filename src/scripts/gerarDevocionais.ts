@@ -142,6 +142,14 @@ function pedirAoClaude(prompt: string): Promise<{ texto: string; gasto: Gasto }>
       timeout: TEMPO_LIMITE_MS,
     });
 
+    // Sem isto, `saida += pedaco` converte cada chunk em string por conta
+    // própria, e um caractere multi-byte partido na fronteira entre dois
+    // chunks vira "�": "século" saiu "s�culo" e a referência "2 Coríntios"
+    // deixou de casar com a ACF. O setEncoding segura o byte pela metade até
+    // o chunk seguinte completar o caractere.
+    processo.stdout.setEncoding('utf8');
+    processo.stderr.setEncoding('utf8');
+
     let saida = '';
     let erro = '';
     processo.stdout.on('data', (pedaco) => (saida += pedaco));
