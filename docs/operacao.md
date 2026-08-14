@@ -173,9 +173,15 @@ não a verdade final.
 ### A fila de um mês não repete assunto
 
 ```bash
-npm run devocionais -- 20 2027-8 --pregador "Nélio Monteiro"
+npm run devocionais -- 20 2027-8             # só do Nélio, por padrão
 npm run devocionais -- 20 2027-8 --listar    # confere sem gastar cota
+npm run devocionais -- 20 --todos            # abre para todos os pregadores
 ```
+
+**O pregador é padrão, não flag.** O livro é do pastor Nélio, e devocional
+escrito a partir da pregação de outra pessoa não pertence a ele. Depender de
+alguém lembrar de digitar `--pregador` significa que uma distração contamina o
+acervo — e o erro só apareceria na diagramação.
 
 Com um mês, a fila deixa de ser "as mais recentes" e passa a ser "as que mais
 se parecem com o tema". Só que semelhança pura agrupa: Agosto/2027 é

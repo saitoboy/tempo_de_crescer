@@ -28,6 +28,11 @@ import { urlDoProxy } from '../utils/proxy';
  *     npm run devocionais                    # 5, das mais recentes
  *     npm run devocionais -- 20              # 20, das mais recentes
  *     npm run devocionais -- 20 2027-6       # 20 para o mês de Escatologia
+ *     npm run devocionais -- 20 2027-6 --listar   # só a lista, sem gastar cota
+ *     npm run devocionais -- 20 --todos      # abre para todos os pregadores
+ *
+ * **Só pregação do Nélio, por padrão** — o livro é dele. Ver
+ * `PREGADOR_DO_LIVRO`.
  *
  * A fila são as resenhas sem devocional. Interromper no meio não perde nada:
  * cada uma é gravada assim que fica pronta, e a execução seguinte continua de
@@ -41,6 +46,19 @@ import { urlDoProxy } from '../utils/proxy';
 
 const MODELO = 'claude-opus-5';
 const LOTE_PADRAO = 5;
+
+/**
+ * De quem é o livro.
+ *
+ * Não é preferência de quem roda o script: **o livro é do pastor Nélio**, e
+ * devocional escrito a partir da pregação de outra pessoa não pertence a ele.
+ * Por isso o filtro é o padrão e não uma flag — depender de alguém lembrar de
+ * digitar `--pregador` significa que uma distração contamina o acervo do
+ * livro, e o erro só apareceria na diagramação.
+ *
+ * `--todos` desliga, para geração que não seja para este livro.
+ */
+const PREGADOR_DO_LIVRO = 'Nélio Monteiro';
 /**
  * Quantas falhas seguidas derrubam o lote.
  *
@@ -311,8 +329,13 @@ async function main() {
   const limite = Number(process.argv[2]) || LOTE_PADRAO;
   const alvo = process.argv[3]?.startsWith('--') ? undefined : process.argv[3];
 
+  // O pregador é padrão, não opção: esquecer a flag uma vez colocaria pregação
+  // de outra pessoa dentro do livro do Nélio. `--todos` abre para o acervo
+  // inteiro, para quando a geração não for para este livro.
   const pedido = process.argv.indexOf('--pregador');
-  const pregador = pedido > -1 ? await acharPregador(process.argv[pedido + 1] ?? '') : null;
+  const pregador = process.argv.includes('--todos')
+    ? null
+    : await acharPregador(pedido > -1 ? (process.argv[pedido + 1] ?? '') : PREGADOR_DO_LIVRO);
 
   const pendentes = await connection.resenha.count({ where: { devocional: null } });
   logInfo(`${pendentes} resenhas ainda sem devocional; gerando ${Math.min(limite, pendentes)}`, 'devocional');
@@ -327,7 +350,8 @@ async function main() {
       'devocional',
     );
   } else {
-    fila = await filaDeGeracao(limite);
+    fila = await filaDeGeracao(limite, pregador?.id);
+    logInfo(`das mais recentes${pregador ? `, só de ${pregador.nomeCanonico}` : ''}`, 'devocional');
   }
 
   // Conferir antes de gastar: 20 devocionais são ~560k tokens de entrada, mais

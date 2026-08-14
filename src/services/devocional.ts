@@ -194,9 +194,9 @@ export async function buscarVersiculo(referencia: string): Promise<string | null
  * transmitir em 2020, então as pregações recentes são as que têm culto casado
  * e QR code. Começar pelas novas rende página completa desde o primeiro lote.
  */
-export function filaDeGeracao(limite: number) {
+export function filaDeGeracao(limite: number, pregadorId?: string) {
   return connection.resenha.findMany({
-    where: PENDENTES,
+    where: { ...PENDENTES, ...(pregadorId ? { pregadorId } : {}) },
     orderBy: [{ dataPregacao: 'desc' }],
     take: limite,
     select: CAMPOS_DA_FILA,
