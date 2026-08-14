@@ -11,7 +11,7 @@ Oito fases. Sete prontas no backend; falta o front.
 | 4    | YouTube: casar culto com a live, QR code   | ✅ pronta   |
 | 5    | Classificação teológica                 | ✅ pronta   |
 | 6    | Geração dos devocionais                  | ✅ pronta   |
-| 7    | Análise e login                            | ✅ backend  |
+| 7    | Análise e login                            | 🚧 backend pronto, front planejado |
 | 8    | Montagem do livro                          | ✅ pronta   |
 
 ---
@@ -241,7 +241,8 @@ arriscava misturar as instruções do repositório com as do devocional.
 - [x] `/analise/pregadores` — o que cada um enfatiza
 - [x] `/analise/biblia` — cobertura, e o que nunca foi pregado
 - [x] **Login com JWT** e os papéis `ADMIN`, `PASTOR`, `LIDER`
-- [ ] Front em Vite + shadcn/ui
+- [x] Plano do front: [plano-frontend.md](plano-frontend.md) e `PRODUCT.md`
+- [ ] Front em Vite + shadcn/ui — projeto separado, em `front-tempo_de_crescer`
 
 ### O achado da cobertura bíblica
 
@@ -273,7 +274,7 @@ o front estiver de pé.
 - [x] `/livro/paginas` — os blocos da página, em JSON
 - [x] `/livro/imprimir.html` — A5 pronto para imprimir
 - [x] `/livro/livro.idml` — para o designer refinar
-- [ ] Temas do mês e seleção manual de quais devocionais entram
+- [x] Temas do mês e seleção manual de quais devocionais entram
 
 ### Dois modelos de miolo
 
