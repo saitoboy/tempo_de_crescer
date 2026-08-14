@@ -6,6 +6,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import connection from '../connection';
 import {
+  comoCorrecao,
   extrairJson,
   filaDeGeracao,
   filaDoTema,
@@ -27,6 +28,11 @@ import { urlDoProxy } from '../utils/proxy';
  *     npm run devocionais                    # 5, das mais recentes
  *     npm run devocionais -- 20              # 20, das mais recentes
  *     npm run devocionais -- 20 2027-6       # 20 para o mês de Escatologia
+ *     npm run devocionais -- 20 2027-6 --listar   # só a lista, sem gastar cota
+ *     npm run devocionais -- 20 --todos      # abre para todos os pregadores
+ *
+ * **Só pregação do Nélio, por padrão** — o livro é dele. Ver
+ * `PREGADOR_DO_LIVRO`.
  *
  * A fila são as resenhas sem devocional. Interromper no meio não perde nada:
  * cada uma é gravada assim que fica pronta, e a execução seguinte continua de
@@ -40,6 +46,19 @@ import { urlDoProxy } from '../utils/proxy';
 
 const MODELO = 'claude-opus-5';
 const LOTE_PADRAO = 5;
+
+/**
+ * De quem é o livro.
+ *
+ * Não é preferência de quem roda o script: **o livro é do pastor Nélio**, e
+ * devocional escrito a partir da pregação de outra pessoa não pertence a ele.
+ * Por isso o filtro é o padrão e não uma flag — depender de alguém lembrar de
+ * digitar `--pregador` significa que uma distração contamina o acervo do
+ * livro, e o erro só apareceria na diagramação.
+ *
+ * `--todos` desliga, para geração que não seja para este livro.
+ */
+const PREGADOR_DO_LIVRO = 'Nélio Monteiro';
 /**
  * Quantas falhas seguidas derrubam o lote.
  *
@@ -142,6 +161,14 @@ function pedirAoClaude(prompt: string): Promise<{ texto: string; gasto: Gasto }>
       timeout: TEMPO_LIMITE_MS,
     });
 
+    // Sem isto, `saida += pedaco` converte cada chunk em string por conta
+    // própria, e um caractere multi-byte partido na fronteira entre dois
+    // chunks vira "�": "século" saiu "s�culo" e a referência "2 Coríntios"
+    // deixou de casar com a ACF. O setEncoding segura o byte pela metade até
+    // o chunk seguinte completar o caractere.
+    processo.stdout.setEncoding('utf8');
+    processo.stderr.setEncoding('utf8');
+
     let saida = '';
     let erro = '';
     processo.stdout.on('data', (pedaco) => (saida += pedaco));
@@ -204,17 +231,53 @@ function eLimiteDaConta(motivo: string): boolean {
   return /\b(session|usage|rate) limit\b/i.test(motivo);
 }
 
-async function gerarUm(resenha: ResenhaParaDevocional): Promise<Gasto> {
-  const { texto, gasto } = await pedirAoClaude(montarPrompt(resenha));
-  const resposta = respostaDoModelo.parse(extrairJson(texto));
-  const devocional = await guardarDevocional(resenha.id, resposta, MODELO);
+/**
+ * Quantas vezes pedir o mesmo devocional.
+ *
+ * A geração é estocástica: a reflexão estoura os 1050 caracteres de vez em
+ * quando, e o mesmo pedido repetido costuma passar. Sem retentativa, o item
+ * voltava para a fila e alguém precisava rodar de novo na mão — foi o que
+ * aconteceu com `2 Coríntios 1:8-11` em Agosto.
+ *
+ * Duas, não mais: se o texto continua estourando na segunda, o problema é a
+ * resenha, não o acaso, e insistir só queima cota.
+ */
+const TENTATIVAS = 2;
 
-  logSuccess(`"${devocional.titulo}" — ${devocional.referencia}`, 'devocional');
-  if (!devocional.versiculo) {
-    logWarning(`referência "${devocional.referencia}" não resolveu na ACF`, 'devocional');
+async function gerarUm(resenha: ResenhaParaDevocional): Promise<Gasto> {
+  const gasto: Gasto = { entrada: 0, saida: 0 };
+  let recusa: unknown;
+
+  for (let tentativa = 1; tentativa <= TENTATIVAS; tentativa++) {
+    // A correção só existe da segunda em diante: repetir o prompt intacto
+    // depois de uma recusa por tamanho tende a produzir a mesma recusa.
+    const correcao = tentativa === 1 ? undefined : comoCorrecao(recusa);
+
+    // Erro do CLI (cota, proxy, rede) sobe daqui e não é retentado: nenhuma
+    // repetição resolveria, e o lote tem seu próprio tratamento para isso.
+    const { texto, gasto: custo } = await pedirAoClaude(montarPrompt(resenha, correcao));
+    gasto.entrada += custo.entrada;
+    gasto.saida += custo.saida;
+
+    try {
+      const resposta = respostaDoModelo.parse(extrairJson(texto));
+      const devocional = await guardarDevocional(resenha.id, resposta, MODELO);
+
+      logSuccess(`"${devocional.titulo}" — ${devocional.referencia}`, 'devocional');
+      if (!devocional.versiculo) {
+        logWarning(`referência "${devocional.referencia}" não resolveu na ACF`, 'devocional');
+      }
+
+      return gasto;
+    } catch (e) {
+      recusa = e;
+      if (tentativa < TENTATIVAS) {
+        logWarning(`resposta recusada, tentando de novo (${tentativa}/${TENTATIVAS})`, 'devocional');
+      }
+    }
   }
 
-  return gasto;
+  throw recusa;
 }
 
 /**
@@ -266,8 +329,13 @@ async function main() {
   const limite = Number(process.argv[2]) || LOTE_PADRAO;
   const alvo = process.argv[3]?.startsWith('--') ? undefined : process.argv[3];
 
+  // O pregador é padrão, não opção: esquecer a flag uma vez colocaria pregação
+  // de outra pessoa dentro do livro do Nélio. `--todos` abre para o acervo
+  // inteiro, para quando a geração não for para este livro.
   const pedido = process.argv.indexOf('--pregador');
-  const pregador = pedido > -1 ? await acharPregador(process.argv[pedido + 1] ?? '') : null;
+  const pregador = process.argv.includes('--todos')
+    ? null
+    : await acharPregador(pedido > -1 ? (process.argv[pedido + 1] ?? '') : PREGADOR_DO_LIVRO);
 
   const pendentes = await connection.resenha.count({ where: { devocional: null } });
   logInfo(`${pendentes} resenhas ainda sem devocional; gerando ${Math.min(limite, pendentes)}`, 'devocional');
@@ -282,7 +350,8 @@ async function main() {
       'devocional',
     );
   } else {
-    fila = await filaDeGeracao(limite);
+    fila = await filaDeGeracao(limite, pregador?.id);
+    logInfo(`das mais recentes${pregador ? `, só de ${pregador.nomeCanonico}` : ''}`, 'devocional');
   }
 
   // Conferir antes de gastar: 20 devocionais são ~560k tokens de entrada, mais

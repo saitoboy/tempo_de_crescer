@@ -26,6 +26,7 @@ async function main() {
   }
 
   logSuccess(`${resultado.gravadas} resenhas novas guardadas`, 'ingestao');
+  if (resultado.duplicadas > 0) logInfo(`${resultado.duplicadas} eram cópia de resenha já gravada, ignoradas`, 'ingestao');
   if (resultado.pregadoresNovos > 0) logInfo(`${resultado.pregadoresNovos} pregadores novos cadastrados`, 'pregador');
   if (resultado.semData > 0) logInfo(`${resultado.semData} sem data no texto, vão para revisão`, 'resenha');
   if (resultado.semPregador > 0) logInfo(`${resultado.semPregador} sem assinatura de pregador, vão para revisão`, 'resenha');

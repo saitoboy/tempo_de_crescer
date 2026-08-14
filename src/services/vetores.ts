@@ -144,3 +144,59 @@ export function maisParecidos(
     .sort((a, b) => b.semelhanca - a.semelhanca)
     .slice(0, k);
 }
+
+/**
+ * A partir de onde duas pregações são a mesma mensagem.
+ *
+ * Medido sobre os 20 primeiros de Eclesiologia, 190 pares: o cosseno deste
+ * modelo ocupa uma faixa estreita, de 0,857 a 0,943. O bloco da Ceia do Senhor
+ * — `1 Coríntios 11:20-32`, `Corpus Christi`, `Mateus 26:26-29`, `CELEBRAÇÃO
+ * DA CEIA DO SENHOR` — fica todo acima de 0,923; assuntos de fato distintos
+ * ficam entre 0,857 e 0,87. O p90 dos pares é 0,9188.
+ *
+ * Por isso 0,92, e não os 0,95 que a intuição sugeriria: num espaço que começa
+ * em 0,857, exigir 0,95 só pegaria texto praticamente idêntico e deixaria oito
+ * páginas de Ceia entrarem no mesmo mês.
+ */
+export const LIMIAR_DE_REDUNDANCIA = 0.92;
+
+/**
+ * Percorre o ranking e fica só com o que traz assunto novo.
+ *
+ * O problema que isto resolve: Agosto/2027 é "Eclesiologia", e a busca
+ * devolvia oito das vinte falando de Ceia do Senhor. Todas boas, todas
+ * parecidas — e um mês do livro com oito páginas sobre a mesma mensagem.
+ *
+ * A escolha é gulosa e por isso preserva a ordem de afinidade: percorre do
+ * mais parecido com o tema para o menos, e descarta quem já se parece demais
+ * com algo escolhido. **O melhor de cada grupo sobrevive**, o resto cede lugar
+ * ao próximo assunto do ranking.
+ *
+ * `jaCobertos` são os vetores das pregações que já viraram devocional. Sem
+ * eles, o mês seguinte repetiria o assunto que o anterior já usou — e a fila,
+ * que só enxerga quem ainda não tem devocional, não teria como perceber.
+ */
+export function semRedundancia(
+  ranking: Semelhante[],
+  vetorPorId: Map<string, number[]>,
+  limite: number,
+  jaCobertos: number[][] = [],
+  limiar = LIMIAR_DE_REDUNDANCIA,
+): Semelhante[] {
+  const escolhidos: Semelhante[] = [];
+  const vistos = [...jaCobertos];
+
+  for (const candidato of ranking) {
+    if (escolhidos.length >= limite) break;
+
+    const vetor = vetorPorId.get(candidato.id);
+    if (!vetor) continue;
+
+    if (vistos.some((v) => semelhanca(vetor, v) >= limiar)) continue;
+
+    escolhidos.push(candidato);
+    vistos.push(vetor);
+  }
+
+  return escolhidos;
+}

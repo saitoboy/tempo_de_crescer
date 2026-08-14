@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import connection from '../connection';
-import { comoConsulta, maisParecidos } from './vetores';
+import { comoConsulta, maisParecidos, semRedundancia } from './vetores';
 
 /**
  * Transforma a resenha de um culto em devocional para o livro.
@@ -61,7 +61,7 @@ O que caracteriza esse estilo:
  * A resenha vai inteira: é dela que o devocional tem de nascer. O modelo não
  * escreve o versículo — só indica a referência, e o texto vem do banco.
  */
-export function montarPrompt(resenha: ResenhaParaDevocional): string {
+export function montarPrompt(resenha: ResenhaParaDevocional, correcao?: string): string {
   const contexto = [
     `Título da pregação: ${resenha.titulo}`,
     resenha.textoBase ? `Texto base: ${resenha.textoBase}` : null,
@@ -99,7 +99,34 @@ mais longo do que o pedido não cabe e será cortado.
 
 A "referencia" deve ser um único versículo ou um trecho curto de um capítulo
 só, e precisa existir na Bíblia. Não escreva o texto do versículo: apenas a
-referência.`;
+referência.${correcao ? `\n\n${correcao}` : ''}`;
+}
+
+/**
+ * Transforma a recusa da validação em instrução para a segunda tentativa.
+ *
+ * Repetir o mesmo prompt depois de uma falha por tamanho costuma produzir a
+ * mesma falha: o modelo não sabe que errou. Dizer o que estourou, e em quanto,
+ * é o que faz a retentativa valer os ~28k tokens que ela custa.
+ */
+export function comoCorrecao(erro: unknown): string {
+  const problemas =
+    erro instanceof z.ZodError
+      ? (erro.issues as Array<{ path: PropertyKey[]; code: string; maximum?: number; minimum?: number }>)
+      : [];
+
+  const linhas = problemas.map((p) => {
+    const campo = p.path.join('.');
+    if (p.code === 'too_big') return `- "${campo}" passou do limite de ${p.maximum} caracteres. Encurte de verdade.`;
+    if (p.code === 'too_small') return `- "${campo}" ficou abaixo do mínimo de ${p.minimum}.`;
+    return `- "${campo}" saiu fora do formato pedido.`;
+  });
+
+  if (linhas.length === 0) {
+    return 'A resposta anterior não era JSON válido. Responda SOMENTE com o objeto JSON, sem cercas e sem comentário.';
+  }
+
+  return `ATENÇÃO — a tentativa anterior foi recusada:\n${linhas.join('\n')}\nCorrija exatamente isso e mantenha o resto.`;
 }
 
 /** O modelo às vezes embrulha o JSON em cercas, mesmo quando pedimos que não. */
@@ -167,9 +194,9 @@ export async function buscarVersiculo(referencia: string): Promise<string | null
  * transmitir em 2020, então as pregações recentes são as que têm culto casado
  * e QR code. Começar pelas novas rende página completa desde o primeiro lote.
  */
-export function filaDeGeracao(limite: number) {
+export function filaDeGeracao(limite: number, pregadorId?: string) {
   return connection.resenha.findMany({
-    where: PENDENTES,
+    where: { ...PENDENTES, ...(pregadorId ? { pregadorId } : {}) },
     orderBy: [{ dataPregacao: 'desc' }],
     take: limite,
     select: CAMPOS_DA_FILA,
@@ -226,10 +253,26 @@ export async function filaDoTema(temaMesId: string, limite: number, pregadorId?:
     select: { id: true, embedding: true },
   });
 
-  const ranking = maisParecidos(consulta, candidatas, limite);
+  // O que já virou devocional entra como assunto coberto: sem isso, um mês
+  // repetiria a mensagem que o mês anterior já usou, e a fila — que só enxerga
+  // quem não tem devocional — nunca perceberia.
+  const jaEscritas = await connection.resenha.findMany({
+    where: { devocional: { isNot: null } },
+    select: { embedding: true },
+  });
+
+  // O ranking inteiro, não os `limite` primeiros: quem for descartado por
+  // redundância precisa ter quem o substitua logo abaixo.
+  const ranking = maisParecidos(consulta, candidatas, candidatas.length);
+  const escolhidos = semRedundancia(
+    ranking,
+    new Map(candidatas.map((c) => [c.id, c.embedding])),
+    limite,
+    jaEscritas.map((r) => r.embedding).filter((v) => v.length > 0),
+  );
 
   const resenhas = await connection.resenha.findMany({
-    where: { id: { in: ranking.map((r) => r.id) } },
+    where: { id: { in: escolhidos.map((r) => r.id) } },
     select: CAMPOS_DA_FILA,
   });
 
@@ -237,7 +280,7 @@ export async function filaDoTema(temaMesId: string, limite: number, pregadorId?:
   const porId = new Map(resenhas.map((r) => [r.id, r]));
   return {
     tema: tema.tema,
-    fila: ranking.map((r) => porId.get(r.id)!).filter(Boolean),
+    fila: escolhidos.map((r) => porId.get(r.id)!).filter(Boolean),
   };
 }
 
