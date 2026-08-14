@@ -61,7 +61,7 @@ O que caracteriza esse estilo:
  * A resenha vai inteira: é dela que o devocional tem de nascer. O modelo não
  * escreve o versículo — só indica a referência, e o texto vem do banco.
  */
-export function montarPrompt(resenha: ResenhaParaDevocional): string {
+export function montarPrompt(resenha: ResenhaParaDevocional, correcao?: string): string {
   const contexto = [
     `Título da pregação: ${resenha.titulo}`,
     resenha.textoBase ? `Texto base: ${resenha.textoBase}` : null,
@@ -99,7 +99,34 @@ mais longo do que o pedido não cabe e será cortado.
 
 A "referencia" deve ser um único versículo ou um trecho curto de um capítulo
 só, e precisa existir na Bíblia. Não escreva o texto do versículo: apenas a
-referência.`;
+referência.${correcao ? `\n\n${correcao}` : ''}`;
+}
+
+/**
+ * Transforma a recusa da validação em instrução para a segunda tentativa.
+ *
+ * Repetir o mesmo prompt depois de uma falha por tamanho costuma produzir a
+ * mesma falha: o modelo não sabe que errou. Dizer o que estourou, e em quanto,
+ * é o que faz a retentativa valer os ~28k tokens que ela custa.
+ */
+export function comoCorrecao(erro: unknown): string {
+  const problemas =
+    erro instanceof z.ZodError
+      ? (erro.issues as Array<{ path: PropertyKey[]; code: string; maximum?: number; minimum?: number }>)
+      : [];
+
+  const linhas = problemas.map((p) => {
+    const campo = p.path.join('.');
+    if (p.code === 'too_big') return `- "${campo}" passou do limite de ${p.maximum} caracteres. Encurte de verdade.`;
+    if (p.code === 'too_small') return `- "${campo}" ficou abaixo do mínimo de ${p.minimum}.`;
+    return `- "${campo}" saiu fora do formato pedido.`;
+  });
+
+  if (linhas.length === 0) {
+    return 'A resposta anterior não era JSON válido. Responda SOMENTE com o objeto JSON, sem cercas e sem comentário.';
+  }
+
+  return `ATENÇÃO — a tentativa anterior foi recusada:\n${linhas.join('\n')}\nCorrija exatamente isso e mantenha o resto.`;
 }
 
 /** O modelo às vezes embrulha o JSON em cercas, mesmo quando pedimos que não. */

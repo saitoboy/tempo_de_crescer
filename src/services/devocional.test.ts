@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extrairJson, montarPrompt, respostaDoModelo } from './devocional';
+import { comoCorrecao, extrairJson, montarPrompt, respostaDoModelo } from './devocional';
 
 const RESENHA = {
   id: 'x',
@@ -70,5 +70,40 @@ describe('respostaDoModelo', () => {
     expect(() =>
       respostaDoModelo.parse({ ...valida, pontosAplicacao: Array(6).fill('aplicação prática') }),
     ).toThrow();
+  });
+});
+
+describe('comoCorrecao', () => {
+  const longa = {
+    titulo: 'Deus é nosso Pastor',
+    referencia: 'Salmos 23:1',
+    reflexao: 'x'.repeat(1400),
+    pontosAplicacao: ['confie no Senhor hoje', 'ore pela sua casa', 'leia o Salmo inteiro'],
+    oracao: 'Senhor, ensina-nos a confiar em ti todos os dias da nossa vida. Amém.',
+  };
+
+  it('diz qual campo estourou e qual era o limite', () => {
+    const erro = respostaDoModelo.safeParse(longa).error;
+    const texto = comoCorrecao(erro);
+
+    expect(texto).toContain('reflexao');
+    expect(texto).toContain('1050');
+  });
+
+  it('erro que não é do Zod vira instrução de formato', () => {
+    expect(comoCorrecao(new Error('Unexpected token'))).toContain('JSON');
+  });
+
+  it('a correção entra no prompt da segunda tentativa', () => {
+    const erro = respostaDoModelo.safeParse(longa).error;
+    const prompt = montarPrompt(RESENHA, comoCorrecao(erro));
+
+    expect(prompt).toContain('tentativa anterior foi recusada');
+    // O pedido original continua lá: a correção acrescenta, não substitui.
+    expect(prompt).toContain('pontosAplicacao');
+  });
+
+  it('sem correção, o prompt fica igual ao de sempre', () => {
+    expect(montarPrompt(RESENHA)).not.toContain('tentativa anterior');
   });
 });

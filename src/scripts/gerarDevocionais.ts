@@ -6,6 +6,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import connection from '../connection';
 import {
+  comoCorrecao,
   extrairJson,
   filaDeGeracao,
   filaDoTema,
@@ -212,17 +213,53 @@ function eLimiteDaConta(motivo: string): boolean {
   return /\b(session|usage|rate) limit\b/i.test(motivo);
 }
 
-async function gerarUm(resenha: ResenhaParaDevocional): Promise<Gasto> {
-  const { texto, gasto } = await pedirAoClaude(montarPrompt(resenha));
-  const resposta = respostaDoModelo.parse(extrairJson(texto));
-  const devocional = await guardarDevocional(resenha.id, resposta, MODELO);
+/**
+ * Quantas vezes pedir o mesmo devocional.
+ *
+ * A geração é estocástica: a reflexão estoura os 1050 caracteres de vez em
+ * quando, e o mesmo pedido repetido costuma passar. Sem retentativa, o item
+ * voltava para a fila e alguém precisava rodar de novo na mão — foi o que
+ * aconteceu com `2 Coríntios 1:8-11` em Agosto.
+ *
+ * Duas, não mais: se o texto continua estourando na segunda, o problema é a
+ * resenha, não o acaso, e insistir só queima cota.
+ */
+const TENTATIVAS = 2;
 
-  logSuccess(`"${devocional.titulo}" — ${devocional.referencia}`, 'devocional');
-  if (!devocional.versiculo) {
-    logWarning(`referência "${devocional.referencia}" não resolveu na ACF`, 'devocional');
+async function gerarUm(resenha: ResenhaParaDevocional): Promise<Gasto> {
+  const gasto: Gasto = { entrada: 0, saida: 0 };
+  let recusa: unknown;
+
+  for (let tentativa = 1; tentativa <= TENTATIVAS; tentativa++) {
+    // A correção só existe da segunda em diante: repetir o prompt intacto
+    // depois de uma recusa por tamanho tende a produzir a mesma recusa.
+    const correcao = tentativa === 1 ? undefined : comoCorrecao(recusa);
+
+    // Erro do CLI (cota, proxy, rede) sobe daqui e não é retentado: nenhuma
+    // repetição resolveria, e o lote tem seu próprio tratamento para isso.
+    const { texto, gasto: custo } = await pedirAoClaude(montarPrompt(resenha, correcao));
+    gasto.entrada += custo.entrada;
+    gasto.saida += custo.saida;
+
+    try {
+      const resposta = respostaDoModelo.parse(extrairJson(texto));
+      const devocional = await guardarDevocional(resenha.id, resposta, MODELO);
+
+      logSuccess(`"${devocional.titulo}" — ${devocional.referencia}`, 'devocional');
+      if (!devocional.versiculo) {
+        logWarning(`referência "${devocional.referencia}" não resolveu na ACF`, 'devocional');
+      }
+
+      return gasto;
+    } catch (e) {
+      recusa = e;
+      if (tentativa < TENTATIVAS) {
+        logWarning(`resposta recusada, tentando de novo (${tentativa}/${TENTATIVAS})`, 'devocional');
+      }
+    }
   }
 
-  return gasto;
+  throw recusa;
 }
 
 /**
