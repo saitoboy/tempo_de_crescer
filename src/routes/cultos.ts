@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import connection from '../connection';
+import { exigirPapel } from '../middlewares/autenticacao';
 import { assincrono } from '../middlewares/erros';
 import { comoDataUri, gerarSvg } from '../services/qrcode';
 import { NotFoundError } from '../utils/logger';
@@ -20,6 +21,7 @@ export const filtroCultos = z.object({
 
 rotasCultos.get(
   '/',
+  exigirPapel('LIDER', 'PASTOR'),
   assincrono(async (req, res) => {
     const { ano, turno, natureza, comVideo, pagina, porPagina } = filtroCultos.parse(req.query);
 

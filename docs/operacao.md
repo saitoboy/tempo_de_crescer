@@ -13,6 +13,7 @@ falhar quatro horas depois no meio de uma execução agendada.
 | `DATABASE_URL` | — | **obrigatória**, precisa começar com `postgresql://` |
 | `CRON_INGESTAO` | `0 */4 * * *` | `off` desliga o agendamento |
 | `API_TOKEN` | — | rotas de escrita; sem ele, escrever fica bloqueado |
+| `FRONT_ORIGEM` | — | origens do CORS, separadas por vírgula; **vazio libera tudo** |
 | `ADMIN_EMAIL` / `ADMIN_SENHA` | — | admin criado pelo seed |
 | `ADMIN_NOME` | `Administrador` | |
 | `YOUTUBE_API_KEY` | — | Fase 4 |
@@ -138,8 +139,8 @@ Medido: **~28k tokens de entrada por devocional**, e a cota rende cerca de
 porque o livro usa doze meses por edição, não mil páginas.
 
 ```bash
-npm run devocionais -- 20 2027-5 --pregador "Nélio Monteiro" --listar
-npm run devocionais -- 20 2027-5 --pregador "Nélio Monteiro"
+npm run devocionais -- 20 2027-5 --listar
+npm run devocionais -- 20 2027-5
 ```
 
 Com um mês, a fila deixa de ser "as mais recentes" e passa a ser "as que mais
@@ -150,11 +151,6 @@ numa janela.
 O grosso dos 28k é o system prompt do próprio CLI: o nosso prompt são ~3k.
 Encurtar a resenha não adianta; o custo é por invocação. As duas alavancas
 reais são gerar menos e gerar o certo.
-
-`--pregador` aceita o nome canônico ou qualquer alias do cadastro. É bandeira
-explícita, e não padrão, porque uma pregação de visitante pode ser escolhida de
-propósito — mas o corpo do livro é do Pr. Nélio, e sem a bandeira a fila mistura
-todo mundo.
 
 ### A chave é o slug, nunca o id
 
@@ -209,6 +205,57 @@ escreve o texto.
 
 ---
 
+## A API é interna
+
+**Leitura deixou de ser aberta.** Era herança de quando o front seria público:
+o conteúdo já está no blog, então expor o JSON não vazava nada. Com o app
+interno, o que a API devolve passa a incluir a fila de curadoria, o que ainda
+não foi revisado e os devocionais antes de o pastor aprovar — nada disso é para
+a internet.
+
+Todo GET de JSON exige `exigirPapel('LIDER', 'PASTOR')`; ADMIN passa em tudo.
+Entre em `POST /sessao/login` e mande `Authorization: Bearer <token>`.
+
+Duas rotas continuam **abertas de propósito**:
+
+| rota | por quê |
+|---|---|
+| `/cultos/{id}/qrcode.svg` | o navegador busca em `<img>`, que não manda `Authorization` |
+| `/livro/imprimir.html` | abre em aba nova, mesmo motivo |
+
+O conteúdo das duas já é público — o QR aponta para o YouTube da igreja — e
+fechá-las exigiria token assinado na query string, que é mais superfície do que
+o problema pede. `/health` e `/sessao/login` também ficam abertas, pelo óbvio.
+
+> ⚠️ **`/livro/livro.idml` ficou fechada.** É download, e link `<a href>` não
+> manda cabeçalho — o front precisa buscar com `fetch` e abrir o blob. Se a
+> intenção era um link direto para o designer, esta é a rota a reabrir.
+
+### O contrato viaja tipado
+
+`GET /api/v1/openapi.json` publica **esquema de resposta** em toda operação de
+sucesso, não só `description`. Sem isso o `openapi-typescript` gerava
+`content?: never` em todo 200, o front tirava dali só o tipo do corpo da
+requisição, e precisava de um `esquemas.ts` escrito à mão para o resto — duas
+fontes para o mesmo contrato, uma sem ninguém verificando.
+
+Os esquemas de saída ficam em `src/docs/respostas.ts`. Três testes seguram:
+toda resposta 2xx publica esquema, toda rota fechada declara 401, e onde o
+serviço tem tipo próprio (`PaginaDoLivro`, `Candidato`) o `expectTypeOf`
+compara os dois — campo a mais no esquema quebra o `npm run typecheck`.
+
+### `GET /meta`
+
+Os enums do domínio e as 8 doutrinas, com rótulo pronto para exibir. Existe
+para o front não escrever `['DIA', 'NOITE']` à mão: lista copiada envelhece, e
+acrescentar um turno no schema sem lembrar do front produz um filtro que não
+encontra nada — sem erro nenhum para denunciar.
+
+Os valores vêm do client gerado pelo Prisma, isto é, do próprio
+`schema.prisma`. Não há terceira cópia.
+
+---
+
 ## Ingestão
 
 ```bash
@@ -245,7 +292,7 @@ e outra) e ignora o que já está gravado sob outra URL.
 |---|---|
 | `npm run dev` | servidor com recarga automática |
 | `npm run build` / `npm start` | compila e roda o build |
-| `npm test` | 142 testes |
+| `npm test` | 153 testes |
 | `npm run typecheck` | só a checagem de tipos |
 | `npm run ingerir` | ingestão incremental |
 | `npm run seed` | doutrinas, subtemas, pregadores, admin |

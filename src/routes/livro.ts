@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { exigirPapel } from '../middlewares/autenticacao';
 import { assincrono } from '../middlewares/erros';
 import { pagina, paginas } from '../services/livro';
 import { montarHtml } from '../services/livroHtml';
@@ -38,6 +39,7 @@ export const filtroLivro = z.object({
 /** Os dados de uma página, para quem quiser diagramar por conta própria. */
 rotasLivro.get(
   '/paginas/:devocionalId',
+  exigirPapel('LIDER', 'PASTOR'),
   assincrono(async (req, res) => {
     const { devocionalId } = z.object({ devocionalId: z.uuid() }).parse(req.params);
     const p = await pagina(devocionalId);
@@ -48,6 +50,7 @@ rotasLivro.get(
 
 rotasLivro.get(
   '/paginas',
+  exigirPapel('LIDER', 'PASTOR'),
   assincrono(async (req, res) => {
     const filtro = filtroLivro.parse(req.query);
     res.json(await paginas(filtro));
@@ -75,6 +78,7 @@ rotasLivro.get(
 /** O livro em IDML, para o designer refinar no InDesign. */
 rotasLivro.get(
   '/livro.idml',
+  exigirPapel('LIDER', 'PASTOR'),
   assincrono(async (req, res) => {
     const filtro = filtroLivro.parse(req.query);
     const lista = await paginas(filtro);
