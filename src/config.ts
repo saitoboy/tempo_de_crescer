@@ -32,6 +32,17 @@ const esquema = z.object({
   /** Quanto tempo a sessão dura. */
   JWT_HORAS: z.coerce.number().int().min(1).max(720).default(12),
 
+  /**
+   * De onde o front pode chamar a API, separado por vírgula.
+   *
+   * `cors()` sem argumento devolve `Access-Control-Allow-Origin: *`, o que
+   * libera qualquer site a chamar esta API com o token do usuário logado.
+   * Vazio mantém o comportamento aberto — serve para o Swagger e para curl em
+   * desenvolvimento, e é por isso que **em produção isto tem de ser
+   * preenchido**.
+   */
+  FRONT_ORIGEM: z.string().default(''),
+
   YOUTUBE_API_KEY: z.string().optional(),
   CHANNEL_HANDLE: z.string().default('@ibps.muriae'),
 

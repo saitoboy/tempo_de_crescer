@@ -5,6 +5,8 @@ import { filtroLivro } from '../routes/livro';
 import { credenciais } from '../routes/sessao';
 import { fusaoPregador, novoPregador } from '../routes/pregadores';
 import { correcaoResenha, filtroListagem, filtroPendentes } from '../routes/resenhas';
+import { filtroDeEscolha, filtroTemas, novaOrdem, novoTema, paginaEscolhida } from '../routes/temas';
+import * as R from './respostas';
 
 /**
  * Especificação OpenAPI, montada a partir dos mesmos esquemas Zod que as rotas
@@ -42,6 +44,25 @@ const corpo = (zod: z.ZodType) => ({
   required: true,
   content: { 'application/json': { schema: esquema(zod) } },
 });
+
+/**
+ * Uma resposta com esquema de verdade.
+ *
+ * Declarar só `description` fazia o `openapi-typescript` gerar `content?: never`
+ * para todo 200 — o front tirava dali o tipo do corpo da requisição e nada mais,
+ * e precisava de um arquivo de esquemas escrito à mão para as respostas.
+ *
+ * Aqui a conversão sai com `io: 'output'`: o que interessa é a forma **depois**
+ * dos `transform`, que é o que o cliente recebe. Nos filtros de query é o
+ * contrário, e por isso `esquema()` usa `input`.
+ */
+function respostaJson(descricao: string, zod: z.ZodType) {
+  const { $schema, ...corpo } = z.toJSONSchema(zod, { io: 'output' }) as Record<string, unknown>;
+  return {
+    description: descricao,
+    content: { 'application/json': { schema: corpo } },
+  };
+}
 
 const idNaRota = {
   name: 'id',
@@ -83,7 +104,17 @@ const ERROS_DE_ESCRITA = {
   503: respostaErro('API_TOKEN não configurado no servidor'),
 };
 
-const protegida = [{ tokenDeEscrita: [] }];
+/** Escrita: token de sessão de um ADMIN, ou o API_TOKEN do ambiente. */
+const protegida = [{ sessao: [] }, { tokenDeEscrita: [] }];
+
+/** Leitura: exige login, de qualquer papel. */
+const comLogin = [{ sessao: [] }];
+
+/** Toda rota de leitura devolve isto quando não há sessão válida. */
+const SEM_SESSAO = {
+  401: respostaErro('Faça login para continuar'),
+  403: respostaErro('Seu perfil não permite esta operação'),
+};
 
 export const especificacao = {
   openapi: '3.1.0',
@@ -93,11 +124,16 @@ export const especificacao = {
     description: [
       'Acervo de pregações da Igreja Batista do Parque Safira, de 2012 a 2026.',
       '',
-      '**Leitura é aberta** — o conteúdo já é público no blog da igreja.',
-      '**Escrita exige token**: `Authorization: Bearer $API_TOKEN`.',
+      '**Tudo exige login**, exceto `/health`, `/sessao/login` e as duas rotas',
+      'que o navegador busca fora do `fetch`: `/cultos/{id}/qrcode.svg` e',
+      '`/livro/imprimir.html` — `<img>` e aba nova não mandam `Authorization`,',
+      'e o conteúdo delas já é público (o QR aponta para o YouTube da igreja).',
       '',
-      'O token único é provisório; o login por usuário e senha, com os papéis',
-      'ADMIN, PASTOR e LIDER, entra na Fase 7.',
+      'Entre em `/sessao/login` e mande `Authorization: Bearer <token>`.',
+      'Papéis: ADMIN passa em tudo; LIDER e PASTOR leem; escrever é de ADMIN.',
+      '',
+      'O `API_TOKEN` único ainda é aceito na escrita, e sai quando as telas',
+      'de escrita estiverem no ar.',
     ].join('\n'),
   },
   servers: [{ url: BASE, description: 'servidor atual' }],
@@ -109,13 +145,21 @@ export const especificacao = {
     { name: 'Livro', description: 'As páginas, o HTML para impressão e o IDML' },
     { name: 'Cultos', description: 'O encontro, com a transmissão e o QR code' },
     { name: 'Pregadores', description: 'Quem pregou, com as grafias que o blog usa' },
+    { name: 'Temas do mês', description: 'A curadoria: qual devocional entra em qual mês do livro' },
+    { name: 'Meta', description: 'O vocabulário do domínio' },
   ],
   components: {
     securitySchemes: {
+      sessao: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'O token devolvido por POST /sessao/login.',
+      },
       tokenDeEscrita: {
         type: 'http',
         scheme: 'bearer',
-        description: 'O valor de API_TOKEN no ambiente do servidor.',
+        description: 'O valor de API_TOKEN no ambiente do servidor. Provisório.',
       },
     },
     schemas: { Erro: ERRO },
@@ -126,15 +170,124 @@ export const especificacao = {
         tags: ['Saúde'],
         summary: 'Contagem do que está no banco',
         responses: {
-          200: {
-            description: 'Serviço no ar',
-            content: {
-              'application/json': {
-                example: { ok: true, resenhas: 1409, cultos: 1026, pregadores: 51 },
-              },
-            },
-          },
+          200: respostaJson('Serviço no ar', R.saude),
         },
+      },
+    },
+
+    '/meta': {
+      get: {
+        tags: ['Meta'],
+        summary: 'Os enums e as doutrinas',
+        description: [
+          'Existe para o front não escrever a lista de turnos à mão. Lista',
+          'copiada envelhece: acrescentar um turno no schema e esquecer do',
+          'front produz um filtro que não encontra nada, sem erro nenhum.',
+        ].join('\n'),
+        security: comLogin,
+        responses: { 200: respostaJson('O vocabulário', R.meta), ...SEM_SESSAO },
+      },
+    },
+
+    '/livro/paginas/{devocionalId}': {
+      get: {
+        tags: ['Livro'],
+        summary: 'Os dados de uma página',
+        security: comLogin,
+        parameters: [{ ...idNaRota, name: 'devocionalId' }],
+        responses: {
+          200: respostaJson('A página', R.paginaDoLivro),
+          404: respostaErro('Devocional não encontrado'),
+          ...SEM_SESSAO,
+        },
+      },
+    },
+
+    '/temas': {
+      get: {
+        tags: ['Temas do mês'],
+        summary: 'Os meses do livro',
+        security: comLogin,
+        parameters: parametrosDeQuery(filtroTemas),
+        responses: { 200: respostaJson('Os temas', R.listaDeTemas), ...SEM_SESSAO },
+      },
+      post: {
+        tags: ['Temas do mês'],
+        summary: 'Cria o tema de um mês',
+        security: protegida,
+        requestBody: corpo(novoTema),
+        responses: { 201: respostaJson('Criado', R.temaSalvo), ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/temas/{id}': {
+      get: {
+        tags: ['Temas do mês'],
+        summary: 'Um mês, com as páginas já escolhidas na ordem',
+        security: comLogin,
+        parameters: [idNaRota],
+        responses: { 200: respostaJson('O tema', R.temaCompleto), ...SEM_SESSAO },
+      },
+      patch: {
+        tags: ['Temas do mês'],
+        summary: 'Edita o tema',
+        security: protegida,
+        parameters: [idNaRota],
+        requestBody: corpo(novoTema.partial()),
+        responses: { 200: respostaJson('Editado', R.temaSalvo), ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/temas/{id}/sugestoes': {
+      get: {
+        tags: ['Temas do mês'],
+        summary: 'Que devocionais podem entrar neste mês',
+        description: [
+          'Parte da doutrina do tema, mas tudo é sobreponível: por pastor, por',
+          'ano da pregação, por palavra no título.',
+          '',
+          '`semantica=true` ordena por semelhança de significado com o tema, e',
+          'é o caminho para os meses que não são doutrina — "As Mulheres da',
+          'Bíblia", "Novas Gerações". Só aí vem a `afinidade`.',
+        ].join('\n'),
+        security: comLogin,
+        parameters: [idNaRota, ...parametrosDeQuery(filtroDeEscolha)],
+        responses: { 200: respostaJson('Os candidatos, do mais aderente ao menos', R.candidatos), ...SEM_SESSAO },
+      },
+    },
+
+    '/temas/{id}/paginas': {
+      post: {
+        tags: ['Temas do mês'],
+        summary: 'Põe um devocional no mês',
+        security: protegida,
+        parameters: [idNaRota],
+        requestBody: corpo(paginaEscolhida),
+        responses: { 201: respostaJson('Adicionado', R.temaCompleto), ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/temas/{id}/paginas/{devocionalId}': {
+      delete: {
+        tags: ['Temas do mês'],
+        summary: 'Tira um devocional do mês',
+        security: protegida,
+        parameters: [idNaRota, { ...idNaRota, name: 'devocionalId' }],
+        responses: {
+          200: respostaJson('Removido', R.confirmacao),
+          ...ERROS_DE_ESCRITA,
+        },
+      },
+    },
+
+    '/temas/{id}/ordem': {
+      patch: {
+        tags: ['Temas do mês'],
+        summary: 'Reordena as páginas do mês',
+        security: protegida,
+        parameters: [idNaRota],
+        requestBody: corpo(novaOrdem),
+        responses: { 200: respostaJson('Reordenado', R.temaCompleto), ...ERROS_DE_ESCRITA },
       },
     },
 
@@ -148,8 +301,9 @@ export const especificacao = {
           'Sem filtro, devolve tudo que tem **alguma** lacuna. Com `semPregador`',
           'e `semData` juntos, devolve só as que têm **as duas**.',
         ].join('\n'),
+        security: comLogin,
         parameters: parametrosDeQuery(filtroPendentes),
-        responses: { 200: { description: 'Página da fila' } },
+        responses: { 200: respostaJson('Página da fila', R.listaDePendentes), ...SEM_SESSAO },
       },
     },
 
@@ -157,8 +311,9 @@ export const especificacao = {
       get: {
         tags: ['Resenhas'],
         summary: 'Listagem',
+        security: comLogin,
         parameters: parametrosDeQuery(filtroListagem),
-        responses: { 200: { description: 'Página de resenhas' } },
+        responses: { 200: respostaJson('Página de resenhas', R.listaDeResenhas), ...SEM_SESSAO },
       },
     },
 
@@ -166,8 +321,9 @@ export const especificacao = {
       get: {
         tags: ['Resenhas'],
         summary: 'Uma resenha, com culto, classificação e devocional',
+        security: comLogin,
         parameters: [idNaRota],
-        responses: { 200: { description: 'A resenha' }, 404: respostaErro('Resenha não encontrada') },
+        responses: { 200: respostaJson('A resenha', R.resenhaCompleta), 404: respostaErro('Resenha não encontrada'), ...SEM_SESSAO },
       },
       patch: {
         tags: ['Resenhas'],
@@ -183,7 +339,7 @@ export const especificacao = {
         security: protegida,
         parameters: [idNaRota],
         requestBody: corpo(correcaoResenha),
-        responses: { 200: { description: 'Resenha corrigida' }, ...ERROS_DE_ESCRITA },
+        responses: { 200: respostaJson('Resenha corrigida', R.resenhaCompleta), ...ERROS_DE_ESCRITA },
       },
     },
 
@@ -194,7 +350,7 @@ export const especificacao = {
         description:
           'A resposta é a mesma para e-mail inexistente, senha errada e conta inativa: dizer qual dos três falhou entregaria quais e-mails existem.',
         requestBody: corpo(credenciais),
-        responses: { 200: { description: 'Token e dados do usuário' }, 401: respostaErro('E-mail ou senha inválidos') },
+        responses: { 200: respostaJson('Token e dados do usuário', R.login), 401: respostaErro('E-mail ou senha inválidos') },
       },
     },
 
@@ -203,19 +359,20 @@ export const especificacao = {
         tags: ['Sessão'],
         summary: 'Quem sou eu',
         security: protegida,
-        responses: { 200: { description: 'O usuário da sessão' }, 401: respostaErro('Faça login') },
+        responses: { 200: respostaJson('O usuário da sessão', R.eu), 401: respostaErro('Faça login') },
       },
     },
 
     '/analise/panorama': {
-      get: { tags: ['Análise'], summary: 'Números do acervo', responses: { 200: { description: 'Panorama' } } },
+      get: { tags: ['Análise'], summary: 'Números do acervo', security: comLogin, responses: { 200: respostaJson('Panorama', R.panorama), ...SEM_SESSAO } },
     },
     '/analise/doutrinas': {
       get: {
         tags: ['Análise'],
         summary: 'Distribuição por doutrina',
         description: 'Só o tema PRINCIPAL conta; somar os secundários faria o total passar do número de pregações.',
-        responses: { 200: { description: 'As 8 doutrinas com contagem e percentual' } },
+        security: comLogin,
+        responses: { 200: respostaJson('As 8 doutrinas com contagem e percentual', R.porDoutrina), ...SEM_SESSAO },
       },
     },
     '/analise/evolucao': {
@@ -223,15 +380,17 @@ export const especificacao = {
         tags: ['Análise'],
         summary: 'Ênfase doutrinária ano a ano',
         description: 'Usa apenas data de origem TEXTO, para a série histórica não misturar o que é firme com o que foi inferido.',
-        responses: { 200: { description: 'Série por ano' } },
+        security: comLogin,
+        responses: { 200: respostaJson('Série por ano', R.evolucao), ...SEM_SESSAO },
       },
     },
     '/analise/pregadores': {
       get: {
         tags: ['Análise'],
         summary: 'O que cada pregador enfatiza',
+        security: comLogin,
         parameters: parametrosDeQuery(filtroPregadores),
-        responses: { 200: { description: 'Perfil por pregador' } },
+        responses: { 200: respostaJson('Perfil por pregador', R.perfilDePregadores), ...SEM_SESSAO },
       },
     },
     '/analise/biblia': {
@@ -239,7 +398,8 @@ export const especificacao = {
         tags: ['Análise'],
         summary: 'Cobertura bíblica',
         description: 'A pergunta interessante não é qual livro aparece mais, e sim qual nunca apareceu — por isso os 66 vêm sempre.',
-        responses: { 200: { description: 'Cobertura, mais pregados e nunca pregados' } },
+        security: comLogin,
+        responses: { 200: respostaJson('Cobertura, mais pregados e nunca pregados', R.cobertura), ...SEM_SESSAO },
       },
     },
 
@@ -247,8 +407,9 @@ export const especificacao = {
       get: {
         tags: ['Livro'],
         summary: 'As páginas do livro, em JSON',
+        security: comLogin,
         parameters: parametrosDeQuery(filtroLivro),
-        responses: { 200: { description: 'Páginas montadas' } },
+        responses: { 200: respostaJson('Páginas montadas', R.paginasDoLivro), ...SEM_SESSAO },
       },
     },
     '/livro/imprimir.html': {
@@ -267,8 +428,9 @@ export const especificacao = {
         summary: 'O livro em IDML, para o designer refinar no InDesign',
         description:
           'Pacote com um spread por página e os quadros de texto nomeados (Titulo, Versiculo, Creditos, Reflexao, PontosAplicacao, QRCode, Oracao, Anotacoes). NÃO foi aberto no InDesign — a estrutura segue a especificação, mas isso ainda é promessa, não fato.',
+        security: comLogin,
         parameters: parametrosDeQuery(filtroLivro),
-        responses: { 200: { description: 'Pacote IDML' } },
+        responses: { 200: { description: 'Pacote IDML', content: { 'application/vnd.adobe.indesign-idml-package': { schema: { type: 'string', format: 'binary' } } } }, ...SEM_SESSAO },
       },
     },
 
@@ -277,8 +439,9 @@ export const especificacao = {
         tags: ['Cultos'],
         summary: 'Listagem de cultos',
         description: 'Filtra por ano, turno, natureza e presença de vídeo.',
+        security: comLogin,
         parameters: parametrosDeQuery(filtroCultos),
-        responses: { 200: { description: 'Página de cultos' } },
+        responses: { 200: respostaJson('Página de cultos', R.listaDeCultos), ...SEM_SESSAO },
       },
     },
 
@@ -303,7 +466,8 @@ export const especificacao = {
       get: {
         tags: ['Pregadores'],
         summary: 'Cadastro, com a contagem de resenhas',
-        responses: { 200: { description: 'Todos os pregadores' } },
+        security: comLogin,
+        responses: { 200: respostaJson('Todos os pregadores', R.listaDePregadores), ...SEM_SESSAO },
       },
       post: {
         tags: ['Pregadores'],
@@ -311,7 +475,7 @@ export const especificacao = {
         description: 'O nome canônico entra automaticamente como alias.',
         security: protegida,
         requestBody: corpo(novoPregador),
-        responses: { 201: { description: 'Cadastrado' }, ...ERROS_DE_ESCRITA },
+        responses: { 201: respostaJson('Cadastrado', R.pregadorCriado), ...ERROS_DE_ESCRITA },
       },
     },
 
@@ -326,7 +490,7 @@ export const especificacao = {
         security: protegida,
         parameters: [{ ...idNaRota, description: 'O pregador que **fica**' }],
         requestBody: corpo(fusaoPregador),
-        responses: { 200: { description: 'Fundido' }, ...ERROS_DE_ESCRITA },
+        responses: { 200: respostaJson('Fundido', R.fusaoFeita), ...ERROS_DE_ESCRITA },
       },
     },
   },
