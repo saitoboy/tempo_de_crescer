@@ -88,7 +88,75 @@ const EXEMPLO = `{
  * A resenha vai inteira: é dela que o devocional tem de nascer. O modelo não
  * escreve o versículo — só indica a referência, e o texto vem do banco.
  */
-export function montarPrompt(resenha: ResenhaParaDevocional, correcao?: string): string {
+/**
+ * Os devocionais nossos mais parecidos com esta pregação, como exemplo.
+ *
+ * Não é treino — nenhum peso muda. É contexto: em vez de um exemplo fixo, o
+ * modelo vê o que **nós** já escrevemos sobre assunto próximo. Numa pregação
+ * escatológica ele recebe devocionais escatológicos nossos; numa sobre a Ceia,
+ * os da Ceia. É a diferença entre descrever o estilo e mostrar o alvo no
+ * assunto certo.
+ *
+ * **`excluir` não é opcional na prática.** A resenha que está sendo escrita
+ * precisa ficar de fora: se ela já tiver devocional — o caso da comparação de
+ * modelos — a busca traria justamente a resposta, o modelo copiaria, e a
+ * medida daria excelente por motivo errado.
+ *
+ * Só devocional `REVISADO` ou gerado pelo Opus entra. Exemplo ruim rebaixa
+ * tudo que vier depois dele.
+ */
+export async function exemplosParecidos(
+  resenhaId: string,
+  quantos = 2,
+): Promise<string[]> {
+  const alvo = await connection.resenha.findUnique({
+    where: { id: resenhaId },
+    select: { embedding: true },
+  });
+  if (!alvo || alvo.embedding.length === 0) return [];
+
+  const candidatos = await connection.resenha.findMany({
+    where: { id: { not: resenhaId }, devocional: { isNot: null } },
+    select: {
+      id: true,
+      embedding: true,
+      devocional: {
+        select: {
+          titulo: true,
+          referencia: true,
+          reflexao: true,
+          pontosAplicacao: true,
+          oracao: true,
+        },
+      },
+    },
+  });
+
+  const ranking = maisParecidos(alvo.embedding, candidatos, quantos);
+  const porId = new Map(candidatos.map((c) => [c.id, c.devocional!]));
+
+  return ranking.map((r) => {
+    const d = porId.get(r.id)!;
+    return JSON.stringify(
+      {
+        titulo: d.titulo,
+        referencia: d.referencia,
+        reflexao: d.reflexao,
+        pontosAplicacao: d.pontosAplicacao,
+        oracao: d.oracao,
+      },
+      null,
+      2,
+    );
+  });
+}
+
+export function montarPrompt(
+  resenha: ResenhaParaDevocional,
+  correcao?: string,
+  /** Exemplos escolhidos por semelhança. Vazio cai no exemplo fixo. */
+  exemplos: string[] = [],
+): string {
   const contexto = [
     `Título da pregação: ${resenha.titulo}`,
     resenha.textoBase ? `Texto base: ${resenha.textoBase}` : null,
@@ -128,10 +196,18 @@ A "referencia" deve ser um único versículo ou um trecho curto de um capítulo
 só, e precisa existir na Bíblia. Não escreva o texto do versículo: apenas a
 referência.
 
-Este é um devocional nosso já aprovado. Siga o tom, o tamanho e a forma dele —
+${
+    exemplos.length > 0
+      ? `${exemplos.length} devocionais nossos já aprovados, escolhidos por tratarem de assunto
+próximo ao desta pregação. Siga o tom, o tamanho e a forma deles — o conteúdo,
+não: cada um nasceu de outra pregação.
+
+${exemplos.join('\n\n')}`
+      : `Este é um devocional nosso já aprovado. Siga o tom, o tamanho e a forma dele —
 o conteúdo, não: aquele nasceu de outra pregação.
 
-${EXEMPLO}${correcao ? `\n\n${correcao}` : ''}`;
+${EXEMPLO}`
+  }${correcao ? `\n\n${correcao}` : ''}`;
 }
 
 /**

@@ -23,6 +23,18 @@ export type Provedor = {
   modelo: string;
   /** Em rodízio: a primeira que não estiver esgotada é a que atende. */
   chaves: string[];
+  /**
+   * Quanto o modelo pode raciocinar antes de responder.
+   *
+   * **Não é ajuste fino, é o que faz o `gpt-oss-120b` responder.** No padrão,
+   * ele gastou os 4.000 tokens de saída inteiros pensando — `finish_reason:
+   * length`, 3.998 tokens de raciocínio e `content` vazio. Com `low`, foram 72
+   * tokens de raciocínio e o JSON saiu inteiro.
+   *
+   * Escrever devocional a partir de uma resenha pronta não é problema de
+   * raciocínio; é de redação. O modelo não precisa deliberar, precisa escrever.
+   */
+  raciocinio?: 'low' | 'medium' | 'high';
 };
 
 export type Resultado = {
@@ -37,10 +49,29 @@ export type Resultado = {
 const ESGOTADA = [401, 402, 403, 429];
 
 /**
- * Sem isto o modelo devolve o JSON embrulhado em prosa ("Claro! Aqui está:"),
- * e o `extrairJson` teria de adivinhar. Groq e NVIDIA aceitam o mesmo campo.
+ * O modo JSON estrito fica **desligado** por padrão.
+ *
+ * Parece o caminho óbvio — `response_format: json_object` obriga o modelo a
+ * devolver JSON e dispensa adivinhação. Com prompt curto funciona. Com o nosso,
+ * de ~12 mil caracteres, a Groq recusou com `400 Failed to validate JSON` e
+ * `failed_generation` vazio, em toda tentativa, inclusive limitando
+ * `max_tokens`. O `gpt-oss-120b` emite raciocínio antes da resposta, e o
+ * validador da Groq é mais rígido que o nosso.
+ *
+ * Como o `extrairJson` já lida com cerca de código e prosa em volta, ligar
+ * isto troca um problema que sabemos resolver por um 400 que não sabemos.
+ * `GROQ_JSON_ESTRITO=true` liga, para quando um modelo precisar.
  */
-const SO_JSON = { type: 'json_object' } as const;
+const jsonEstrito = process.env.GROQ_JSON_ESTRITO === 'true';
+
+/**
+ * Quanto esperar quando **todas** as chaves esgotam.
+ *
+ * O limite da Groq é por minuto (TPM), não por dia: chave esgotada volta
+ * sozinha. Num lote longo, parar seria desistir de algo que se resolve
+ * esperando — mas esperar sem teto esconderia uma conta de fato bloqueada.
+ */
+const ESPERA_MS = 65_000;
 
 /**
  * Baixa, para o texto não variar a cada tentativa mais do que o necessário.
@@ -74,6 +105,7 @@ export function provedoresDoAmbiente(): Provedor[] {
       baseUrl: 'https://api.groq.com/openai/v1',
       modelo: process.env.GROQ_MODELO || 'openai/gpt-oss-120b',
       chaves: groq,
+      raciocinio: 'low',
     });
   }
 
@@ -82,7 +114,7 @@ export function provedoresDoAmbiente(): Provedor[] {
     provedores.push({
       nome: 'nvidia',
       baseUrl: 'https://integrate.api.nvidia.com/v1',
-      modelo: process.env.NVIDIA_MODELO || 'moonshotai/kimi-k2-instruct',
+      modelo: process.env.NVIDIA_MODELO || 'nvidia/nemotron-3-super-120b-a12b',
       chaves: nvidia,
     });
   }
@@ -115,7 +147,8 @@ async function pedirA(
         model: provedor.modelo,
         messages: [{ role: 'user', content: prompt }],
         temperature: TEMPERATURA,
-        response_format: SO_JSON,
+        ...(provedor.raciocinio ? { reasoning_effort: provedor.raciocinio } : {}),
+        ...(jsonEstrito ? { response_format: { type: 'json_object' } } : {}),
       }),
       signal: controle.signal,
     });
@@ -141,7 +174,34 @@ export async function escrever(
   provedores: Provedor[],
   prompt: string,
   limiteMs = 120_000,
+  /** Sobrepõe o modelo de todos os provedores. Serve à comparação de modelos. */
+  modelo?: string,
 ): Promise<Resultado> {
+  if (modelo) provedores = provedores.map((p) => ({ ...p, modelo }));
+
+  // Uma passada; se todas as chaves esgotarem, espera a janela do minuto virar
+  // e tenta de novo. Duas rodadas, não infinitas: conta bloqueada de verdade
+  // precisa aparecer como erro, não virar espera eterna.
+  try {
+    return await umaPassada(provedores, prompt, limiteMs);
+  } catch (e) {
+    if (!(e instanceof TodasEsgotadas)) throw e;
+
+    logInfo(`todas as chaves no limite, esperando ${ESPERA_MS / 1000}s`, 'devocional');
+    await new Promise((r) => setTimeout(r, ESPERA_MS));
+    return umaPassada(provedores, prompt, limiteMs);
+  }
+}
+
+/** Só o esgotamento merece nova rodada; erro de pedido, não. */
+class TodasEsgotadas extends Error {}
+
+async function umaPassada(
+  provedores: Provedor[],
+  prompt: string,
+  limiteMs: number,
+): Promise<Resultado> {
+
   if (provedores.length === 0) {
     throw new Error('Nenhum provedor configurado — defina GROQ_API_KEYS ou NVIDIA_API_KEYS');
   }
@@ -176,11 +236,33 @@ export async function escrever(
       }
 
       const json = JSON.parse(corpo) as {
-        choices?: Array<{ message?: { content?: string } }>;
-        usage?: { prompt_tokens?: number; completion_tokens?: number };
+        choices?: Array<{
+          message?: { content?: string };
+          finish_reason?: string;
+        }>;
+        usage?: {
+          prompt_tokens?: number;
+          completion_tokens?: number;
+          completion_tokens_details?: { reasoning_tokens?: number };
+        };
       };
-      const texto = json.choices?.[0]?.message?.content;
-      if (!texto) throw new Error(`${origem} devolveu resposta sem conteúdo: ${corpo.slice(0, 300)}`);
+
+      const escolha = json.choices?.[0];
+      const texto = escolha?.message?.content;
+
+      if (!texto) {
+        // O caso comum não é "o modelo não respondeu", é "o modelo gastou a
+        // saída inteira raciocinando". Dizer isso poupa a investigação que
+        // custou meia hora aqui.
+        const raciocinio = json.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
+        const diagnostico =
+          escolha?.finish_reason === 'length' && raciocinio > 0
+            ? `gastou ${raciocinio} tokens raciocinando e não sobrou saída para a resposta — ` +
+              `use reasoning_effort mais baixo`
+            : corpo.slice(0, 200);
+
+        throw new Error(`${origem} devolveu resposta sem conteúdo: ${diagnostico}`);
+      }
 
       if (esgotadas.length > 0) {
         logInfo(`${esgotadas.length} chave(s) fora, atendido por ${origem}`, 'devocional');
