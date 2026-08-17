@@ -56,6 +56,33 @@ O que caracteriza esse estilo:
 - Nada de linguagem corporativa, autoajuda ou motivacional.`;
 
 /**
+ * Um devocional nosso, já aprovado, como referência de alvo.
+ *
+ * Descrever estilo em adjetivos ("frases curtas", "peso teológico") funciona
+ * com modelo forte, que já sabe o que aquilo significa. Modelo aberto de 20 a
+ * 120 bilhões de parâmetros acerta muito mais vendo **um exemplo do produto**
+ * do que lendo a descrição dele.
+ *
+ * Custa ~400 tokens de entrada. No CLI isso era caro; numa API gratuita é o
+ * melhor negócio do prompt inteiro.
+ *
+ * Saiu de `Sementes` (Mateus 13:30), gerado pelo Opus e conferido. Se for
+ * trocado um dia, trocar por outro **já revisado** — este bloco é o padrão de
+ * qualidade, e um exemplo ruim rebaixa tudo que vier depois dele.
+ */
+const EXEMPLO = `{
+  "titulo": "Duas sementes, dois destinos",
+  "referencia": "Mateus 13:30",
+  "reflexao": "Meus irmãos, o coração do homem é solo fértil. Tudo o que nele se lança germina. A questão nunca foi se a semente cresce — cresce sempre. A questão é qual semente. Cristo veio semear a boa semente: a Palavra que revela Deus e gera vida. Mas o inimigo não dorme. Ele semeia o joio na mente e no coração, e o joio cresce no meio do trigo, dentro do campo do Senhor.\\n\\nNão suavizemos isto. Jesus disse que o joio será atado em feixes e queimado no fogo (Mateus 13:40-42). Quem afirma que se pode viver com um pé no mundo e outro no Reino anuncia mensagem falsa. Deus é santo, e sem santidade ninguém verá o Senhor.\\n\\nA diferença está na raiz. Quem está em Cristo produz o fruto do Espírito; quem tem raiz no mundo produz apenas palha levada pelo vento (João 15:5). Regue a Palavra com oração. Ela não muda, e nenhuma palavra de Deus cai por terra.",
+  "pontosAplicacao": [
+    "Examine hoje o que tem sido semeado na sua mente.",
+    "Afaste-se de quem murmura contra Deus e Seu povo.",
+    "Medite na Palavra e pratique-a antes de dormir."
+  ],
+  "oracao": "Senhor, guarda a nossa mente e o nosso coração do joio que o inimigo lança sobre nós. Arraiga-nos em Cristo. Faze crescer em nós a Tua Palavra, até que produzamos o fruto do Teu Espírito. Amém."
+}`;
+
+/**
  * Monta o pedido.
  *
  * A resenha vai inteira: é dela que o devocional tem de nascer. O modelo não
@@ -99,7 +126,12 @@ mais longo do que o pedido não cabe e será cortado.
 
 A "referencia" deve ser um único versículo ou um trecho curto de um capítulo
 só, e precisa existir na Bíblia. Não escreva o texto do versículo: apenas a
-referência.${correcao ? `\n\n${correcao}` : ''}`;
+referência.
+
+Este é um devocional nosso já aprovado. Siga o tom, o tamanho e a forma dele —
+o conteúdo, não: aquele nasceu de outra pregação.
+
+${EXEMPLO}${correcao ? `\n\n${correcao}` : ''}`;
 }
 
 /**

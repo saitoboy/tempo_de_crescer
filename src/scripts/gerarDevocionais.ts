@@ -18,18 +18,30 @@ import {
 import { MESES } from '../services/curadoriaDoLivro';
 import { logError, logInfo, logSuccess, logWarning } from '../utils/logger';
 import { urlDoProxy } from '../utils/proxy';
+import {
+  escrever as escreverPorApi,
+  provedoresDoAmbiente,
+  type Provedor,
+} from '../services/provedores';
 
 /**
- * Escreve os devocionais chamando o Claude Opus pelo CLI local.
- *
- * Usa a assinatura, não a chave de API. Por isso é um script de lote rodado à
- * mão, e não algo que a API dispara: quem controla o gasto é você.
+ * Escreve os devocionais.
  *
  *     npm run devocionais                    # 5, das mais recentes
  *     npm run devocionais -- 20              # 20, das mais recentes
  *     npm run devocionais -- 20 2027-6       # 20 para o mês de Escatologia
  *     npm run devocionais -- 20 2027-6 --listar   # só a lista, sem gastar cota
  *     npm run devocionais -- 20 --todos      # abre para todos os pregadores
+ *     npm run devocionais -- 20 --cli        # força o Claude, ignorando as chaves
+ *
+ * **Dois motores.** Com `GROQ_API_KEYS` ou `NVIDIA_API_KEYS` no ambiente, usa a
+ * API — modelos abertos, de graça, com rodízio de chaves. Sem chave nenhuma,
+ * cai no CLI do Claude, que consome a assinatura de quem roda e rende ~18
+ * devocionais por janela de 5 horas.
+ *
+ * O motor não muda mais nada: prompt, validação, retentativa e gravação são os
+ * mesmos, e quem decide se o texto presta é o Zod. `modelo` fica gravado em
+ * cada devocional, então dá para comparar os dois depois.
  *
  * **Só pregação do Nélio, por padrão** — o livro é dele. Ver
  * `PREGADOR_DO_LIVRO`.
@@ -244,7 +256,36 @@ function eLimiteDaConta(motivo: string): boolean {
  */
 const TENTATIVAS = 2;
 
-async function gerarUm(resenha: ResenhaParaDevocional): Promise<Gasto> {
+/**
+ * Quem escreve o texto: o CLI do Claude ou uma API aberta.
+ *
+ * O CLI consome a assinatura de quem roda — ~18 devocionais por janela de 5
+ * horas. Groq e NVIDIA servem modelos abertos de graça, com limite **por
+ * chave**, então várias chaves em rodízio viram várias cotas.
+ *
+ * O motor não muda mais nada: prompt, validação, retentativa e gravação são os
+ * mesmos. Quem decide se o texto presta é o Zod, não o provedor.
+ */
+type Motor = { nome: string; escrever(prompt: string): Promise<{ texto: string; gasto: Gasto }> };
+
+function motorDoClaude(): Motor {
+  return {
+    nome: `CLI ${MODELO}`,
+    escrever: pedirAoClaude,
+  };
+}
+
+function motorDeApi(provedores: Provedor[]): Motor {
+  return {
+    nome: provedores.map((p) => `${p.nome}/${p.modelo} (${p.chaves.length} chaves)`).join(' → '),
+    async escrever(prompt: string) {
+      const r = await escreverPorApi(provedores, prompt);
+      return { texto: r.texto, gasto: { entrada: r.entrada, saida: r.saida } };
+    },
+  };
+}
+
+async function gerarUm(resenha: ResenhaParaDevocional, motor: Motor): Promise<Gasto> {
   const gasto: Gasto = { entrada: 0, saida: 0 };
   let recusa: unknown;
 
@@ -253,15 +294,15 @@ async function gerarUm(resenha: ResenhaParaDevocional): Promise<Gasto> {
     // depois de uma recusa por tamanho tende a produzir a mesma recusa.
     const correcao = tentativa === 1 ? undefined : comoCorrecao(recusa);
 
-    // Erro do CLI (cota, proxy, rede) sobe daqui e não é retentado: nenhuma
+    // Erro do motor (cota, proxy, rede) sobe daqui e não é retentado: nenhuma
     // repetição resolveria, e o lote tem seu próprio tratamento para isso.
-    const { texto, gasto: custo } = await pedirAoClaude(montarPrompt(resenha, correcao));
+    const { texto, gasto: custo } = await motor.escrever(montarPrompt(resenha, correcao));
     gasto.entrada += custo.entrada;
     gasto.saida += custo.saida;
 
     try {
       const resposta = respostaDoModelo.parse(extrairJson(texto));
-      const devocional = await guardarDevocional(resenha.id, resposta, MODELO);
+      const devocional = await guardarDevocional(resenha.id, resposta, motor.nome);
 
       logSuccess(`"${devocional.titulo}" — ${devocional.referencia}`, 'devocional');
       if (!devocional.versiculo) {
@@ -337,6 +378,15 @@ async function main() {
     ? null
     : await acharPregador(pedido > -1 ? (process.argv[pedido + 1] ?? '') : PREGADOR_DO_LIVRO);
 
+  // Motor: API se houver chave configurada, CLI caso contrário. `--cli` força
+  // o Claude mesmo com chaves no ambiente, para comparar os dois lado a lado.
+  const provedores = provedoresDoAmbiente();
+  const motor =
+    provedores.length > 0 && !process.argv.includes('--cli')
+      ? motorDeApi(provedores)
+      : motorDoClaude();
+  logInfo(`motor: ${motor.nome}`, 'devocional');
+
   const pendentes = await connection.resenha.count({ where: { devocional: null } });
   logInfo(`${pendentes} resenhas ainda sem devocional; gerando ${Math.min(limite, pendentes)}`, 'devocional');
 
@@ -382,7 +432,7 @@ async function main() {
     logInfo(`[${i + 1}/${fila.length}] ${resenha.titulo.slice(0, 55)}`, 'devocional');
 
     try {
-      const gasto = await gerarUm(resenha);
+      const gasto = await gerarUm(resenha, motor);
       entrada += gasto.entrada;
       saidaTokens += gasto.saida;
       feitos++;
