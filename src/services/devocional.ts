@@ -370,6 +370,24 @@ export async function comoPedido(item: {
 }
 
 /**
+ * Quanto a afinidade pode cair abaixo da melhor do acervo.
+ *
+ * Medido: a curva é **plana**. Em "Novos Recomeços" o primeiro dá 0,8955, o
+ * vigésimo 0,8755 e o quadragésimo 0,8719 — do #20 ao #40 são 3,6‰. Não há
+ * penhasco onde cortar; passadas as ~20 primeiras, o vetor não distingue mais
+ * nada, e o que vem depois é enchimento com cara de resultado.
+ *
+ * 20‰ é onde ficam as ~20 primeiras de cada tema, que é quanto o acervo tem de
+ * pregação realmente sobre cada assunto. Pedir mais que isso não traz material
+ * melhor, traz Jó 42 num mês sobre recomeço.
+ *
+ * Relativo, e não absoluto, porque o topo varia por tema: "Novos Recomeços"
+ * começa em 0,8955 e "Escatologia" em 0,8493. Um corte fixo esvaziaria um e
+ * deixaria o outro intacto.
+ */
+const QUEDA_MAXIMA = 0.02;
+
+/**
  * Teto de versículos para não afogar o prompt.
  *
  * Pregação sobre um capítulo inteiro existe; mandar 60 versículos gastaria mais
@@ -515,8 +533,28 @@ export async function filaDoTema(temaMesId: string, limite: number, pregadorId?:
   // O ranking inteiro, não os `limite` primeiros: quem for descartado por
   // redundância precisa ter quem o substitua logo abaixo.
   const ranking = maisParecidos(consulta, candidatas, candidatas.length);
+
+  // O piso é medido contra o MELHOR DO ACERVO, incluindo o que já foi escrito.
+  //
+  // Contra o melhor dos que sobraram não funcionaria: depois de escrever as
+  // vinte primeiras, a régua se recalibraria pelas sobras e deixaria tudo
+  // passar de novo — que é exatamente o defeito. Rodando Janeiro duas vezes,
+  // a segunda escreveu Jó 42, Ezequiel 22 e Naum 1 para "Novos Recomeços",
+  // e o relatório de cobertura andou 3 casas com 20 textos escritos.
+  const todas = await connection.resenha.findMany({
+    where: {
+      conteudoLimpo: { not: '' },
+      dataPregacao: { not: null },
+      ...(pregadorId ? { pregadorId } : {}),
+    },
+    select: { id: true, embedding: true },
+  });
+  const melhorDoAcervo = maisParecidos(consulta, todas, 1)[0]?.semelhanca ?? 0;
+
+  const dentroDoPiso = ranking.filter((r) => melhorDoAcervo - r.semelhanca <= QUEDA_MAXIMA);
+
   const escolhidos = semRedundancia(
-    ranking,
+    dentroDoPiso,
     new Map(candidatas.map((c) => [c.id, c.embedding])),
     limite,
     jaEscritas.map((r) => r.embedding).filter((v) => v.length > 0),
