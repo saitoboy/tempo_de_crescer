@@ -6,14 +6,12 @@ import { logInfo, logSuccess, logWarning, progresso } from '../utils/logger';
 /**
  * Os devocionais viajam como dado, não como geração.
  *
- * O CLI do Claude autentica com a sessão da máquina de quem escreve. Dentro do
- * contêiner em produção não há login nenhum, então **produção não consegue
- * gerar** — e nem deveria: cada texto custa assinatura, e regerar o que já
- * existe seria desperdício em cima de desperdício.
+ * Produção **hoje consegue gerar**, com `GROQ_API_KEYS` — o que a impedia era o
+ * CLI do Claude, que autentica com a sessão da máquina de quem escreve.
  *
- * O fluxo é: gera na máquina, exporta para arquivo, versiona, e o seed carrega
- * na subida do contêiner. Cultos novos são três por semana; uma passada mensal
- * local dá conta.
+ * Este arquivo continua valendo por outro motivo: é ele que leva o texto
+ * **revisado** para produção. Gerar de novo produziria outro texto; o que o
+ * pastor corrigiu só viaja como dado.
  *
  * **A chave de casamento é o slug da resenha, não o id.** Ids são uuid gerados
  * por banco: o id de um devocional aqui não existe em produção. Casar por id

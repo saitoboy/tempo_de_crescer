@@ -2,7 +2,9 @@ import { schedule, validate } from 'node-cron';
 import { config } from '../config';
 import { logError, logInfo, logSuccess, logWarning } from '../utils/logger';
 import { FUSO } from '../utils/timezone';
+import { acharPregador, escreverPendentes, relatarGasto } from './escrita';
 import { ingerirNovos } from './ingestao';
+import { provedoresDoAmbiente } from './provedores';
 
 /**
  * Agendamento da ingestão incremental.
@@ -70,5 +72,80 @@ export function agendarIngestao(): string | null {
   }
 
   schedule(expressao, executarIngestao, { timezone: FUSO });
+  return expressao;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ESCRITA DOS DEVOCIONAIS
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Produção passou a escrever devocional.
+ *
+ * Não conseguia: o CLI do Claude autentica com a sessão da máquina de quem
+ * escreve, e dentro do contêiner não há login nenhum. Uma chave de API não tem
+ * esse problema — por isso `GROQ_API_KEYS` mudou o que é possível aqui, e não
+ * só o custo.
+ *
+ * **O lote é pequeno de propósito.** A igreja produz três cultos por semana, e
+ * a ingestão traz isso todo dia; escrever cinco por execução mantém o acervo em
+ * dia com folga. Encher os 1.300 pendentes automaticamente seria gastar cota
+ * escrevendo texto que nenhum mês do livro vai usar — e o mês do livro se monta
+ * pelo script, com a curadoria junto.
+ *
+ * O que sai daqui nasce em `status: GERADO`. Publicar continua sendo do pastor.
+ */
+let escrevendo = false;
+
+export async function executarEscrita(): Promise<void> {
+  if (escrevendo) {
+    logWarning('escrita anterior ainda em curso, pulando', CONTEXTO);
+    return;
+  }
+
+  escrevendo = true;
+  try {
+    const pregador = await acharPregador(config.PREGADOR_DO_LIVRO);
+    const resultado = await escreverPendentes(config.DEVOCIONAIS_POR_EXECUCAO, pregador.id);
+
+    if (resultado.escritos === 0 && resultado.falhas.length === 0) {
+      logInfo('nenhuma resenha pendente de devocional', CONTEXTO);
+    } else {
+      logSuccess(`${resultado.escritos} devocionais escritos`, CONTEXTO);
+      relatarGasto(resultado);
+    }
+
+    for (const falha of resultado.falhas) logError(falha, CONTEXTO);
+  } catch (e) {
+    // Chave esgotada, provedor fora, pregador ausente do cadastro: nada disso
+    // pode derrubar o servidor. A execução seguinte tenta de novo.
+    logError(`erro na escrita: ${(e as Error).message}`, CONTEXTO);
+  } finally {
+    escrevendo = false;
+  }
+}
+
+/**
+ * Liga o agendamento da escrita. Desligado por padrão — escrever sozinho é
+ * decisão de quem opera, não comportamento implícito de subir o servidor.
+ *
+ * Sem chave de provedor não adianta agendar: avisa e não agenda, em vez de
+ * falhar de hora em hora no log.
+ */
+export function agendarEscrita(): string | null {
+  const expressao = config.CRON_DEVOCIONAIS;
+
+  if (expressao === 'off') return null;
+
+  if (!validate(expressao)) {
+    throw new Error(`CRON_DEVOCIONAIS inválido: "${expressao}"`);
+  }
+
+  if (provedoresDoAmbiente().length === 0) {
+    logWarning('CRON_DEVOCIONAIS ligado sem GROQ_API_KEYS — escrita não agendada', CONTEXTO);
+    return null;
+  }
+
+  schedule(expressao, executarEscrita, { timezone: FUSO });
   return expressao;
 }

@@ -22,6 +22,28 @@ const esquema = z.object({
   CRON_INGESTAO: z.string().default('0 */4 * * *'),
 
   /**
+   * Expressão cron da escrita de devocionais. `off` (padrão) desliga.
+   *
+   * Desligado por padrão porque escrever sozinho é decisão de quem opera, não
+   * comportamento implícito de subir o servidor. Só funciona com
+   * `GROQ_API_KEYS`: o CLI do Claude autentica com a sessão da máquina de quem
+   * escreve, e dentro do contêiner não há login nenhum.
+   */
+  CRON_DEVOCIONAIS: z.string().default('off'),
+
+  /**
+   * Quantos devocionais por execução agendada.
+   *
+   * Cinco cobre com folga os três cultos por semana. Número alto encheria a
+   * fila de texto que nenhum mês do livro vai usar — o mês se monta pelo
+   * script, com a curadoria junto.
+   */
+  DEVOCIONAIS_POR_EXECUCAO: z.coerce.number().int().min(1).max(50).default(5),
+
+  /** De quem é o livro. O devocional nasce da pregação dele, não de qualquer um. */
+  PREGADOR_DO_LIVRO: z.string().default('Nélio Monteiro'),
+
+  /**
    * Token das rotas de escrita. Sem ele, escrever fica bloqueado.
    * Substituído por login de verdade na Fase 7.
    */

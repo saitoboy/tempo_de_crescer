@@ -17,7 +17,7 @@ import { rotasPregadores } from './routes/pregadores';
 import { rotasResenhas } from './routes/resenhas';
 import { rotasTemas } from './routes/temas';
 import { rotasSessao } from './routes/sessao';
-import { agendarIngestao, executarIngestao } from './services/agendamento';
+import { agendarEscrita, agendarIngestao, executarIngestao } from './services/agendamento';
 import { logInfo, logSuccess } from './utils/logger';
 import { aplicarProxy } from './utils/proxy';
 
@@ -116,6 +116,16 @@ const server = app.listen(config.PORT, () => {
 
   const cron = agendarIngestao();
   logInfo(cron ? `ingestão agendada: ${cron} (${config.TZ})` : 'ingestão desligada', 'cron');
+
+  // Produção só passou a escrever devocional quando a geração deixou de
+  // depender do CLI do Claude, que autentica com a sessão da máquina.
+  const escrita = agendarEscrita();
+  logInfo(
+    escrita
+      ? `escrita agendada: ${escrita} (${config.DEVOCIONAIS_POR_EXECUCAO} por vez)`
+      : 'escrita de devocionais desligada',
+    'cron',
+  );
 
   // Uma passada na subida, sem bloquear o boot. Num banco recém-criado é ela
   // que carrega o acervo inteiro; num banco já populado não baixa nada. Erros

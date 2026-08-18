@@ -79,8 +79,9 @@ async function main() {
   logSuccess(`${PREGADORES.length} pregadores no cadastro`, 'pregador');
 
   await semearSubtemas();
-  // Os devocionais vêm de arquivo: produção não consegue gerar, porque o CLI
-  // autentica com a sessão da máquina de quem escreve.
+  // Os devocionais vêm de arquivo mesmo agora que produção consegue gerar:
+  // gerar de novo produziria outro texto, e o que o pastor revisou só viaja
+  // como dado. A importação nunca sobrescreve o que já está no destino.
   await importarDevocionais();
   await fundirDuplicados();
   await criarAdmin();

@@ -115,13 +115,29 @@ atualização diária.
 
 ---
 
-## Devocionais: geração local, dado versionado
+## Devocionais
 
-**Produção não gera devocional.** O CLI do Claude autentica com a sessão da
-máquina de quem escreve; dentro do contêiner não há login nenhum. Isso não é
-contornável por código — é como a assinatura funciona.
+**Produção passou a escrever.** Era impossível enquanto a geração dependia do
+CLI do Claude, que autentica com a sessão da máquina de quem escreve — dentro
+do contêiner não há login nenhum. Uma chave de API não tem esse problema, e é
+por isso que `GROQ_API_KEYS` mudou o que é possível, não só o custo.
 
-O fluxo é:
+| variável | para quê |
+|---|---|
+| `GROQ_API_KEYS` | chaves separadas por vírgula; o limite é **por chave** |
+| `GROQ_MODELO` | `openai/gpt-oss-120b` |
+| `CRON_DEVOCIONAIS` | `off` por padrão; escrever sozinho é decisão de quem opera |
+| `DEVOCIONAIS_POR_EXECUCAO` | `5` |
+
+O lote é pequeno de propósito: a igreja produz três cultos por semana, e cinco
+por execução mantém o acervo em dia com folga. Encher os 1.300 pendentes
+automaticamente seria escrever texto que nenhum mês do livro vai usar — o mês
+se monta pelo script, com a curadoria junto.
+
+**O que sai daqui nasce em `status: GERADO`.** Publicar continua sendo do
+pastor, e é ele quem lê tudo antes de imprimir.
+
+### O arquivo versionado continua valendo
 
 ```
 sua máquina                    repositório              produção
@@ -129,8 +145,8 @@ npm run devocionais       →    devocionais.json    →    npm run seed
 npm run exportar:devocionais   (versionado)             (carrega o arquivo)
 ```
 
-Cultos novos são três por semana, ~12 por mês. Uma passada local mensal dá
-conta, e o deploy leva os textos junto.
+Não é mais a única via, mas continua sendo a que leva **o texto revisado** para
+produção — a importação nunca sobrescreve o que já existe lá.
 
 ### Gerar por tema do mês, não a fila inteira
 

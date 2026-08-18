@@ -5,25 +5,18 @@ import { mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import connection from '../connection';
-import {
-  comoCorrecao,
-  extrairJson,
-  filaDeGeracao,
-  filaDoTema,
-  guardarDevocional,
-  montarPrompt,
-  respostaDoModelo,
-  type ResenhaParaDevocional,
-} from '../services/devocional';
+import { comoPedido, filaDeGeracao, filaDoTema } from '../services/devocional';
 import { MESES } from '../services/curadoriaDoLivro';
-import { comoCorrecaoDeFidelidade, conferirFidelidade } from '../services/fidelidade';
+import {
+  acharPregador,
+  escreverUm,
+  motorDeApi,
+  type Gasto,
+  type Motor,
+} from '../services/escrita';
 import { logError, logInfo, logSuccess, logWarning } from '../utils/logger';
 import { urlDoProxy } from '../utils/proxy';
-import {
-  escrever as escreverPorApi,
-  provedoresDoAmbiente,
-  type Provedor,
-} from '../services/provedores';
+import { provedoresDoAmbiente } from '../services/provedores';
 
 /**
  * Escreve os devocionais.
@@ -155,9 +148,6 @@ const ARGUMENTOS = [
   '--strict-mcp-config',
 ];
 
-/** O que uma chamada custou, para somar no fim do lote. */
-type Gasto = { entrada: number; saida: number };
-
 /**
  * O prompt vai pelo stdin, não como argumento.
  *
@@ -246,135 +236,6 @@ function eLimiteDaConta(motivo: string): boolean {
 
 
 /**
- * Quem escreve o texto: o CLI do Claude ou uma API aberta.
- *
- * O CLI consome a assinatura de quem roda — ~18 devocionais por janela de 5
- * horas. Groq e NVIDIA servem modelos abertos de graça, com limite **por
- * chave**, então várias chaves em rodízio viram várias cotas.
- *
- * O motor não muda mais nada: prompt, validação, retentativa e gravação são os
- * mesmos. Quem decide se o texto presta é o Zod, não o provedor.
- */
-type Motor = {
-  nome: string;
-  escrever(prompt: string): Promise<{ texto: string; gasto: Gasto }>;
-  /**
-   * Quantas vezes tentar o mesmo devocional.
-   *
-   * Pela API aberta a retentativa é de graça, então cabe uma a mais: uma para
-   * o formato (o Zod recusando tamanho) e outra para a fidelidade (citação
-   * fora da ACF). Pelo CLI cada tentativa custa uma fatia da assinatura, e
-   * duas já é o limite do razoável.
-   */
-  tentativas: number;
-};
-
-function motorDoClaude(): Motor {
-  return {
-    nome: `CLI ${MODELO}`,
-    escrever: pedirAoClaude,
-    tentativas: 2,
-  };
-}
-
-function motorDeApi(provedores: Provedor[]): Motor {
-  return {
-    nome: provedores.map((p) => `${p.nome}/${p.modelo} (${p.chaves.length} chaves)`).join(' → '),
-    tentativas: 3,
-    async escrever(prompt: string) {
-      const r = await escreverPorApi(provedores, prompt);
-      return { texto: r.texto, gasto: { entrada: r.entrada, saida: r.saida } };
-    },
-  };
-}
-
-/**
- * Recusa por fidelidade, não por formato.
- *
- * O Zod devolve `ZodError`, e `comoCorrecao` sabe traduzi-lo. A citação fora da
- * ACF já vem com a instrução pronta, e passá-la pelo mesmo caminho a
- * transformaria em "a resposta não era JSON" — dizendo ao modelo para consertar
- * o que não está quebrado.
- */
-class NaoConfere extends Error {}
-
-async function gerarUm(resenha: ResenhaParaDevocional, motor: Motor): Promise<Gasto> {
-  const gasto: Gasto = { entrada: 0, saida: 0 };
-  let recusa: unknown;
-
-  for (let tentativa = 1; tentativa <= motor.tentativas; tentativa++) {
-    // A correção só existe da segunda em diante: repetir o prompt intacto
-    // depois de uma recusa por tamanho tende a produzir a mesma recusa.
-    const correcao =
-      tentativa === 1
-        ? undefined
-        : recusa instanceof NaoConfere
-          ? recusa.message
-          : comoCorrecao(recusa);
-
-    // Erro do motor (cota, proxy, rede) sobe daqui e não é retentado: nenhuma
-    // repetição resolveria, e o lote tem seu próprio tratamento para isso.
-    const { texto, gasto: custo } = await motor.escrever(montarPrompt(resenha, correcao));
-    gasto.entrada += custo.entrada;
-    gasto.saida += custo.saida;
-
-    try {
-      const resposta = respostaDoModelo.parse(extrairJson(texto));
-
-      // Citação que não bate com a ACF: regera antes de gravar.
-      //
-      // Medido: os dois modelos abertos inventaram a MESMA frase na resenha
-      // "Ainda há lugar" — "na casa do Pai ainda há lugar", atribuída a Jesus,
-      // que não existe. O título da pregação induz a invenção, então não é
-      // ruído aleatório e repetir tende a repetir.
-      //
-      // Por isso a correção diz exatamente o que foi inventado. E por isso
-      // isto só vale a pena agora: com API gratuita a retentativa é de graça,
-      // enquanto pelo CLI custaria outra fatia da cota da assinatura.
-      //
-      // Na última tentativa grava mesmo assim, marcando no log. Melhor um
-      // devocional com citação a conferir do que nenhum: a página só vai
-      // impressa depois da leitura do pastor, e a fila não pode travar.
-      const suspeitas = await conferirFidelidade({
-        reflexao: resposta.reflexao,
-        oracao: resposta.oracao,
-      });
-
-      if (suspeitas.length > 0 && tentativa < motor.tentativas) {
-        recusa = new NaoConfere(comoCorrecaoDeFidelidade(suspeitas));
-        logWarning(
-          `citação fora da ACF: "${suspeitas[0].trecho.slice(0, 70)}" — regerando`,
-          'devocional',
-        );
-        continue;
-      }
-
-      const devocional = await guardarDevocional(resenha.id, resposta, motor.nome);
-
-      logSuccess(`"${devocional.titulo}" — ${devocional.referencia}`, 'devocional');
-      if (!devocional.versiculo) {
-        logWarning(`referência "${devocional.referencia}" não resolveu na ACF`, 'devocional');
-      }
-      for (const s of suspeitas) {
-        logWarning(`para o pastor conferir: "${s.trecho.slice(0, 90)}"`, 'devocional');
-      }
-
-      return gasto;
-    } catch (e) {
-      recusa = e;
-      if (tentativa < motor.tentativas) {
-        logWarning(
-          `resposta recusada, tentando de novo (${tentativa}/${motor.tentativas})`,
-          'devocional',
-        );
-      }
-    }
-  }
-
-  throw recusa;
-}
-
-/**
  * Resolve `2027-6` no tema daquele mês. Aceita também o uuid direto, que é o
  * que a API devolve.
  */
@@ -402,21 +263,18 @@ async function acharTema(argumento: string) {
 }
 
 /**
- * O pregador pedido em `--pregador "Nélio Monteiro"`, resolvido pelo nome
- * canônico ou por qualquer um dos aliases.
+ * O motor do CLI, que só existe aqui.
+ *
+ * O serviço de escrita não o conhece de propósito: ele roda também dentro do
+ * servidor, e lá não há `claude` instalado nem sessão para autenticar. Quem
+ * quiser o Claude passa por este script, com `--cli`.
  */
-async function acharPregador(nome: string) {
-  const alvo = nome.toLowerCase();
-
-  const pregador = await connection.pregador.findFirst({
-    where: {
-      OR: [{ nomeCanonico: { equals: nome, mode: 'insensitive' } }, { aliases: { has: alvo } }],
-    },
-    select: { id: true, nomeCanonico: true },
-  });
-
-  if (!pregador) throw new Error(`Pregador "${nome}" não está no cadastro`);
-  return pregador;
+function motorDoClaude(): Motor {
+  return {
+    nome: `CLI ${MODELO}`,
+    escrever: pedirAoClaude,
+    tentativas: 2,
+  };
 }
 
 async function main() {
@@ -473,19 +331,12 @@ async function main() {
   const falhas: string[] = [];
 
   for (const [i, item] of fila.entries()) {
-    const resenha: ResenhaParaDevocional = {
-      id: item.id,
-      titulo: item.titulo,
-      conteudoLimpo: item.conteudoLimpo,
-      textoBase: item.textoBase,
-      pregador: item.pregador?.nomeCanonico ?? null,
-      doutrina: item.classificacoes[0]?.doutrina.nome ?? null,
-    };
+    const resenha = await comoPedido(item);
 
     logInfo(`[${i + 1}/${fila.length}] ${resenha.titulo.slice(0, 55)}`, 'devocional');
 
     try {
-      const gasto = await gerarUm(resenha, motor);
+      const gasto = await escreverUm(resenha, motor);
       entrada += gasto.entrada;
       saidaTokens += gasto.saida;
       feitos++;
