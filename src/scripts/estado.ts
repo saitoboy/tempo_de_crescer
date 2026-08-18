@@ -24,7 +24,19 @@ import { logInfo, logSuccess } from '../utils/logger';
  * chama provedor nenhum.
  */
 
-const QUANTOS_POR_MES = 20;
+/**
+ * Quantos devocionais o mês precisa: um por dia.
+ *
+ * O livro é diário, então o alvo é o calendário, não um número redondo.
+ * Fevereiro de 2027 tem 28 — o ano não é bissexto — e o ano fecha em 365.
+ *
+ * `new Date(ano, mes, 0)` devolve o último dia do mês anterior ao índice, e
+ * como `mes` aqui é 1-based isso dá o último dia do próprio mês. Resolve
+ * bissexto sozinho, sem tabela.
+ */
+function diasDoMes(ano: number, mes: number): number {
+  return new Date(ano, mes, 0).getDate();
+}
 
 async function main() {
   const ano = Number(process.argv[2]) || new Date().getFullYear() + 1;
@@ -69,31 +81,54 @@ async function main() {
     throw new Error(`Nenhum tema em ${ano}. Rode \`npm run seed:temas -- ${ano}\`.`);
   }
 
-  console.log(`\n| mês | tema | escritos dos ${QUANTOS_POR_MES} melhores | no livro |`);
-  console.log('|---|---|---|---|');
+  console.log('\n| mês | tema | dias | no tema | faltam | no livro |');
+  console.log('|---|---|---|---|---|---|');
 
-  let faltandoNoTotal = 0;
+  let diasNoAno = 0;
+
+  /**
+   * Quem já foi contado, para o total não somar a mesma página duas vezes.
+   *
+   * Um devocional aparece no topo de mais de um mês — "Cristo, espelhe a Sua
+   * luz" serve a Janeiro, Março e Setembro. Somar as aparições dava 191 com
+   * 170 no banco. No livro cada página ocupa **um** dia, então o que vale é a
+   * contagem distinta.
+   */
+  const contados = new Set<string>();
 
   for (const t of temas) {
-    const consulta = await comoConsulta([t.tema, t.descricao].filter(Boolean).join('. '));
-    const melhores = maisParecidos(consulta, acervo, QUANTOS_POR_MES);
-    const prontos = melhores.filter((m) => escritas.has(m.id)).length;
-    const faltam = melhores.length - prontos;
-    faltandoNoTotal += faltam;
+    const dias = diasDoMes(ano, t.mes);
+    diasNoAno += dias;
 
-    const barra = '█'.repeat(prontos) + '░'.repeat(faltam);
+    const consulta = await comoConsulta([t.tema, t.descricao].filter(Boolean).join('. '));
+
+    // Quantos dos melhores do tema já estão escritos — até o número de dias,
+    // que é o teto do que o mês comporta.
+    const melhores = maisParecidos(consulta, acervo, dias);
+    const prontos = melhores.filter((m) => escritas.has(m.id));
+    for (const p of prontos) contados.add(p.id);
+
+    const barra = '█'.repeat(prontos.length) + '░'.repeat(Math.max(0, dias - prontos.length));
     console.log(
-      `| ${MESES[t.mes - 1]} | ${t.tema} | ${barra} ${prontos}/${melhores.length} | ${t._count.paginas} |`,
+      `| ${MESES[t.mes - 1]} | ${t.tema} | ${dias} | ${barra} ${prontos.length} | ` +
+        `${dias - prontos.length} | ${t._count.paginas} |`,
     );
   }
 
   console.log('');
-  logInfo(
-    faltandoNoTotal === 0
-      ? 'todos os meses cobertos — o que falta é curadoria, não escrita'
-      : `${faltandoNoTotal} devocionais a escrever para cobrir os ${QUANTOS_POR_MES} melhores de cada mês`,
-    'devocional',
-  );
+  logInfo(`${ano} precisa de ${diasNoAno} páginas — uma por dia`, 'devocional');
+  logSuccess(`${total} devocionais no acervo, ${contados.size} aderentes a algum tema deste ano`, 'devocional');
+
+  // A conta por mês soma mais que o total de propósito: o mesmo devocional
+  // aparece no topo de vários temas, e a curadoria decide em qual mês ele fica.
+  logInfo('a soma dos meses passa do total porque um devocional serve a mais de um tema', 'devocional');
+
+  // E o acervo não é de uma edição só: são 700 pregações do Nélio, e o livro
+  // sai todo ano. Devocional que não entra em 2027 entra em 2028.
+  const restam = await connection.resenha.count({
+    where: { pregadorId: pregador.id, devocional: null, conteudoLimpo: { not: '' }, dataPregacao: { not: null } },
+  });
+  logInfo(`${restam} pregações dele ainda sem devocional — material para as próximas edições`, 'devocional');
   logInfo('"no livro" é o que a curadoria já escolheu, não o que existe', 'devocional');
 }
 
