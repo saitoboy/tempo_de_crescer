@@ -29,7 +29,18 @@ export const respostaDoModelo = z.object({
    * dá cerca de 1.250 caracteres. O limite fica abaixo disso para o texto não
    * encostar no rodapé.
    */
-  reflexao: z.string().trim().min(200).max(1050),
+  reflexao: z
+    .string()
+    .trim()
+    .min(200)
+    .max(1050)
+    // A página do livro monta um bloco por parágrafo. Texto de 800 caracteres
+    // num parágrafo só vira paredão no A5 — e acontecia: o modelo devolvia
+    // ora 3, ora 2, ora 1. Como a retentativa é de graça pela API, exigir é
+    // mais barato do que diagramar em volta do problema.
+    .refine((t) => t.split(/\n\s*\n/).filter((p) => p.trim()).length >= 2, {
+      message: 'precisa de pelo menos 2 parágrafos, separados por linha em branco',
+    }),
   pontosAplicacao: z.array(z.string().trim().min(10)).min(3).max(4),
   oracao: z.string().trim().min(50),
 });
@@ -200,7 +211,7 @@ Responda SOMENTE com JSON válido, sem cercas de código e sem comentário:
 {
   "titulo": "título curto e forte, até 34 caracteres, para caber em UMA linha",
   "referencia": "a referência do versículo que resume a mensagem, ex: Salmos 23:1",
-  "reflexao": "2 a 3 parágrafos, 800 a 950 caracteres NO TOTAL, separados por \\n\\n",
+  "reflexao": "EXATAMENTE 3 parágrafos curtos, de 40 a 50 palavras CADA, separados por \\n\\n",
   "pontosAplicacao": ["exatamente 3 aplicações, uma linha curta cada, no imperativo"],
   "oracao": "oração curta, primeira pessoa do PLURAL, 180 a 260 caracteres"
 }
@@ -242,6 +253,15 @@ export function comoCorrecao(erro: unknown): string {
 
   const linhas = problemas.map((p) => {
     const campo = p.path.join('.');
+    // Dizer "encurte" não funcionava: o modelo devolvia o mesmo tamanho. O que
+    // funciona é mandar **cortar uma unidade inteira** — ele conta parágrafos,
+    // não caracteres.
+    if (p.code === 'too_big' && campo === 'reflexao') {
+      return (
+        `- A "reflexao" passou de ${p.maximum} caracteres. Escreva 3 parágrafos de` +
+        ` no MÁXIMO 45 palavras cada. Corte frases inteiras, não palavras soltas.`
+      );
+    }
     if (p.code === 'too_big') return `- "${campo}" passou do limite de ${p.maximum} caracteres. Encurte de verdade.`;
     if (p.code === 'too_small') return `- "${campo}" ficou abaixo do mínimo de ${p.minimum}.`;
     return `- "${campo}" saiu fora do formato pedido.`;

@@ -76,6 +76,17 @@ export function motorDeApi(provedores = provedoresDoAmbiente()): Motor {
  */
 export class NaoConfere extends Error {}
 
+/** A recusa em uma linha, para o log dizer o que houve. */
+function resumirRecusa(erro: unknown): string {
+  const issues = (erro as { issues?: Array<{ path: PropertyKey[]; message: string }> })?.issues;
+
+  if (Array.isArray(issues)) {
+    return issues.map((i) => `${i.path.join('.') || 'raiz'}: ${i.message}`).join('; ').slice(0, 160);
+  }
+
+  return (erro as Error)?.message?.slice(0, 160) ?? String(erro);
+}
+
 /**
  * Escreve um devocional e grava.
  *
@@ -139,7 +150,13 @@ export async function escreverUm(resenha: ResenhaParaDevocional, motor: Motor): 
     } catch (e) {
       recusa = e;
       if (tentativa < motor.tentativas) {
-        logWarning(`resposta recusada, tentando de novo (${tentativa}/${motor.tentativas})`, CONTEXTO);
+        // Com o motivo junto. "resposta recusada" sozinho não diz se foi
+        // tamanho, formato ou JSON quebrado — e sem isso não dá para saber se
+        // o prompt precisa de ajuste ou se é o acaso de sempre.
+        logWarning(
+          `recusada (${tentativa}/${motor.tentativas}): ${resumirRecusa(e)}`,
+          CONTEXTO,
+        );
       }
     }
   }

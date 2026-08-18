@@ -177,7 +177,15 @@ async function pedirA(
 export async function escrever(
   provedores: Provedor[],
   prompt: string,
-  limiteMs = 120_000,
+  /**
+   * Teto por chamada.
+   *
+   * Baixo de propósito. A Groq responde em 2 a 4 segundos; um provedor que
+   * passa disso está enfileirando, não pensando. Com 120s, uma chamada à
+   * NVIDIA com a chave esgotada segurava o lote inteiro por dois minutos
+   * **por item** antes de desistir — visto no log, entre 16:46:59 e 16:48:59.
+   */
+  limiteMs = 45_000,
   /** Sobrepõe o modelo de todos os provedores. Serve à comparação de modelos. */
   modelo?: string,
 ): Promise<Resultado> {
@@ -298,7 +306,7 @@ async function umaPassada(
     }
   }
 
-  throw new Error(
+  throw new TodasEsgotadas(
     `Todas as ${esgotadas.length} chaves estão esgotadas ou fora:\n  ${esgotadas.join('\n  ')}`,
   );
 }
