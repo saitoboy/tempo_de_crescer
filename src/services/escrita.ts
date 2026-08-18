@@ -141,6 +141,24 @@ export async function escreverUm(
         continue;
       }
 
+      // Outro processo pode ter escrito esta resenha enquanto o modelo
+      // respondia. `Devocional.resenhaId` é único, então o `create` estouraria
+      // e o item viraria falha — com dois lotes no mesmo mês, era o que
+      // acontecia: ambos pegam a mesma fila, ambos geram, e o segundo perde a
+      // chamada inteira. Conferir aqui não fecha a janela toda, mas fecha a
+      // parte que importa, que são os segundos entre pedir e gravar.
+      if (!sobrescrever) {
+        const jaTem = await connection.devocional.findUnique({
+          where: { resenhaId: resenha.id },
+          select: { id: true },
+        });
+
+        if (jaTem) {
+          logInfo(`"${resenha.titulo.slice(0, 45)}" já foi escrita por outra execução`, CONTEXTO);
+          return gasto;
+        }
+      }
+
       const devocional = await guardarDevocional(resenha.id, resposta, motor.nome, sobrescrever);
 
       logSuccess(`"${devocional.titulo}" — ${devocional.referencia}`, CONTEXTO);
