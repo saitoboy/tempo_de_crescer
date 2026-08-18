@@ -311,6 +311,8 @@ e outra) e ignora o que já está gravado sob outra URL.
 | `npm test` | 153 testes |
 | `npm run typecheck` | só a checagem de tipos |
 | `npm run ingerir` | ingestão incremental |
+| `npm run estado` | quanto de cada mês do livro já está escrito |
+| `npm run comparar` | mede modelos abertos contra o gabarito do Opus |
 | `npm run seed` | doutrinas, subtemas, pregadores, admin |
 | `npm run seed:biblia` | Bíblia ACF (`--forcar` recarrega) |
 | `npm run seed:resenhas` | recarrega do cache em disco |
