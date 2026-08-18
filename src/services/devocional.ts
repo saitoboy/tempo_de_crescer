@@ -66,7 +66,20 @@ O que caracteriza esse estilo:
 - Frases curtas e afirmativas. Exclamação usada de verdade, com moderação.
 - Sustenta a afirmação com outra passagem bíblica, citada e referenciada.
 - Não modera o que a Escritura afirma nem suaviza contraste doutrinário.
-- Nada de linguagem corporativa, autoajuda ou motivacional.`;
+- Nada de linguagem corporativa, autoajuda ou motivacional.
+
+Quatro erros que apareceram em textos anteriores e não podem se repetir:
+
+1. NÃO comece mais de um parágrafo com "Meus irmãos". Usado três vezes
+   seguidas vira ladainha. No máximo uma vez no devocional inteiro.
+2. NÃO repita, dentro da reflexão, o versículo que você indicou em
+   "referencia". Ele já aparece impresso em destaque logo acima, na página —
+   citá-lo de novo o imprime duas vezes.
+3. Escreva português correto e atual. Nada de imperativo arcaico inventado:
+   "confessoai", "permitai" e "escárdia" NÃO existem. Na dúvida entre a forma
+   antiga e a comum, use a comum.
+4. NUNCA mande desprezar, menosprezar ou julgar pessoa alguma. Confrontar
+   pecado é do estilo; mandar desprezar quem o pratica não é cristão.`;
 
 /**
  * Um devocional nosso, já aprovado, como referência de alvo.
@@ -526,18 +539,32 @@ export async function guardarDevocional(
   resenhaId: string,
   resposta: RespostaDoModelo,
   modelo: string,
+  /**
+   * Sobrescreve o devocional que já existe para esta resenha.
+   *
+   * Falso por padrão, e não é preciosismo: a fila normal só traz resenha **sem**
+   * devocional, então criar é o caminho certo, e um upsert silencioso ali
+   * apagaria trabalho na primeira vez que a fila trouxesse algo repetido por
+   * engano. Só a regeração deliberada pede isto.
+   */
+  sobrescrever = false,
 ) {
-  return connection.devocional.create({
-    data: {
-      resenhaId,
-      titulo: resposta.titulo,
-      referencia: resposta.referencia,
-      // Da ACF no banco, nunca do modelo.
-      versiculo: await buscarVersiculo(resposta.referencia),
-      reflexao: resposta.reflexao,
-      pontosAplicacao: resposta.pontosAplicacao,
-      oracao: resposta.oracao,
-      modelo,
-    },
+  const dados = {
+    titulo: resposta.titulo,
+    referencia: resposta.referencia,
+    // Da ACF no banco, nunca do modelo.
+    versiculo: await buscarVersiculo(resposta.referencia),
+    reflexao: resposta.reflexao,
+    pontosAplicacao: resposta.pontosAplicacao,
+    oracao: resposta.oracao,
+    modelo,
+  };
+
+  if (!sobrescrever) return connection.devocional.create({ data: { resenhaId, ...dados } });
+
+  return connection.devocional.upsert({
+    where: { resenhaId },
+    update: { ...dados, geradoEm: new Date() },
+    create: { resenhaId, ...dados },
   });
 }

@@ -101,7 +101,12 @@ function resumirRecusa(erro: unknown): string {
  * fila por uma medida que reconhecidamente erra sairia pior. A página só vai
  * impressa depois da leitura do pastor.
  */
-export async function escreverUm(resenha: ResenhaParaDevocional, motor: Motor): Promise<Gasto> {
+export async function escreverUm(
+  resenha: ResenhaParaDevocional,
+  motor: Motor,
+  /** Regeração: substitui o devocional que já existe para esta resenha. */
+  sobrescrever = false,
+): Promise<Gasto> {
   const gasto: Gasto = { entrada: 0, saida: 0 };
   let recusa: unknown;
 
@@ -136,7 +141,7 @@ export async function escreverUm(resenha: ResenhaParaDevocional, motor: Motor): 
         continue;
       }
 
-      const devocional = await guardarDevocional(resenha.id, resposta, motor.nome);
+      const devocional = await guardarDevocional(resenha.id, resposta, motor.nome, sobrescrever);
 
       logSuccess(`"${devocional.titulo}" — ${devocional.referencia}`, CONTEXTO);
       if (!devocional.versiculo) {
