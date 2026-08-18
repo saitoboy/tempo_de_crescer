@@ -43,6 +43,8 @@ export type ResenhaParaDevocional = {
   textoBase: string | null;
   pregador: string | null;
   doutrina: string | null;
+  /** A passagem em ACF, para o modelo citar em vez de lembrar. */
+  passagem?: string | null;
 };
 
 const ESTILO = `Você escreve devocionais no estilo de A.W. Tozer, em português do Brasil.
@@ -177,7 +179,22 @@ ${contexto}
 --- RESENHA ---
 ${resenha.conteudoLimpo}
 --- FIM DA RESENHA ---
+${
+    resenha.passagem
+      ? `
+--- TEXTO BÍBLICO (Almeida Corrigida Fiel) ---
+${resenha.passagem}
+--- FIM DO TEXTO BÍBLICO ---
 
+Ao citar a Escritura entre aspas, copie LITERALMENTE do texto acima. Se precisar
+de outra passagem, cite sem aspas, como afirmação sua. NUNCA ponha entre aspas
+palavra que a Bíblia não diz.
+`
+      : `
+Ao citar a Escritura entre aspas, copie literalmente. Na dúvida, escreva sem
+aspas, como afirmação sua. NUNCA ponha entre aspas palavra que a Bíblia não diz.
+`
+  }
 Responda SOMENTE com JSON válido, sem cercas de código e sem comentário:
 
 {
@@ -290,6 +307,94 @@ export async function buscarVersiculo(referencia: string): Promise<string | null
 }
 
 /**
+ * O que a fila devolve, virado no que o prompt precisa — já com a passagem
+ * bíblica buscada.
+ *
+ * Existe para o script de geração e o de comparação não montarem isto cada um
+ * do seu jeito: prompt diferente entre os dois faria a comparação medir a
+ * diferença dos scripts, não a dos modelos.
+ */
+export async function comoPedido(item: {
+  id: string;
+  titulo: string;
+  conteudoLimpo: string;
+  textoBase: string | null;
+  livro?: string | null;
+  capitulo?: number | null;
+  versiculos?: string | null;
+  pregador: { nomeCanonico: string } | null;
+  classificacoes: Array<{ doutrina: { nome: string } }>;
+}): Promise<ResenhaParaDevocional> {
+  return {
+    id: item.id,
+    titulo: item.titulo,
+    conteudoLimpo: item.conteudoLimpo,
+    textoBase: item.textoBase,
+    pregador: item.pregador?.nomeCanonico ?? null,
+    doutrina: item.classificacoes[0]?.doutrina.nome ?? null,
+    passagem: await passagemEmAcf(item.livro ?? null, item.capitulo ?? null, item.versiculos ?? null),
+  };
+}
+
+/**
+ * Teto de versículos para não afogar o prompt.
+ *
+ * Pregação sobre um capítulo inteiro existe; mandar 60 versículos gastaria mais
+ * contexto do que a resenha e afogaria o que interessa.
+ */
+const MAXIMO_DE_VERSICULOS = 25;
+
+/**
+ * A passagem da pregação, em ACF, para o modelo citar em vez de lembrar.
+ *
+ * **Prevenir em vez de detectar.** Pedir que o modelo cite Escritura de memória
+ * é pedir que invente: um modelo aberto escreveu que Jesus disse "Na casa do
+ * Pai ainda há lugar", frase que não existe. E detectar depois não resolve — a
+ * conferência literal não distingue invenção de citação em outra tradução, os
+ * números se cruzam ("Na casa do Pai" pontuou 0,71; "Tudo posso naquele que me
+ * fortalece", que é real, pontuou 0,67).
+ *
+ * Entregando o texto, o modelo não precisa lembrar de nada. É o mesmo motivo
+ * pelo qual o versículo em destaque da página nunca sai do modelo, e sim desta
+ * tabela.
+ *
+ * A ingestão já separou livro, capítulo e versículos de 1.380 das 1.404
+ * resenhas, e os 57 nomes de livro batem com a ACF — por isso a busca é pelos
+ * campos, não por regex no `textoBase`.
+ */
+export async function passagemEmAcf(
+  livro: string | null,
+  capitulo: number | null,
+  versiculos: string | null,
+): Promise<string | null> {
+  if (!livro || !capitulo) return null;
+
+  const registro = await connection.livroBiblico.findFirst({
+    where: { nome: livro },
+    select: { id: true, nome: true },
+  });
+  if (!registro) return null;
+
+  const faixa = versiculos?.match(/^\s*(\d+)\s*(?:[-–]\s*(\d+))?\s*$/);
+  const primeiro = faixa ? Number(faixa[1]) : 1;
+  const ultimo = faixa ? Number(faixa[2] ?? faixa[1]) : primeiro + MAXIMO_DE_VERSICULOS - 1;
+
+  const achados = await connection.versiculo.findMany({
+    where: {
+      livroId: registro.id,
+      capitulo,
+      numero: { gte: primeiro, lte: Math.min(ultimo, primeiro + MAXIMO_DE_VERSICULOS - 1) },
+    },
+    orderBy: { numero: 'asc' },
+    select: { numero: true, texto: true },
+  });
+
+  if (achados.length === 0) return null;
+
+  return achados.map((v) => `${registro.nome} ${capitulo}:${v.numero} ${v.texto}`).join('\n');
+}
+
+/**
  * As resenhas que ainda não viraram devocional. É a fila, e não um status.
  *
  * **Resenha sem data fica de fora.** No Postgres, `ORDER BY data DESC` põe os
@@ -323,6 +428,11 @@ const CAMPOS_DA_FILA = {
   titulo: true,
   conteudoLimpo: true,
   textoBase: true,
+  // Separados pela ingestão, e é por eles que a passagem em ACF é buscada —
+  // não por regex no `textoBase`, que tem grafia livre.
+  livro: true,
+  capitulo: true,
+  versiculos: true,
   pregador: { select: { nomeCanonico: true } },
   classificacoes: {
     where: { papel: 'PRINCIPAL' as const },

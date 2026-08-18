@@ -6,12 +6,14 @@ import connection from '../connection';
 import {
   buscarVersiculo,
   comoCorrecao,
+  comoPedido,
   exemplosParecidos,
   extrairJson,
   montarPrompt,
   respostaDoModelo,
   type ResenhaParaDevocional,
 } from '../services/devocional';
+import { carregarEscritura, extrairCitacoes, medirCitacao } from '../services/fidelidade';
 import { escrever, provedoresDoAmbiente } from '../services/provedores';
 import { comoDocumento, semelhanca } from '../services/vetores';
 import { logError, logInfo, logSuccess } from '../utils/logger';
@@ -67,6 +69,20 @@ const CANDIDATOS = [
 
 const SAIDA = join('saida', 'comparacao-modelos.md');
 
+/**
+ * Pausa entre chamadas.
+ *
+ * Sem ela a comparação mede limite de taxa, não modelo. Rodando 15 candidatos
+ * em sequência, os 8.000 tokens por minuto de cada chave acabam antes da
+ * metade da lista, e os últimos aparecem com zero acertos por 429 — indistintos
+ * de um modelo ruim. A NVIDIA, com uma chave só, chega ao teto mais rápido
+ * ainda, e ainda devolve 529 quando está cheia.
+ *
+ * O tempo de espera fica fora da conta de `úteis/min`, que continua medindo só
+ * o que a geração levou.
+ */
+const PAUSA_MS = Number(process.env.COMPARAR_PAUSA_MS ?? 4000);
+
 type Nota = {
   modelo: string;
   resenha: string;
@@ -81,6 +97,9 @@ type Nota = {
   charsTitulo?: number;
   /** A referência bíblica existe na ACF? Devocional sem versículo sai capenga. */
   referenciaResolve?: boolean;
+  /** Quantas citações entre aspas o texto tem, e quantas batem com a ACF. */
+  citacoes: number;
+  citacoesFieis: number;
   segundos: number;
   entrada: number;
   saida: number;
@@ -95,6 +114,8 @@ async function main() {
   if (provedores.length === 0) {
     throw new Error('Sem GROQ_API_KEYS ou NVIDIA_API_KEYS no .env');
   }
+
+  const biblia = await carregarEscritura();
 
   // `--exemplos` troca o exemplo fixo do prompt pelos devocionais nossos mais
   // parecidos com a resenha. É a variável a medir: mesmo modelo, prompt
@@ -113,6 +134,9 @@ async function main() {
       titulo: true,
       conteudoLimpo: true,
       textoBase: true,
+      livro: true,
+      capitulo: true,
+      versiculos: true,
       pregador: { select: { nomeCanonico: true } },
       classificacoes: {
         where: { papel: 'PRINCIPAL' },
@@ -135,14 +159,7 @@ async function main() {
   const relatorio: string[] = ['# Comparação de modelos\n'];
 
   for (const r of comGabarito) {
-    const resenha: ResenhaParaDevocional = {
-      id: 'comparacao',
-      titulo: r.titulo,
-      conteudoLimpo: r.conteudoLimpo,
-      textoBase: r.textoBase,
-      pregador: r.pregador?.nomeCanonico ?? null,
-      doutrina: r.classificacoes[0]?.doutrina.nome ?? null,
-    };
+    const resenha = await comoPedido(r);
     // A própria resenha fica de fora dos exemplos: ela tem devocional (é o
     // gabarito), e trazê-lo entregaria a resposta ao modelo.
     const exemplos = comExemplos ? await exemplosParecidos(r.id, 2) : [];
@@ -170,6 +187,8 @@ async function main() {
         segundos: 0,
         entrada: 0,
         saida: 0,
+        citacoes: 0,
+        citacoesFieis: 0,
       };
 
       try {
@@ -217,6 +236,13 @@ async function main() {
           const vetor = await comoDocumento([d.titulo, d.reflexao, d.oracao].join(' '));
           nota.proximidade = semelhanca(vetorDoGabarito, vetor);
 
+          // Fidelidade: citação entre aspas que não bate com a ACF é o defeito
+          // que nenhuma outra medida enxerga. Um texto pode ser lindo, rápido e
+          // barato, e pôr palavra falsa na boca de Jesus.
+          const citacoes = extrairCitacoes([d.reflexao, d.oracao].filter(Boolean).join('\n'));
+          nota.citacoes = citacoes.length;
+          nota.citacoesFieis = citacoes.filter((c) => medirCitacao(c, biblia).acerto >= 0.8).length;
+
           nota.texto = [
             `**${d.titulo}** — ${d.referencia}`,
             '',
@@ -233,6 +259,8 @@ async function main() {
 
       nota.segundos = (Date.now() - inicio) / 1000;
       notas.push(nota);
+
+      await new Promise((r) => setTimeout(r, PAUSA_MS));
 
       const marca = nota.valido ? '✓' : '✗';
       logInfo(
@@ -254,29 +282,47 @@ async function main() {
     const validas = minhas.filter((n) => n.valido);
     const media = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
+    // "Utilizável" é o que interessa de verdade: passou no Zod E não inventou
+    // Escritura. Devocional bonito com citação falsa não entra no livro, então
+    // contá-lo como aprovado mentiria no ranking.
+    const uteis = validas.filter((n) => n.citacoes === n.citacoesFieis);
+
+    const tempoTotal = minhas.reduce((s, n) => s + n.segundos, 0);
+    const tokensTotal = minhas.reduce((s, n) => s + n.entrada + n.saida, 0);
+
     return {
       modelo,
-      aprovados: `${validas.length}/${minhas.length}`,
-      dePrimeira: `${validas.filter((n) => n.dePrimeira).length}/${minhas.length}`,
-      proximidade: media(validas.map((n) => n.proximidade!)),
-      reflexao: Math.round(media(validas.map((n) => n.charsReflexao!))),
-      comVersiculo: validas.filter((n) => n.referenciaResolve).length,
+      tentativas: minhas.length,
+      validos: validas.length,
+      uteis: uteis.length,
+      inventou: validas.reduce((s, n) => s + (n.citacoes - n.citacoesFieis), 0),
+      proximidade: media(uteis.map((n) => n.proximidade!)),
+      reflexao: Math.round(media(uteis.map((n) => n.charsReflexao!))),
+      // As três colunas que respondem "quanto rende": um modelo que acerta
+      // sempre mas é recusado quatro em cinco vezes rende menos que um de 80%
+      // que passa sempre.
+      porMinuto: tempoTotal > 0 ? (uteis.length / tempoTotal) * 60 : 0,
+      tokensPorUtil: uteis.length > 0 ? Math.round(tokensTotal / uteis.length) : 0,
       segundos: media(minhas.map((n) => n.segundos)),
-      tokens: Math.round(media(minhas.map((n) => n.entrada + n.saida))),
     };
   });
 
-  porModelo.sort((a, b) => b.proximidade - a.proximidade);
+  // Rendimento primeiro: úteis por minuto. Empate desempata pela proximidade.
+  porModelo.sort((a, b) => b.porMinuto - a.porMinuto || b.proximidade - a.proximidade);
 
   const tabela = [
     '',
-    `| modelo | aprovados | de primeira | proximidade | reflexão | versículo | seg | tokens |`,
-    '|---|---|---|---|---|---|---|---|',
+    '| modelo | úteis | válidos | tent. | inventou | úteis/min | tokens/útil | prox | reflexão |',
+    '|---|---|---|---|---|---|---|---|---|',
     ...porModelo.map(
       (p) =>
-        `| ${p.modelo} | ${p.aprovados} | ${p.dePrimeira} | ${p.proximidade.toFixed(3)} | ${p.reflexao} | ` +
-        `${p.comVersiculo}/${comGabarito.length} | ${p.segundos.toFixed(1)} | ${p.tokens} |`,
+        `| ${p.modelo} | **${p.uteis}** | ${p.validos} | ${p.tentativas} | ${p.inventou} | ` +
+        `${p.porMinuto.toFixed(1)} | ${p.tokensPorUtil || '—'} | ` +
+        `${p.uteis > 0 ? p.proximidade.toFixed(3) : '—'} | ${p.reflexao || '—'} |`,
     ),
+    '',
+    '`úteis` = passou no Zod **e** não inventou Escritura. É o que entra no livro.',
+    '`inventou` = citações entre aspas que não batem com a ACF.',
     '',
   ];
 

@@ -132,6 +132,8 @@ async function pedirA(
   chave: string,
   prompt: string,
   limiteMs: number,
+  /** Segunda tentativa sem `reasoning_effort`, para modelo que não o aceita. */
+  semRaciocinio = false,
 ): Promise<{ resposta: Response; corpo: string }> {
   const controle = new AbortController();
   const relogio = setTimeout(() => controle.abort(), limiteMs);
@@ -147,7 +149,9 @@ async function pedirA(
         model: provedor.modelo,
         messages: [{ role: 'user', content: prompt }],
         temperature: TEMPERATURA,
-        ...(provedor.raciocinio ? { reasoning_effort: provedor.raciocinio } : {}),
+        ...(provedor.raciocinio && !semRaciocinio
+          ? { reasoning_effort: provedor.raciocinio }
+          : {}),
         ...(jsonEstrito ? { response_format: { type: 'json_object' } } : {}),
       }),
       signal: controle.signal,
@@ -229,6 +233,23 @@ async function umaPassada(
       if (ESGOTADA.includes(resposta.status)) {
         esgotadas.push(`${origem} → ${resposta.status}`);
         continue;
+      }
+
+      // 404 é "este provedor não tem este modelo", não falha da chave. As
+      // outras chaves dele responderiam igual, então o certo é passar ao
+      // provedor seguinte — que pode ser justamente quem serve o modelo. Sem
+      // isto, pedir um modelo da NVIDIA com a Groq listada primeiro abortava
+      // com 404 sem nunca chegar à NVIDIA.
+      if (resposta.status === 404) {
+        esgotadas.push(`${origem} → não serve este modelo`);
+        break;
+      }
+
+      // Nem todo modelo aceita `reasoning_effort` — o qwen da Groq responde
+      // "must be one of none or default". O parâmetro é otimização, não
+      // requisito: sem ele o pedido é o mesmo.
+      if (resposta.status === 400 && corpo.includes('reasoning_effort')) {
+        ({ resposta, corpo } = await pedirA(provedor, chave, prompt, limiteMs, true));
       }
 
       if (!resposta.ok) {
