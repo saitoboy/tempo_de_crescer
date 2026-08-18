@@ -12,6 +12,11 @@ falhar quatro horas depois no meio de uma execução agendada.
 | `TZ` | `America/Sao_Paulo` | |
 | `DATABASE_URL` | — | **obrigatória**, precisa começar com `postgresql://` |
 | `CRON_INGESTAO` | `0 */4 * * *` | `off` desliga o agendamento |
+| `CRON_DEVOCIONAIS` | `off` | escrita automática; exige `GROQ_API_KEYS` |
+| `DEVOCIONAIS_POR_EXECUCAO` | `5` | tamanho do lote agendado |
+| `PREGADOR_DO_LIVRO` | `Nélio Monteiro` | de quem é o livro |
+| `GROQ_API_KEYS` | — | chaves por vírgula; o limite é **por chave** |
+| `GROQ_MODELO` | `openai/gpt-oss-120b` | |
 | `API_TOKEN` | — | rotas de escrita; sem ele, escrever fica bloqueado |
 | `FRONT_ORIGEM` | — | origens do CORS, separadas por vírgula; **vazio libera tudo** |
 | `ADMIN_EMAIL` / `ADMIN_SENHA` | — | admin criado pelo seed |
@@ -148,25 +153,31 @@ npm run exportar:devocionais   (versionado)             (carrega o arquivo)
 Não é mais a única via, mas continua sendo a que leva **o texto revisado** para
 produção — a importação nunca sobrescreve o que já existe lá.
 
+### Quanto custa cada motor
+
+| motor | tokens de entrada | ritmo | custo |
+|---|---|---|---|
+| Groq (padrão) | 6.400 a 9.000 | ~4 por minuto | grátis |
+| CLI do Claude (`--cli`) | ~28.000 | ~18 por **janela de 5h** | assinatura |
+
+O grosso dos 28k do CLI é o system prompt dele: o nosso prompt são ~3k.
+Encurtar a resenha não adiantava; o custo era por invocação. Foi essa conta que
+tornou a API aberta obrigatória, e não só conveniente.
+
 ### Gerar por tema do mês, não a fila inteira
 
-Medido: **~28k tokens de entrada por devocional**, e a cota rende cerca de
-**18 por janela** de 5 horas. A fila inteira levaria meses — e não faz sentido,
-porque o livro usa doze meses por edição, não mil páginas.
-
 ```bash
+npm run estado                        # quanto de cada mês já está escrito
 npm run devocionais -- 20 2027-5 --listar
 npm run devocionais -- 20 2027-5
 ```
 
 Com um mês, a fila deixa de ser "as mais recentes" e passa a ser "as que mais
 se parecem com o tema", pelo mesmo vetor que a curadoria usa. `--listar` mostra
-a escolha sem gastar nada — 20 devocionais são ~560k tokens, mais do que cabe
-numa janela.
+a escolha sem gastar nada.
 
-O grosso dos 28k é o system prompt do próprio CLI: o nosso prompt são ~3k.
-Encurtar a resenha não adianta; o custo é por invocação. As duas alavancas
-reais são gerar menos e gerar o certo.
+Vale mesmo sendo grátis: o livro usa doze meses por edição, e escrever as mil
+pendentes pela ordem cronológica renderia texto que nenhum mês vai usar.
 
 ### A chave é o slug, nunca o id
 
