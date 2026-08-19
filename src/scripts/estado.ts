@@ -125,10 +125,21 @@ async function main() {
 
   // E o acervo não é de uma edição só: são 700 pregações do Nélio, e o livro
   // sai todo ano. Devocional que não entra em 2027 entra em 2028.
-  const restam = await connection.resenha.count({
-    where: { pregadorId: pregador.id, devocional: null, conteudoLimpo: { not: '' }, dataPregacao: { not: null } },
-  });
-  logInfo(`${restam} pregações dele ainda sem devocional — material para as próximas edições`, 'devocional');
+  // Sem o filtro de data: elas voltaram para a fila, porque a página é datada
+  // pelo dia do calendário do livro e não pela data da pregação.
+  const [restam, semData] = await Promise.all([
+    connection.resenha.count({
+      where: { pregadorId: pregador.id, devocional: null, conteudoLimpo: { not: '' } },
+    }),
+    connection.resenha.count({
+      where: { pregadorId: pregador.id, devocional: null, conteudoLimpo: { not: '' }, dataPregacao: null },
+    }),
+  ]);
+  logInfo(
+    `${restam} pregações dele ainda sem devocional (${semData} sem data, que saem sem QR) — ` +
+      `material para as próximas edições`,
+    'devocional',
+  );
   logInfo('"no livro" é o que a curadoria já escolheu, não o que existe', 'devocional');
 }
 
