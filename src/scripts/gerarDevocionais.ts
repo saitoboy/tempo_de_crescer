@@ -65,6 +65,21 @@ const LOTE_PADRAO = 5;
  * `--todos` desliga, para geração que não seja para este livro.
  */
 const PREGADOR_DO_LIVRO = 'Nélio Monteiro';
+
+/**
+ * Pausa entre itens do lote, para não pedir mais do que o provedor entrega.
+ *
+ * A conta: 5 chaves × 8.000 tokens por minuto = 40.000, e cada devocional
+ * custa ~4.300 — cabem **nove por minuto**, ou um a cada 6,7 segundos. A
+ * geração leva uns 3,5s, então 3 segundos de pausa põem o ritmo no lugar.
+ *
+ * Sem isso o lote ia a catorze por minuto, gastava o colchão do rodízio em uns
+ * oitenta itens e derrubava as cinco chaves de uma vez — e aí nem a espera de
+ * 65s resolve, porque a demanda continua acima da oferta.
+ *
+ * `DEVOCIONAIS_PAUSA_MS=0` desliga, para quando houver mais chaves.
+ */
+const PAUSA_ENTRE_ITENS = Number(process.env.DEVOCIONAIS_PAUSA_MS ?? 3000);
 /**
  * Quantas falhas seguidas derrubam o lote.
  *
@@ -333,6 +348,16 @@ async function main() {
   for (const [i, item] of fila.entries()) {
     const resenha = await comoPedido(item);
 
+    // Ritmo, e não velocidade máxima.
+    //
+    // Sem isto o lote roda **acima da capacidade**: são 40.000 tokens por
+    // minuto somando as cinco chaves, e cada devocional custa ~4.300 — logo
+    // cabem nove por minuto. Indo a catorze, o colchão do rodízio segura por
+    // uns oitenta itens e depois as cinco chaves caem juntas em 429, a espera
+    // de 65s não resolve porque a demanda continua acima da oferta, e o lote
+    // aborta por três falhas seguidas. Foi o que aconteceu no item 85 de 626.
+    if (i > 0) await new Promise((r) => setTimeout(r, PAUSA_ENTRE_ITENS));
+
     logInfo(`[${i + 1}/${fila.length}] ${resenha.titulo.slice(0, 55)}`, 'devocional');
 
     try {
@@ -362,9 +387,13 @@ async function main() {
       }
 
       if (seguidas >= FALHAS_SEGUIDAS_PARA_ABORTAR) {
+        // A mensagem falava em conferir a conta do CLI mesmo quando o motor
+        // era a API — e mandava olhar no lugar errado justamente na hora em
+        // que a pessoa precisa saber onde olhar.
         logError(
-          `${seguidas} falhas seguidas — o lote parou. Confira a conta do CLI ` +
-            `(\`claude\` na mão) antes de rodar de novo; nada do que já foi gravado se perde.`,
+          `${seguidas} falhas seguidas — o lote parou. Os ${feitos} gravados ficam e a fila ` +
+            `retoma de onde parou. Se foram 429, aumente DEVOCIONAIS_PAUSA_MS ou espere alguns ` +
+            `minutos: o limite da Groq é por minuto, não por dia.`,
           'devocional',
         );
         break;
