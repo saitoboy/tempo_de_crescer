@@ -461,17 +461,31 @@ export async function passagemEmAcf(
 export function filaDeGeracao(limite: number, pregadorId?: string) {
   return connection.resenha.findMany({
     where: { ...PENDENTES, ...(pregadorId ? { pregadorId } : {}) },
-    orderBy: [{ dataPregacao: 'desc' }],
+    // `nulls: 'last'` é o ponto: sem ele o Postgres põe os NULL primeiro num
+    // `DESC`, e as sem data — que não têm QR nem crédito — passariam na frente
+    // das recentes, que têm os dois. Elas entram, mas por último.
+    orderBy: [{ dataPregacao: { sort: 'desc', nulls: 'last' } }],
     take: limite,
     select: CAMPOS_DA_FILA,
   });
 }
 
-/** Quem ainda não virou devocional e tem material para virar. */
+/**
+ * Quem ainda não virou devocional e tem material para virar.
+ *
+ * **Resenha sem data entra.** Ficava de fora por engano meu: a página do livro
+ * é datada pelo **dia do calendário** em que ela cai — "01 de Fevereiro" — e
+ * não pela data da pregação, que aparece só como crédito no rodapé. Sem data,
+ * a página perde o crédito e o QR code, e é só isso.
+ *
+ * O que motivou a exclusão foi outra coisa, e continua verdade: no Postgres,
+ * `ORDER BY data DESC` põe os NULL **primeiro**, e a fila servia justamente as
+ * 251 sem data antes de qualquer outra. Isso se resolve na ordenação, não
+ * jogando o material fora.
+ */
 const PENDENTES = {
   devocional: null,
   conteudoLimpo: { not: '' },
-  dataPregacao: { not: null },
 } as const;
 
 const CAMPOS_DA_FILA = {
