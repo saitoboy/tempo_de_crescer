@@ -66,20 +66,36 @@ const LOTE_PADRAO = 5;
  */
 const PREGADOR_DO_LIVRO = 'Nélio Monteiro';
 
+/** Limite de tokens por minuto de cada chave da Groq, do plano gratuito. */
+const TOKENS_POR_MINUTO_POR_CHAVE = 8000;
+/** Medido ao longo de centenas de gerações: ~2.900 de entrada e ~1.400 de saída. */
+const CUSTO_DE_UM_DEVOCIONAL = 4300;
+/** Quanto a chamada leva, para descontar da pausa. */
+const GERACAO_TIPICA_MS = 3500;
+
 /**
- * Pausa entre itens do lote, para não pedir mais do que o provedor entrega.
+ * Pausa entre itens, calculada a partir da capacidade real.
  *
- * A conta: 5 chaves × 8.000 tokens por minuto = 40.000, e cada devocional
- * custa ~4.300 — cabem **nove por minuto**, ou um a cada 6,7 segundos. A
- * geração leva uns 3,5s, então 3 segundos de pausa põem o ritmo no lugar.
+ * Era constante, e constante envelhece: 3 segundos estavam certos para cinco
+ * chaves e viraram desperdício com onze. Agora sai da conta —
+ * `chaves × 8.000 ÷ 4.300` dá quantos cabem por minuto, e a pausa é o intervalo
+ * que sobra depois de descontar a geração.
  *
- * Sem isso o lote ia a catorze por minuto, gastava o colchão do rodízio em uns
- * oitenta itens e derrubava as cinco chaves de uma vez — e aí nem a espera de
- * 65s resolve, porque a demanda continua acima da oferta.
+ * Por que existe: sem ritmo o lote pede mais do que o provedor entrega. Com
+ * cinco chaves ele ia a catorze por minuto contra nove de capacidade, gastava
+ * o colchão do rodízio em uns oitenta itens e derrubava as cinco de uma vez —
+ * e aí nem a espera de 65s resolve, porque a demanda segue acima da oferta.
  *
- * `DEVOCIONAIS_PAUSA_MS=0` desliga, para quando houver mais chaves.
+ * **A pausa é por processo.** Dois lotes em paralelo pedem o dobro, e cada um
+ * precisa do dobro da pausa. `DEVOCIONAIS_PAUSA_MS` sobrepõe para esse caso.
  */
-const PAUSA_ENTRE_ITENS = Number(process.env.DEVOCIONAIS_PAUSA_MS ?? 3000);
+function pausaEntreItens(chaves: number): number {
+  if (process.env.DEVOCIONAIS_PAUSA_MS) return Number(process.env.DEVOCIONAIS_PAUSA_MS);
+  if (chaves === 0) return 0;
+
+  const porMinuto = (chaves * TOKENS_POR_MINUTO_POR_CHAVE) / CUSTO_DE_UM_DEVOCIONAL;
+  return Math.max(0, Math.round(60_000 / porMinuto - GERACAO_TIPICA_MS));
+}
 /**
  * Quantas falhas seguidas derrubam o lote.
  *
@@ -313,6 +329,17 @@ async function main() {
       : motorDoClaude();
   logInfo(`motor: ${motor.nome}`, 'devocional');
 
+  const chavesDaGroq = provedores.find((p) => p.nome === 'groq')?.chaves.length ?? 0;
+  const pausa = pausaEntreItens(chavesDaGroq);
+  if (chavesDaGroq > 0) {
+    const porMinuto = Math.floor((chavesDaGroq * TOKENS_POR_MINUTO_POR_CHAVE) / CUSTO_DE_UM_DEVOCIONAL);
+    logInfo(
+      `${chavesDaGroq} chaves rendem ~${porMinuto}/min; pausa de ${(pausa / 1000).toFixed(1)}s entre itens` +
+        (pausa === 0 ? ' (a geração sozinha já segura o ritmo)' : ''),
+      'devocional',
+    );
+  }
+
   const pendentes = await connection.resenha.count({ where: { devocional: null } });
   logInfo(`${pendentes} resenhas ainda sem devocional; gerando ${Math.min(limite, pendentes)}`, 'devocional');
 
@@ -356,7 +383,7 @@ async function main() {
     // uns oitenta itens e depois as cinco chaves caem juntas em 429, a espera
     // de 65s não resolve porque a demanda continua acima da oferta, e o lote
     // aborta por três falhas seguidas. Foi o que aconteceu no item 85 de 626.
-    if (i > 0) await new Promise((r) => setTimeout(r, PAUSA_ENTRE_ITENS));
+    if (i > 0 && pausa > 0) await new Promise((r) => setTimeout(r, pausa));
 
     logInfo(`[${i + 1}/${fila.length}] ${resenha.titulo.slice(0, 55)}`, 'devocional');
 
