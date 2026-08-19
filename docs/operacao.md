@@ -12,6 +12,11 @@ falhar quatro horas depois no meio de uma execução agendada.
 | `TZ` | `America/Sao_Paulo` | |
 | `DATABASE_URL` | — | **obrigatória**, precisa começar com `postgresql://` |
 | `CRON_INGESTAO` | `0 */4 * * *` | `off` desliga o agendamento |
+| `CRON_DEVOCIONAIS` | `off` | escrita automática; exige `GROQ_API_KEYS` |
+| `DEVOCIONAIS_POR_EXECUCAO` | `5` | tamanho do lote agendado |
+| `PREGADOR_DO_LIVRO` | `Nélio Monteiro` | de quem é o livro |
+| `GROQ_API_KEYS` | — | chaves por vírgula; o limite é **por chave** |
+| `GROQ_MODELO` | `openai/gpt-oss-120b` | |
 | `API_TOKEN` | — | rotas de escrita; sem ele, escrever fica bloqueado |
 | `FRONT_ORIGEM` | — | origens do CORS, separadas por vírgula; **vazio libera tudo** |
 | `ADMIN_EMAIL` / `ADMIN_SENHA` | — | admin criado pelo seed |
@@ -115,13 +120,29 @@ atualização diária.
 
 ---
 
-## Devocionais: geração local, dado versionado
+## Devocionais
 
-**Produção não gera devocional.** O CLI do Claude autentica com a sessão da
-máquina de quem escreve; dentro do contêiner não há login nenhum. Isso não é
-contornável por código — é como a assinatura funciona.
+**Produção passou a escrever.** Era impossível enquanto a geração dependia do
+CLI do Claude, que autentica com a sessão da máquina de quem escreve — dentro
+do contêiner não há login nenhum. Uma chave de API não tem esse problema, e é
+por isso que `GROQ_API_KEYS` mudou o que é possível, não só o custo.
 
-O fluxo é:
+| variável | para quê |
+|---|---|
+| `GROQ_API_KEYS` | chaves separadas por vírgula; o limite é **por chave** |
+| `GROQ_MODELO` | `openai/gpt-oss-120b` |
+| `CRON_DEVOCIONAIS` | `off` por padrão; escrever sozinho é decisão de quem opera |
+| `DEVOCIONAIS_POR_EXECUCAO` | `5` |
+
+O lote é pequeno de propósito: a igreja produz três cultos por semana, e cinco
+por execução mantém o acervo em dia com folga. Encher os 1.300 pendentes
+automaticamente seria escrever texto que nenhum mês do livro vai usar — o mês
+se monta pelo script, com a curadoria junto.
+
+**O que sai daqui nasce em `status: GERADO`.** Publicar continua sendo do
+pastor, e é ele quem lê tudo antes de imprimir.
+
+### O arquivo versionado continua valendo
 
 ```
 sua máquina                    repositório              produção
@@ -129,28 +150,34 @@ npm run devocionais       →    devocionais.json    →    npm run seed
 npm run exportar:devocionais   (versionado)             (carrega o arquivo)
 ```
 
-Cultos novos são três por semana, ~12 por mês. Uma passada local mensal dá
-conta, e o deploy leva os textos junto.
+Não é mais a única via, mas continua sendo a que leva **o texto revisado** para
+produção — a importação nunca sobrescreve o que já existe lá.
+
+### Quanto custa cada motor
+
+| motor | tokens de entrada | ritmo | custo |
+|---|---|---|---|
+| Groq (padrão) | 6.400 a 9.000 | ~4 por minuto | grátis |
+| CLI do Claude (`--cli`) | ~28.000 | ~18 por **janela de 5h** | assinatura |
+
+O grosso dos 28k do CLI é o system prompt dele: o nosso prompt são ~3k.
+Encurtar a resenha não adiantava; o custo era por invocação. Foi essa conta que
+tornou a API aberta obrigatória, e não só conveniente.
 
 ### Gerar por tema do mês, não a fila inteira
 
-Medido: **~28k tokens de entrada por devocional**, e a cota rende cerca de
-**18 por janela** de 5 horas. A fila inteira levaria meses — e não faz sentido,
-porque o livro usa doze meses por edição, não mil páginas.
-
 ```bash
+npm run estado                        # quanto de cada mês já está escrito
 npm run devocionais -- 20 2027-5 --listar
 npm run devocionais -- 20 2027-5
 ```
 
 Com um mês, a fila deixa de ser "as mais recentes" e passa a ser "as que mais
 se parecem com o tema", pelo mesmo vetor que a curadoria usa. `--listar` mostra
-a escolha sem gastar nada — 20 devocionais são ~560k tokens, mais do que cabe
-numa janela.
+a escolha sem gastar nada.
 
-O grosso dos 28k é o system prompt do próprio CLI: o nosso prompt são ~3k.
-Encurtar a resenha não adianta; o custo é por invocação. As duas alavancas
-reais são gerar menos e gerar o certo.
+Vale mesmo sendo grátis: o livro usa doze meses por edição, e escrever as mil
+pendentes pela ordem cronológica renderia texto que nenhum mês vai usar.
 
 ### A chave é o slug, nunca o id
 
@@ -295,6 +322,8 @@ e outra) e ignora o que já está gravado sob outra URL.
 | `npm test` | 153 testes |
 | `npm run typecheck` | só a checagem de tipos |
 | `npm run ingerir` | ingestão incremental |
+| `npm run estado` | quanto de cada mês do livro já está escrito |
+| `npm run comparar` | mede modelos abertos contra o gabarito do Opus |
 | `npm run seed` | doutrinas, subtemas, pregadores, admin |
 | `npm run seed:biblia` | Bíblia ACF (`--forcar` recarrega) |
 | `npm run seed:resenhas` | recarrega do cache em disco |

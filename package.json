@@ -27,7 +27,9 @@
     "seed:temas": "tsx src/scripts/semearTemas.ts",
     "vetorizar": "tsx src/scripts/vetorizar.ts",
     "exportar:devocionais": "tsx src/scripts/exportarDevocionais.ts",
-    "comparar": "tsx src/scripts/compararModelos.ts"
+    "comparar": "tsx src/scripts/compararModelos.ts",
+    "estado": "tsx src/scripts/estado.ts",
+    "regerar": "tsx src/scripts/regerar.ts"
   },
   "repository": {
     "type": "git",

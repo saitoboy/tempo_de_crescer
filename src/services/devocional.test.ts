@@ -52,7 +52,9 @@ describe('respostaDoModelo', () => {
   const valida = {
     titulo: 'Deus é nosso Pastor',
     referencia: 'Salmos 23:1',
-    reflexao: 'x'.repeat(300),
+    // Dois parágrafos: a página monta um bloco por parágrafo, e o esquema
+    // recusa reflexão num bloco só.
+    reflexao: `${'x'.repeat(150)}\n\n${'y'.repeat(150)}`,
     pontosAplicacao: ['Confie em Deus como seu Pastor.', 'Reconheça o cuidado dele.', 'Busque a presença dele.'],
     oracao: 'y'.repeat(80),
   };
@@ -105,5 +107,30 @@ describe('comoCorrecao', () => {
 
   it('sem correção, o prompt fica igual ao de sempre', () => {
     expect(montarPrompt(RESENHA)).not.toContain('tentativa anterior');
+  });
+});
+
+describe('reflexão em parágrafos', () => {
+  const base = {
+    titulo: 'Deus é nosso Pastor',
+    referencia: 'Salmos 23:1',
+    pontosAplicacao: ['Confie no Senhor hoje.', 'Ore pela sua casa.', 'Leia o Salmo inteiro.'],
+    oracao: 'y'.repeat(80),
+  };
+
+  it('recusa um parágrafo só, que na página A5 vira paredão', () => {
+    const num = respostaDoModelo.safeParse({ ...base, reflexao: 'x'.repeat(800) });
+    expect(num.success).toBe(false);
+  });
+
+  it('aceita dois parágrafos', () => {
+    const dois = `${'x'.repeat(300)}\n\n${'y'.repeat(300)}`;
+    expect(respostaDoModelo.safeParse({ ...base, reflexao: dois }).success).toBe(true);
+  });
+
+  it('aceita separador com espaço na linha em branco', () => {
+    // O modelo às vezes devolve "\n \n" em vez de "\n\n"; é o mesmo parágrafo.
+    const frouxo = `${'x'.repeat(300)}\n \n${'y'.repeat(300)}`;
+    expect(respostaDoModelo.safeParse({ ...base, reflexao: frouxo }).success).toBe(true);
   });
 });

@@ -6,6 +6,9 @@ import { credenciais } from '../routes/sessao';
 import { fusaoPregador, novoPregador } from '../routes/pregadores';
 import { correcaoResenha, filtroListagem, filtroPendentes } from '../routes/resenhas';
 import { filtroDeEscolha, filtroTemas, novaOrdem, novoTema, paginaEscolhida } from '../routes/temas';
+import { filtroDevocionais } from '../routes/devocionais';
+import { chaveNova, situacaoDaChave } from '../routes/chaves';
+import { correcaoDeDevocional } from '../services/revisaoDeDevocional';
 import * as R from './respostas';
 
 /**
@@ -147,6 +150,8 @@ export const especificacao = {
     { name: 'Pregadores', description: 'Quem pregou, com as grafias que o blog usa' },
     { name: 'Temas do mês', description: 'A curadoria: qual devocional entra em qual mês do livro' },
     { name: 'Meta', description: 'O vocabulário do domínio' },
+    { name: 'Devocionais', description: 'A revisão: o pastor corrige no papel, alguém digita aqui' },
+    { name: 'Chaves', description: 'As chaves de API dos provedores de modelo' },
   ],
   components: {
     securitySchemes: {
@@ -288,6 +293,121 @@ export const especificacao = {
         parameters: [idNaRota],
         requestBody: corpo(novaOrdem),
         responses: { 200: respostaJson('Reordenado', R.temaCompleto), ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/chaves': {
+      get: {
+        tags: ['Chaves'],
+        summary: 'As chaves cadastradas',
+        description:
+          'O valor da chave NUNCA é devolvido — só o rótulo e os quatro últimos caracteres. Ela entra uma vez e não sai mais.',
+        security: comLogin,
+        responses: { 200: respostaJson('As chaves', R.listaDeChaves), ...SEM_SESSAO },
+      },
+      post: {
+        tags: ['Chaves'],
+        summary: 'Cadastra uma chave',
+        description: [
+          'Existe porque a cota diária da Groq é de 200.000 tokens por chave —',
+          'uns 44 devocionais — então acrescentar chave é rotina, e fazer isso',
+          'pelo `.env` custa um redeploy a cada vez.',
+          '',
+          'A chave é cifrada com AES-256-GCM antes de gravar. Exige',
+          '`CHAVES_SEGREDO` no ambiente do servidor.',
+          '',
+          'Vale em até um minuto, sem reiniciar: é o tempo do cache.',
+        ].join('\n'),
+        security: protegida,
+        requestBody: corpo(chaveNova),
+        responses: { 201: respostaJson('Cadastrada', R.chaveGuardada), ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/chaves/{id}': {
+      patch: {
+        tags: ['Chaves'],
+        summary: 'Liga e desliga sem apagar',
+        description:
+          'Chave que estourou a cota do dia não precisa ser removida: desligar preserva o rótulo e o histórico de erro, que é o que ajuda a entender qual conta está rendendo.',
+        security: protegida,
+        parameters: [idNaRota],
+        requestBody: corpo(situacaoDaChave),
+        responses: { 200: respostaJson('Alterada', R.chaveGuardada), ...ERROS_DE_ESCRITA },
+      },
+      delete: {
+        tags: ['Chaves'],
+        summary: 'Remove a chave',
+        security: protegida,
+        parameters: [idNaRota],
+        responses: { 200: respostaJson('Removida', R.confirmacao), ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/devocionais': {
+      get: {
+        tags: ['Devocionais'],
+        summary: 'A fila de revisão',
+        description: [
+          '`status=GERADO` é o que a máquina escreveu e ninguém leu ainda.',
+          '',
+          '`semQrcode=true` separa as páginas que sairão sem o quadrado do QR —',
+          'o canal do YouTube só começou a transmitir em 2020, e de lá para trás',
+          'não há vídeo para apontar.',
+        ].join('\n'),
+        security: comLogin,
+        parameters: parametrosDeQuery(filtroDevocionais),
+        responses: { 200: respostaJson('Página da fila', R.listaDeDevocionais), ...SEM_SESSAO },
+      },
+    },
+
+    '/devocionais/{id}': {
+      get: {
+        tags: ['Devocionais'],
+        summary: 'Um devocional, com a resenha de origem e as suspeitas',
+        description:
+          'As suspeitas vêm junto de propósito: quem abre esta tela é quem decide se a citação está certa, e pedir isso numa segunda chamada faria a conferência ser esquecida.',
+        security: comLogin,
+        parameters: [idNaRota],
+        responses: {
+          200: respostaJson('O devocional', R.devocionalCompleto),
+          404: respostaErro('Devocional não encontrado'),
+          ...SEM_SESSAO,
+        },
+      },
+      patch: {
+        tags: ['Devocionais'],
+        summary: 'Aplica a correção do pastor',
+        description: [
+          'Marca **REVISADO**, porque quem digita aqui está transcrevendo a',
+          'revisão dele. `manterStatus: true` serve ao conserto de digitação,',
+          'que não é aprovação.',
+          '',
+          'Trocar a `referencia` **re-resolve o versículo na ACF** — sem isso a',
+          'página ficaria com o texto de um versículo sob a citação de outro.',
+          '',
+          'As regras de tamanho são as mesmas da geração: são a página A5',
+          'impressa, e não mudam conforme quem escreve.',
+        ].join('\n'),
+        security: protegida,
+        parameters: [idNaRota],
+        requestBody: corpo(correcaoDeDevocional),
+        responses: { 200: respostaJson('Corrigido', R.devocionalCorrigido), ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/devocionais/{id}/aprovar': {
+      post: {
+        tags: ['Devocionais'],
+        summary: 'Aprova sem mexer no texto',
+        description:
+          '`?desfazer=true` devolve a GERADO. Existe porque aprovação errada acontece, e REVISADO também é o que protege o texto da regeração — marcar por engano travaria a página no lugar errado.',
+        security: protegida,
+        parameters: [
+          idNaRota,
+          { name: 'desfazer', in: 'query', required: false, schema: { type: 'string', enum: ['true', 'false'] } },
+        ],
+        responses: { 200: respostaJson('Aprovado', R.devocionalAprovado), ...ERROS_DE_ESCRITA },
       },
     },
 

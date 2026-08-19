@@ -2,8 +2,11 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { exigirPapel } from '../middlewares/autenticacao';
 import { assincrono } from '../middlewares/erros';
-import { pagina, paginas } from '../services/livro';
+import connection from '../connection';
+import { MESES } from '../services/curadoriaDoLivro';
+import { pagina, paginas, paginasDoTema } from '../services/livro';
 import { montarHtml } from '../services/livroHtml';
+import { montarRevisao } from '../services/livroRevisao';
 import { montarIdml } from '../services/livroIdml';
 import { NotFoundError } from '../utils/logger';
 
@@ -74,6 +77,62 @@ rotasLivro.get(
     res.type('text/html; charset=utf-8').send(montarHtml(lista, filtro.modelo));
   }),
 );
+
+/**
+ * O caderno de revisão, para o pastor corrigir no papel.
+ *
+ * Fica **aberta**, pelo mesmo motivo de `/imprimir.html`: abre em aba nova, e
+ * aba nova não manda cabeçalho `Authorization`.
+ *
+ * A4 deitado, com a página do livro em A5 real à esquerda e pauta à direita.
+ * Quem revisa não usa computador; ler na tela e depois descrever a correção por
+ * telefone não funciona.
+ */
+rotasLivro.get(
+  '/revisao.html',
+  assincrono(async (req, res) => {
+    const filtro = filtroLivro.parse(req.query);
+    const { tema } = filtroDaRevisao.parse(req.query);
+
+    // Um caderno por mês: é assim que ele vai revisar, um de cada vez. O mês
+    // ainda não existe como escolha — a curadoria vem depois da aprovação —
+    // então "as páginas de Março" são as que mais se parecem com o tema de
+    // Março entre as já escritas. É o que a curadoria vai lhe oferecer.
+    const mes = tema ? await acharTemaDoMes(tema) : null;
+
+    const lista = mes
+      ? await paginasDoTema(mes.id, filtro.limite)
+      : await paginas(filtro);
+
+    if (lista.length === 0) throw new NotFoundError('Nenhum devocional para revisar');
+
+    const titulo = mes
+      ? `Revisão — ${MESES[mes.mes - 1]}/${mes.ano}: ${mes.tema}`
+      : 'Revisão — Tempo de Crescer';
+
+    res.type('text/html; charset=utf-8').send(montarRevisao(lista, titulo));
+  }),
+);
+
+/** `?tema=2027-3` ou o uuid do TemaMes. */
+const filtroDaRevisao = z.object({ tema: z.string().trim().min(4).optional() });
+
+async function acharTemaDoMes(argumento: string) {
+  const anoMes = argumento.match(/^(\d{4})-(\d{1,2})$/);
+
+  const tema = anoMes
+    ? await connection.temaMes.findUnique({
+        where: { ano_mes: { ano: Number(anoMes[1]), mes: Number(anoMes[2]) } },
+        select: { id: true, ano: true, mes: true, tema: true },
+      })
+    : await connection.temaMes.findUnique({
+        where: { id: argumento },
+        select: { id: true, ano: true, mes: true, tema: true },
+      });
+
+  if (!tema) throw new NotFoundError(`Nenhum tema em "${argumento}" — use ano-mês, como 2027-3`);
+  return tema;
+}
 
 /** O livro em IDML, para o designer refinar no InDesign. */
 rotasLivro.get(

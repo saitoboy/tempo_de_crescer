@@ -29,7 +29,18 @@ export const respostaDoModelo = z.object({
    * dá cerca de 1.250 caracteres. O limite fica abaixo disso para o texto não
    * encostar no rodapé.
    */
-  reflexao: z.string().trim().min(200).max(1050),
+  reflexao: z
+    .string()
+    .trim()
+    .min(200)
+    .max(1050)
+    // A página do livro monta um bloco por parágrafo. Texto de 800 caracteres
+    // num parágrafo só vira paredão no A5 — e acontecia: o modelo devolvia
+    // ora 3, ora 2, ora 1. Como a retentativa é de graça pela API, exigir é
+    // mais barato do que diagramar em volta do problema.
+    .refine((t) => t.split(/\n\s*\n/).filter((p) => p.trim()).length >= 2, {
+      message: 'precisa de pelo menos 2 parágrafos, separados por linha em branco',
+    }),
   pontosAplicacao: z.array(z.string().trim().min(10)).min(3).max(4),
   oracao: z.string().trim().min(50),
 });
@@ -43,6 +54,8 @@ export type ResenhaParaDevocional = {
   textoBase: string | null;
   pregador: string | null;
   doutrina: string | null;
+  /** A passagem em ACF, para o modelo citar em vez de lembrar. */
+  passagem?: string | null;
 };
 
 const ESTILO = `Você escreve devocionais no estilo de A.W. Tozer, em português do Brasil.
@@ -53,7 +66,20 @@ O que caracteriza esse estilo:
 - Frases curtas e afirmativas. Exclamação usada de verdade, com moderação.
 - Sustenta a afirmação com outra passagem bíblica, citada e referenciada.
 - Não modera o que a Escritura afirma nem suaviza contraste doutrinário.
-- Nada de linguagem corporativa, autoajuda ou motivacional.`;
+- Nada de linguagem corporativa, autoajuda ou motivacional.
+
+Quatro erros que apareceram em textos anteriores e não podem se repetir:
+
+1. NÃO comece mais de um parágrafo com "Meus irmãos". Usado três vezes
+   seguidas vira ladainha. No máximo uma vez no devocional inteiro.
+2. NÃO repita, dentro da reflexão, o versículo que você indicou em
+   "referencia". Ele já aparece impresso em destaque logo acima, na página —
+   citá-lo de novo o imprime duas vezes.
+3. Escreva português correto e atual. Nada de imperativo arcaico inventado:
+   "confessoai", "permitai" e "escárdia" NÃO existem. Na dúvida entre a forma
+   antiga e a comum, use a comum.
+4. NUNCA mande desprezar, menosprezar ou julgar pessoa alguma. Confrontar
+   pecado é do estilo; mandar desprezar quem o pratica não é cristão.`;
 
 /**
  * Um devocional nosso, já aprovado, como referência de alvo.
@@ -177,13 +203,28 @@ ${contexto}
 --- RESENHA ---
 ${resenha.conteudoLimpo}
 --- FIM DA RESENHA ---
+${
+    resenha.passagem
+      ? `
+--- TEXTO BÍBLICO (Almeida Corrigida Fiel) ---
+${resenha.passagem}
+--- FIM DO TEXTO BÍBLICO ---
 
+Ao citar a Escritura entre aspas, copie LITERALMENTE do texto acima. Se precisar
+de outra passagem, cite sem aspas, como afirmação sua. NUNCA ponha entre aspas
+palavra que a Bíblia não diz.
+`
+      : `
+Ao citar a Escritura entre aspas, copie literalmente. Na dúvida, escreva sem
+aspas, como afirmação sua. NUNCA ponha entre aspas palavra que a Bíblia não diz.
+`
+  }
 Responda SOMENTE com JSON válido, sem cercas de código e sem comentário:
 
 {
   "titulo": "título curto e forte, até 34 caracteres, para caber em UMA linha",
   "referencia": "a referência do versículo que resume a mensagem, ex: Salmos 23:1",
-  "reflexao": "2 a 3 parágrafos, 800 a 950 caracteres NO TOTAL, separados por \\n\\n",
+  "reflexao": "EXATAMENTE 3 parágrafos curtos, de 40 a 50 palavras CADA, separados por \\n\\n",
   "pontosAplicacao": ["exatamente 3 aplicações, uma linha curta cada, no imperativo"],
   "oracao": "oração curta, primeira pessoa do PLURAL, 180 a 260 caracteres"
 }
@@ -225,6 +266,15 @@ export function comoCorrecao(erro: unknown): string {
 
   const linhas = problemas.map((p) => {
     const campo = p.path.join('.');
+    // Dizer "encurte" não funcionava: o modelo devolvia o mesmo tamanho. O que
+    // funciona é mandar **cortar uma unidade inteira** — ele conta parágrafos,
+    // não caracteres.
+    if (p.code === 'too_big' && campo === 'reflexao') {
+      return (
+        `- A "reflexao" passou de ${p.maximum} caracteres. Escreva 3 parágrafos de` +
+        ` no MÁXIMO 45 palavras cada. Corte frases inteiras, não palavras soltas.`
+      );
+    }
     if (p.code === 'too_big') return `- "${campo}" passou do limite de ${p.maximum} caracteres. Encurte de verdade.`;
     if (p.code === 'too_small') return `- "${campo}" ficou abaixo do mínimo de ${p.minimum}.`;
     return `- "${campo}" saiu fora do formato pedido.`;
@@ -290,6 +340,112 @@ export async function buscarVersiculo(referencia: string): Promise<string | null
 }
 
 /**
+ * O que a fila devolve, virado no que o prompt precisa — já com a passagem
+ * bíblica buscada.
+ *
+ * Existe para o script de geração e o de comparação não montarem isto cada um
+ * do seu jeito: prompt diferente entre os dois faria a comparação medir a
+ * diferença dos scripts, não a dos modelos.
+ */
+export async function comoPedido(item: {
+  id: string;
+  titulo: string;
+  conteudoLimpo: string;
+  textoBase: string | null;
+  livro?: string | null;
+  capitulo?: number | null;
+  versiculos?: string | null;
+  pregador: { nomeCanonico: string } | null;
+  classificacoes: Array<{ doutrina: { nome: string } }>;
+}): Promise<ResenhaParaDevocional> {
+  return {
+    id: item.id,
+    titulo: item.titulo,
+    conteudoLimpo: item.conteudoLimpo,
+    textoBase: item.textoBase,
+    pregador: item.pregador?.nomeCanonico ?? null,
+    doutrina: item.classificacoes[0]?.doutrina.nome ?? null,
+    passagem: await passagemEmAcf(item.livro ?? null, item.capitulo ?? null, item.versiculos ?? null),
+  };
+}
+
+/**
+ * Quanto a afinidade pode cair abaixo da melhor do acervo.
+ *
+ * Medido: a curva é **plana**. Em "Novos Recomeços" o primeiro dá 0,8955, o
+ * vigésimo 0,8755 e o quadragésimo 0,8719 — do #20 ao #40 são 3,6‰. Não há
+ * penhasco onde cortar; passadas as ~20 primeiras, o vetor não distingue mais
+ * nada, e o que vem depois é enchimento com cara de resultado.
+ *
+ * 20‰ é onde ficam as ~20 primeiras de cada tema, que é quanto o acervo tem de
+ * pregação realmente sobre cada assunto. Pedir mais que isso não traz material
+ * melhor, traz Jó 42 num mês sobre recomeço.
+ *
+ * Relativo, e não absoluto, porque o topo varia por tema: "Novos Recomeços"
+ * começa em 0,8955 e "Escatologia" em 0,8493. Um corte fixo esvaziaria um e
+ * deixaria o outro intacto.
+ */
+const QUEDA_MAXIMA = 0.02;
+
+/**
+ * Teto de versículos para não afogar o prompt.
+ *
+ * Pregação sobre um capítulo inteiro existe; mandar 60 versículos gastaria mais
+ * contexto do que a resenha e afogaria o que interessa.
+ */
+const MAXIMO_DE_VERSICULOS = 25;
+
+/**
+ * A passagem da pregação, em ACF, para o modelo citar em vez de lembrar.
+ *
+ * **Prevenir em vez de detectar.** Pedir que o modelo cite Escritura de memória
+ * é pedir que invente: um modelo aberto escreveu que Jesus disse "Na casa do
+ * Pai ainda há lugar", frase que não existe. E detectar depois não resolve — a
+ * conferência literal não distingue invenção de citação em outra tradução, os
+ * números se cruzam ("Na casa do Pai" pontuou 0,71; "Tudo posso naquele que me
+ * fortalece", que é real, pontuou 0,67).
+ *
+ * Entregando o texto, o modelo não precisa lembrar de nada. É o mesmo motivo
+ * pelo qual o versículo em destaque da página nunca sai do modelo, e sim desta
+ * tabela.
+ *
+ * A ingestão já separou livro, capítulo e versículos de 1.380 das 1.404
+ * resenhas, e os 57 nomes de livro batem com a ACF — por isso a busca é pelos
+ * campos, não por regex no `textoBase`.
+ */
+export async function passagemEmAcf(
+  livro: string | null,
+  capitulo: number | null,
+  versiculos: string | null,
+): Promise<string | null> {
+  if (!livro || !capitulo) return null;
+
+  const registro = await connection.livroBiblico.findFirst({
+    where: { nome: livro },
+    select: { id: true, nome: true },
+  });
+  if (!registro) return null;
+
+  const faixa = versiculos?.match(/^\s*(\d+)\s*(?:[-–]\s*(\d+))?\s*$/);
+  const primeiro = faixa ? Number(faixa[1]) : 1;
+  const ultimo = faixa ? Number(faixa[2] ?? faixa[1]) : primeiro + MAXIMO_DE_VERSICULOS - 1;
+
+  const achados = await connection.versiculo.findMany({
+    where: {
+      livroId: registro.id,
+      capitulo,
+      numero: { gte: primeiro, lte: Math.min(ultimo, primeiro + MAXIMO_DE_VERSICULOS - 1) },
+    },
+    orderBy: { numero: 'asc' },
+    select: { numero: true, texto: true },
+  });
+
+  if (achados.length === 0) return null;
+
+  return achados.map((v) => `${registro.nome} ${capitulo}:${v.numero} ${v.texto}`).join('\n');
+}
+
+/**
  * As resenhas que ainda não viraram devocional. É a fila, e não um status.
  *
  * **Resenha sem data fica de fora.** No Postgres, `ORDER BY data DESC` põe os
@@ -305,17 +461,31 @@ export async function buscarVersiculo(referencia: string): Promise<string | null
 export function filaDeGeracao(limite: number, pregadorId?: string) {
   return connection.resenha.findMany({
     where: { ...PENDENTES, ...(pregadorId ? { pregadorId } : {}) },
-    orderBy: [{ dataPregacao: 'desc' }],
+    // `nulls: 'last'` é o ponto: sem ele o Postgres põe os NULL primeiro num
+    // `DESC`, e as sem data — que não têm QR nem crédito — passariam na frente
+    // das recentes, que têm os dois. Elas entram, mas por último.
+    orderBy: [{ dataPregacao: { sort: 'desc', nulls: 'last' } }],
     take: limite,
     select: CAMPOS_DA_FILA,
   });
 }
 
-/** Quem ainda não virou devocional e tem material para virar. */
+/**
+ * Quem ainda não virou devocional e tem material para virar.
+ *
+ * **Resenha sem data entra.** Ficava de fora por engano meu: a página do livro
+ * é datada pelo **dia do calendário** em que ela cai — "01 de Fevereiro" — e
+ * não pela data da pregação, que aparece só como crédito no rodapé. Sem data,
+ * a página perde o crédito e o QR code, e é só isso.
+ *
+ * O que motivou a exclusão foi outra coisa, e continua verdade: no Postgres,
+ * `ORDER BY data DESC` põe os NULL **primeiro**, e a fila servia justamente as
+ * 251 sem data antes de qualquer outra. Isso se resolve na ordenação, não
+ * jogando o material fora.
+ */
 const PENDENTES = {
   devocional: null,
   conteudoLimpo: { not: '' },
-  dataPregacao: { not: null },
 } as const;
 
 const CAMPOS_DA_FILA = {
@@ -323,6 +493,11 @@ const CAMPOS_DA_FILA = {
   titulo: true,
   conteudoLimpo: true,
   textoBase: true,
+  // Separados pela ingestão, e é por eles que a passagem em ACF é buscada —
+  // não por regex no `textoBase`, que tem grafia livre.
+  livro: true,
+  capitulo: true,
+  versiculos: true,
   pregador: { select: { nomeCanonico: true } },
   classificacoes: {
     where: { papel: 'PRINCIPAL' as const },
@@ -372,8 +547,28 @@ export async function filaDoTema(temaMesId: string, limite: number, pregadorId?:
   // O ranking inteiro, não os `limite` primeiros: quem for descartado por
   // redundância precisa ter quem o substitua logo abaixo.
   const ranking = maisParecidos(consulta, candidatas, candidatas.length);
+
+  // O piso é medido contra o MELHOR DO ACERVO, incluindo o que já foi escrito.
+  //
+  // Contra o melhor dos que sobraram não funcionaria: depois de escrever as
+  // vinte primeiras, a régua se recalibraria pelas sobras e deixaria tudo
+  // passar de novo — que é exatamente o defeito. Rodando Janeiro duas vezes,
+  // a segunda escreveu Jó 42, Ezequiel 22 e Naum 1 para "Novos Recomeços",
+  // e o relatório de cobertura andou 3 casas com 20 textos escritos.
+  const todas = await connection.resenha.findMany({
+    where: {
+      conteudoLimpo: { not: '' },
+      dataPregacao: { not: null },
+      ...(pregadorId ? { pregadorId } : {}),
+    },
+    select: { id: true, embedding: true },
+  });
+  const melhorDoAcervo = maisParecidos(consulta, todas, 1)[0]?.semelhanca ?? 0;
+
+  const dentroDoPiso = ranking.filter((r) => melhorDoAcervo - r.semelhanca <= QUEDA_MAXIMA);
+
   const escolhidos = semRedundancia(
-    ranking,
+    dentroDoPiso,
     new Map(candidatas.map((c) => [c.id, c.embedding])),
     limite,
     jaEscritas.map((r) => r.embedding).filter((v) => v.length > 0),
@@ -396,18 +591,32 @@ export async function guardarDevocional(
   resenhaId: string,
   resposta: RespostaDoModelo,
   modelo: string,
+  /**
+   * Sobrescreve o devocional que já existe para esta resenha.
+   *
+   * Falso por padrão, e não é preciosismo: a fila normal só traz resenha **sem**
+   * devocional, então criar é o caminho certo, e um upsert silencioso ali
+   * apagaria trabalho na primeira vez que a fila trouxesse algo repetido por
+   * engano. Só a regeração deliberada pede isto.
+   */
+  sobrescrever = false,
 ) {
-  return connection.devocional.create({
-    data: {
-      resenhaId,
-      titulo: resposta.titulo,
-      referencia: resposta.referencia,
-      // Da ACF no banco, nunca do modelo.
-      versiculo: await buscarVersiculo(resposta.referencia),
-      reflexao: resposta.reflexao,
-      pontosAplicacao: resposta.pontosAplicacao,
-      oracao: resposta.oracao,
-      modelo,
-    },
+  const dados = {
+    titulo: resposta.titulo,
+    referencia: resposta.referencia,
+    // Da ACF no banco, nunca do modelo.
+    versiculo: await buscarVersiculo(resposta.referencia),
+    reflexao: resposta.reflexao,
+    pontosAplicacao: resposta.pontosAplicacao,
+    oracao: resposta.oracao,
+    modelo,
+  };
+
+  if (!sobrescrever) return connection.devocional.create({ data: { resenhaId, ...dados } });
+
+  return connection.devocional.upsert({
+    where: { resenhaId },
+    update: { ...dados, geradoEm: new Date() },
+    create: { resenhaId, ...dados },
   });
 }

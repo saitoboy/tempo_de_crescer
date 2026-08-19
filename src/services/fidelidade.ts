@@ -121,6 +121,51 @@ const ANCORA = 3;
  * de vinte palavras derruba pouco; inventar a frase inteira não encontra
  * janela que a sustente.
  */
+/**
+ * Onde a citação melhor se encaixa na Escritura, e quanto dela bate ali.
+ *
+ * Devolver o número, e não só sim/não, é o que permite separar **inventou** de
+ * **citou por outra tradução** — que são erros de natureza diferente e merecem
+ * tratamento diferente. E devolver o trecho da ACF encontrado é o que permite
+ * pôr os dois lado a lado para o pastor conferir sem abrir a Bíblia.
+ */
+export function medirCitacao(
+  citacao: string,
+  biblia: string,
+): { acerto: number; naAcf: string | null } {
+  const alvo = normalizar(citacao);
+  if (alvo.length === 0) return { acerto: 1, naAcf: null };
+  if (biblia.includes(alvo)) return { acerto: 1, naAcf: citacao };
+
+  const palavras = alvo.split(' ');
+  if (palavras.length < ANCORA) return { acerto: 0, naAcf: null };
+
+  let melhor = 0;
+  let ondeMelhor: string | null = null;
+
+  for (let i = 0; i + ANCORA <= palavras.length; i++) {
+    const ancora = palavras.slice(i, i + ANCORA).join(' ');
+
+    let posicao = biblia.indexOf(ancora);
+    while (posicao !== -1) {
+      const inicio = Math.max(0, posicao - alvo.length);
+      const trecho = biblia.slice(inicio, posicao + alvo.length * 2);
+      const acerto = palavras.filter((p) => trecho.includes(p)).length / palavras.length;
+
+      if (acerto > melhor) {
+        melhor = acerto;
+        // Só o suficiente para o revisor reconhecer a passagem.
+        ondeMelhor = biblia.slice(Math.max(0, posicao - 60), posicao + alvo.length + 60);
+      }
+      if (melhor === 1) return { acerto: 1, naAcf: ondeMelhor };
+
+      posicao = biblia.indexOf(ancora, posicao + 1);
+    }
+  }
+
+  return { acerto: melhor, naAcf: ondeMelhor };
+}
+
 export function estaNaEscritura(citacao: string, biblia: string): boolean {
   // Reticências marcam texto pulado de propósito — "Fostes resgatados... pelo
   // precioso sangue". Os dois lados existem na Escritura, longe um do outro, e

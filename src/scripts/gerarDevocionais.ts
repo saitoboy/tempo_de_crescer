@@ -5,24 +5,18 @@ import { mkdtempSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import connection from '../connection';
-import {
-  comoCorrecao,
-  extrairJson,
-  filaDeGeracao,
-  filaDoTema,
-  guardarDevocional,
-  montarPrompt,
-  respostaDoModelo,
-  type ResenhaParaDevocional,
-} from '../services/devocional';
+import { comoPedido, filaDeGeracao, filaDoTema } from '../services/devocional';
 import { MESES } from '../services/curadoriaDoLivro';
+import {
+  acharPregador,
+  escreverUm,
+  motorDeApi,
+  type Gasto,
+  type Motor,
+} from '../services/escrita';
 import { logError, logInfo, logSuccess, logWarning } from '../utils/logger';
 import { urlDoProxy } from '../utils/proxy';
-import {
-  escrever as escreverPorApi,
-  provedoresDoAmbiente,
-  type Provedor,
-} from '../services/provedores';
+import { eCotaDiaria, provedores as provedoresDisponiveis } from '../services/provedores';
 
 /**
  * Escreve os devocionais.
@@ -71,6 +65,37 @@ const LOTE_PADRAO = 5;
  * `--todos` desliga, para geração que não seja para este livro.
  */
 const PREGADOR_DO_LIVRO = 'Nélio Monteiro';
+
+/** Limite de tokens por minuto de cada chave da Groq, do plano gratuito. */
+const TOKENS_POR_MINUTO_POR_CHAVE = 8000;
+/** Chute inicial, só para o primeiro item; depois vale o medido. */
+const CUSTO_DE_UM_DEVOCIONAL = 4300;
+/** Quanto a chamada leva, para descontar da pausa. */
+const GERACAO_TIPICA_MS = 3500;
+
+/**
+ * Pausa entre itens, calculada a partir da capacidade real.
+ *
+ * Era constante, e constante envelhece: 3 segundos estavam certos para cinco
+ * chaves e viraram desperdício com onze. Agora sai da conta —
+ * `chaves × 8.000 ÷ 4.300` dá quantos cabem por minuto, e a pausa é o intervalo
+ * que sobra depois de descontar a geração.
+ *
+ * Por que existe: sem ritmo o lote pede mais do que o provedor entrega. Com
+ * cinco chaves ele ia a catorze por minuto contra nove de capacidade, gastava
+ * o colchão do rodízio em uns oitenta itens e derrubava as cinco de uma vez —
+ * e aí nem a espera de 65s resolve, porque a demanda segue acima da oferta.
+ *
+ * **A pausa é por processo.** Dois lotes em paralelo pedem o dobro, e cada um
+ * precisa do dobro da pausa. `DEVOCIONAIS_PAUSA_MS` sobrepõe para esse caso.
+ */
+function pausaEntreItens(chaves: number): number {
+  if (process.env.DEVOCIONAIS_PAUSA_MS) return Number(process.env.DEVOCIONAIS_PAUSA_MS);
+  if (chaves === 0) return 0;
+
+  const porMinuto = (chaves * TOKENS_POR_MINUTO_POR_CHAVE) / CUSTO_DE_UM_DEVOCIONAL;
+  return Math.max(0, Math.round(60_000 / porMinuto - GERACAO_TIPICA_MS));
+}
 /**
  * Quantas falhas seguidas derrubam o lote.
  *
@@ -153,9 +178,6 @@ const ARGUMENTOS = [
   MODELO,
   '--strict-mcp-config',
 ];
-
-/** O que uma chamada custou, para somar no fim do lote. */
-type Gasto = { entrada: number; saida: number };
 
 /**
  * O prompt vai pelo stdin, não como argumento.
@@ -243,83 +265,6 @@ function eLimiteDaConta(motivo: string): boolean {
   return /\b(session|usage|rate) limit\b/i.test(motivo);
 }
 
-/**
- * Quantas vezes pedir o mesmo devocional.
- *
- * A geração é estocástica: a reflexão estoura os 1050 caracteres de vez em
- * quando, e o mesmo pedido repetido costuma passar. Sem retentativa, o item
- * voltava para a fila e alguém precisava rodar de novo na mão — foi o que
- * aconteceu com `2 Coríntios 1:8-11` em Agosto.
- *
- * Duas, não mais: se o texto continua estourando na segunda, o problema é a
- * resenha, não o acaso, e insistir só queima cota.
- */
-const TENTATIVAS = 2;
-
-/**
- * Quem escreve o texto: o CLI do Claude ou uma API aberta.
- *
- * O CLI consome a assinatura de quem roda — ~18 devocionais por janela de 5
- * horas. Groq e NVIDIA servem modelos abertos de graça, com limite **por
- * chave**, então várias chaves em rodízio viram várias cotas.
- *
- * O motor não muda mais nada: prompt, validação, retentativa e gravação são os
- * mesmos. Quem decide se o texto presta é o Zod, não o provedor.
- */
-type Motor = { nome: string; escrever(prompt: string): Promise<{ texto: string; gasto: Gasto }> };
-
-function motorDoClaude(): Motor {
-  return {
-    nome: `CLI ${MODELO}`,
-    escrever: pedirAoClaude,
-  };
-}
-
-function motorDeApi(provedores: Provedor[]): Motor {
-  return {
-    nome: provedores.map((p) => `${p.nome}/${p.modelo} (${p.chaves.length} chaves)`).join(' → '),
-    async escrever(prompt: string) {
-      const r = await escreverPorApi(provedores, prompt);
-      return { texto: r.texto, gasto: { entrada: r.entrada, saida: r.saida } };
-    },
-  };
-}
-
-async function gerarUm(resenha: ResenhaParaDevocional, motor: Motor): Promise<Gasto> {
-  const gasto: Gasto = { entrada: 0, saida: 0 };
-  let recusa: unknown;
-
-  for (let tentativa = 1; tentativa <= TENTATIVAS; tentativa++) {
-    // A correção só existe da segunda em diante: repetir o prompt intacto
-    // depois de uma recusa por tamanho tende a produzir a mesma recusa.
-    const correcao = tentativa === 1 ? undefined : comoCorrecao(recusa);
-
-    // Erro do motor (cota, proxy, rede) sobe daqui e não é retentado: nenhuma
-    // repetição resolveria, e o lote tem seu próprio tratamento para isso.
-    const { texto, gasto: custo } = await motor.escrever(montarPrompt(resenha, correcao));
-    gasto.entrada += custo.entrada;
-    gasto.saida += custo.saida;
-
-    try {
-      const resposta = respostaDoModelo.parse(extrairJson(texto));
-      const devocional = await guardarDevocional(resenha.id, resposta, motor.nome);
-
-      logSuccess(`"${devocional.titulo}" — ${devocional.referencia}`, 'devocional');
-      if (!devocional.versiculo) {
-        logWarning(`referência "${devocional.referencia}" não resolveu na ACF`, 'devocional');
-      }
-
-      return gasto;
-    } catch (e) {
-      recusa = e;
-      if (tentativa < TENTATIVAS) {
-        logWarning(`resposta recusada, tentando de novo (${tentativa}/${TENTATIVAS})`, 'devocional');
-      }
-    }
-  }
-
-  throw recusa;
-}
 
 /**
  * Resolve `2027-6` no tema daquele mês. Aceita também o uuid direto, que é o
@@ -349,21 +294,18 @@ async function acharTema(argumento: string) {
 }
 
 /**
- * O pregador pedido em `--pregador "Nélio Monteiro"`, resolvido pelo nome
- * canônico ou por qualquer um dos aliases.
+ * O motor do CLI, que só existe aqui.
+ *
+ * O serviço de escrita não o conhece de propósito: ele roda também dentro do
+ * servidor, e lá não há `claude` instalado nem sessão para autenticar. Quem
+ * quiser o Claude passa por este script, com `--cli`.
  */
-async function acharPregador(nome: string) {
-  const alvo = nome.toLowerCase();
-
-  const pregador = await connection.pregador.findFirst({
-    where: {
-      OR: [{ nomeCanonico: { equals: nome, mode: 'insensitive' } }, { aliases: { has: alvo } }],
-    },
-    select: { id: true, nomeCanonico: true },
-  });
-
-  if (!pregador) throw new Error(`Pregador "${nome}" não está no cadastro`);
-  return pregador;
+function motorDoClaude(): Motor {
+  return {
+    nome: `CLI ${MODELO}`,
+    escrever: pedirAoClaude,
+    tentativas: 2,
+  };
 }
 
 async function main() {
@@ -380,12 +322,23 @@ async function main() {
 
   // Motor: API se houver chave configurada, CLI caso contrário. `--cli` força
   // o Claude mesmo com chaves no ambiente, para comparar os dois lado a lado.
-  const provedores = provedoresDoAmbiente();
+  const provedores = await provedoresDisponiveis();
   const motor =
     provedores.length > 0 && !process.argv.includes('--cli')
-      ? motorDeApi(provedores)
+      ? await motorDeApi(provedores)
       : motorDoClaude();
   logInfo(`motor: ${motor.nome}`, 'devocional');
+
+  const chavesDaGroq = provedores.find((p) => p.nome === 'groq')?.chaves.length ?? 0;
+  const pausa = pausaEntreItens(chavesDaGroq);
+  if (chavesDaGroq > 0) {
+    const porMinuto = Math.floor((chavesDaGroq * TOKENS_POR_MINUTO_POR_CHAVE) / CUSTO_DE_UM_DEVOCIONAL);
+    logInfo(
+      `${chavesDaGroq} chaves rendem ~${porMinuto}/min; pausa de ${(pausa / 1000).toFixed(1)}s entre itens` +
+        (pausa === 0 ? ' (a geração sozinha já segura o ritmo)' : ''),
+      'devocional',
+    );
+  }
 
   const pendentes = await connection.resenha.count({ where: { devocional: null } });
   logInfo(`${pendentes} resenhas ainda sem devocional; gerando ${Math.min(limite, pendentes)}`, 'devocional');
@@ -420,19 +373,25 @@ async function main() {
   const falhas: string[] = [];
 
   for (const [i, item] of fila.entries()) {
-    const resenha: ResenhaParaDevocional = {
-      id: item.id,
-      titulo: item.titulo,
-      conteudoLimpo: item.conteudoLimpo,
-      textoBase: item.textoBase,
-      pregador: item.pregador?.nomeCanonico ?? null,
-      doutrina: item.classificacoes[0]?.doutrina.nome ?? null,
-    };
+    const resenha = await comoPedido(item);
+
+    // Ritmo, e não velocidade máxima.
+    //
+    // Sem isto o lote roda **acima da capacidade**: são 40.000 tokens por
+    // minuto somando as cinco chaves, e cada devocional custa ~4.300 — logo
+    // cabem nove por minuto. Indo a catorze, o colchão do rodízio segura por
+    // uns oitenta itens e depois as cinco chaves caem juntas em 429, a espera
+    // de 65s não resolve porque a demanda continua acima da oferta, e o lote
+    // aborta por três falhas seguidas. Foi o que aconteceu no item 85 de 626.
+    // Quem segura o ritmo é o `retry-after` do provedor, dentro do rodízio:
+    // chave que levou 429 fica de castigo pelo tempo que ela mesma pediu.
+    // A pausa aqui é só o piso configurável, para quem rodar dois lotes.
+    if (i > 0 && pausa > 0) await new Promise((r) => setTimeout(r, pausa));
 
     logInfo(`[${i + 1}/${fila.length}] ${resenha.titulo.slice(0, 55)}`, 'devocional');
 
     try {
-      const gasto = await gerarUm(resenha, motor);
+      const gasto = await escreverUm(resenha, motor);
       entrada += gasto.entrada;
       saidaTokens += gasto.saida;
       feitos++;
@@ -457,10 +416,23 @@ async function main() {
         break;
       }
 
-      if (seguidas >= FALHAS_SEGUIDAS_PARA_ABORTAR) {
+      if (eCotaDiaria(motivo)) {
         logError(
-          `${seguidas} falhas seguidas — o lote parou. Confira a conta do CLI ` +
-            `(\`claude\` na mão) antes de rodar de novo; nada do que já foi gravado se perde.`,
+          `cota diária da Groq esgotada — são 200.000 tokens por dia em cada chave, ` +
+            `uns 44 devocionais. Os ${feitos} gravados ficam e a fila retoma amanhã.`,
+          'devocional',
+        );
+        break;
+      }
+
+      if (seguidas >= FALHAS_SEGUIDAS_PARA_ABORTAR) {
+        // A mensagem falava em conferir a conta do CLI mesmo quando o motor
+        // era a API — e mandava olhar no lugar errado justamente na hora em
+        // que a pessoa precisa saber onde olhar.
+        logError(
+          `${seguidas} falhas seguidas — o lote parou. Os ${feitos} gravados ficam e a fila ` +
+            `retoma de onde parou. Se foram 429, aumente DEVOCIONAIS_PAUSA_MS ou espere alguns ` +
+            `minutos: o limite da Groq é por minuto, não por dia.`,
           'devocional',
         );
         break;

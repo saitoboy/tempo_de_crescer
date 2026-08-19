@@ -11,13 +11,15 @@ import { exigirPapel } from './middlewares/autenticacao';
 import { tratarErros } from './middlewares/erros';
 import { rotasMeta } from './routes/meta';
 import { rotasAnalise } from './routes/analise';
+import { rotasChaves } from './routes/chaves';
 import { rotasCultos } from './routes/cultos';
+import { rotasDevocionais } from './routes/devocionais';
 import { rotasLivro } from './routes/livro';
 import { rotasPregadores } from './routes/pregadores';
 import { rotasResenhas } from './routes/resenhas';
 import { rotasTemas } from './routes/temas';
 import { rotasSessao } from './routes/sessao';
-import { agendarIngestao, executarIngestao } from './services/agendamento';
+import { agendarEscrita, agendarIngestao, executarIngestao } from './services/agendamento';
 import { logInfo, logSuccess } from './utils/logger';
 import { aplicarProxy } from './utils/proxy';
 
@@ -87,6 +89,9 @@ app.use(`${BASE}/cultos`, rotasCultos);
 app.use(`${BASE}/livro`, rotasLivro);
 app.use(`${BASE}/temas`, exigirLeitura, rotasTemas);
 app.use(`${BASE}/resenhas`, exigirLeitura, rotasResenhas);
+app.use(`${BASE}/devocionais`, exigirLeitura, rotasDevocionais);
+// Chave de API é assunto de quem administra, não de quem lê o acervo.
+app.use(`${BASE}/chaves`, exigirPapel(), rotasChaves);
 app.use(`${BASE}/pregadores`, exigirLeitura, rotasPregadores);
 
 app.get(`${BASE}/openapi.json`, (_req: Request, res: Response) => res.json(especificacao));
@@ -116,6 +121,17 @@ const server = app.listen(config.PORT, () => {
 
   const cron = agendarIngestao();
   logInfo(cron ? `ingestão agendada: ${cron} (${config.TZ})` : 'ingestão desligada', 'cron');
+
+  // Produção só passou a escrever devocional quando a geração deixou de
+  // depender do CLI do Claude, que autentica com a sessão da máquina.
+  void agendarEscrita().then((escrita) =>
+    logInfo(
+      escrita
+        ? `escrita agendada: ${escrita} (${config.DEVOCIONAIS_POR_EXECUCAO} por vez)`
+        : 'escrita de devocionais desligada',
+      'cron',
+    ),
+  );
 
   // Uma passada na subida, sem bloquear o boot. Num banco recém-criado é ela
   // que carrega o acervo inteiro; num banco já populado não baixa nada. Erros
