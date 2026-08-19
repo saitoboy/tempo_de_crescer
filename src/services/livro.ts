@@ -1,4 +1,6 @@
 import connection from '../connection';
+import { NotFoundError } from '../utils/logger';
+import { comoConsulta, maisParecidos } from './vetores';
 
 /**
  * A página do livro, montada a partir do banco.
@@ -111,6 +113,51 @@ export async function paginas(filtro: {
     select: SELECAO,
   });
   return devocionais.map(montar);
+}
+
+/**
+ * As páginas candidatas a um mês, por afinidade com o tema.
+ *
+ * Serve à revisão: o pastor confere um mês por vez, e o mês ainda não existe
+ * como escolha — a curadoria acontece **depois** dele aprovar os textos. Então
+ * "as páginas de Março" são, aqui, as que mais se parecem com o tema de Março
+ * entre as que já estão escritas.
+ *
+ * É a mesma ordenação de `sugerir()`, e de propósito: o que ele revisa é o que
+ * a curadoria vai lhe oferecer.
+ */
+export async function paginasDoTema(
+  temaMesId: string,
+  limite: number,
+): Promise<PaginaDoLivro[]> {
+  const tema = await connection.temaMes.findUnique({
+    where: { id: temaMesId },
+    select: { tema: true, descricao: true },
+  });
+  if (!tema) throw new NotFoundError(`Tema ${temaMesId} não encontrado`);
+
+  const consulta = await comoConsulta([tema.tema, tema.descricao].filter(Boolean).join('. '));
+
+  const comDevocional = await connection.resenha.findMany({
+    where: { devocional: { isNot: null } },
+    select: { id: true, embedding: true, devocional: { select: { id: true } } },
+  });
+
+  const ranking = maisParecidos(consulta, comDevocional, limite);
+  const devocionalPorResenha = new Map(comDevocional.map((r) => [r.id, r.devocional!.id]));
+
+  const devocionais = await connection.devocional.findMany({
+    where: { id: { in: ranking.map((r) => devocionalPorResenha.get(r.id)!) } },
+    select: SELECAO,
+  });
+
+  // O `IN` volta em ordem de banco; a de afinidade é a que importa, porque é
+  // nela que a curadoria vai oferecer depois.
+  const porId = new Map(devocionais.map((d) => [d.id, d]));
+  return ranking
+    .map((r) => porId.get(devocionalPorResenha.get(r.id)!))
+    .filter((d): d is NonNullable<typeof d> => Boolean(d))
+    .map(montar);
 }
 
 /** O livro montado como a igreja escolheu: mês a mês, na ordem definida. */
