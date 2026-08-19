@@ -4,6 +4,7 @@ import { exigirPapel } from '../middlewares/autenticacao';
 import { assincrono } from '../middlewares/erros';
 import { pagina, paginas } from '../services/livro';
 import { montarHtml } from '../services/livroHtml';
+import { montarRevisao } from '../services/livroRevisao';
 import { montarIdml } from '../services/livroIdml';
 import { NotFoundError } from '../utils/logger';
 
@@ -72,6 +73,27 @@ rotasLivro.get(
     if (lista.length === 0) throw new NotFoundError('Nenhum devocional para montar o livro');
 
     res.type('text/html; charset=utf-8').send(montarHtml(lista, filtro.modelo));
+  }),
+);
+
+/**
+ * O caderno de revisão, para o pastor corrigir no papel.
+ *
+ * Fica **aberta**, pelo mesmo motivo de `/imprimir.html`: abre em aba nova, e
+ * aba nova não manda cabeçalho `Authorization`.
+ *
+ * A4 deitado, com a página do livro em A5 real à esquerda e pauta à direita.
+ * Quem revisa não usa computador; ler na tela e depois descrever a correção por
+ * telefone não funciona.
+ */
+rotasLivro.get(
+  '/revisao.html',
+  assincrono(async (req, res) => {
+    const filtro = filtroLivro.parse(req.query);
+    const lista = await paginas(filtro);
+    if (lista.length === 0) throw new NotFoundError('Nenhum devocional para revisar');
+
+    res.type('text/html; charset=utf-8').send(montarRevisao(lista));
   }),
 );
 
