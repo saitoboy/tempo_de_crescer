@@ -6,7 +6,9 @@ import * as R from '../docs/respostas';
 import { listarTemas, verTema } from '../services/curadoriaDoLivro';
 import { paginas } from '../services/livro';
 import { listarDevocionais } from '../services/revisaoDeDevocional';
+import { listarCultos, listarResenhas, verResenha } from '../services/acervo';
 import { listarChaves } from '../services/chaves';
+import { listarPendentes } from '../services/curadoria';
 import { coberturaBiblica, distribuicaoPorDoutrina, panorama } from '../services/analise';
 import { logError, logInfo, logSuccess } from '../utils/logger';
 
@@ -44,6 +46,26 @@ async function main() {
       rota: 'GET /temas/:id',
       esquema: R.temaCompleto,
       obter: async () => verTema((await listarTemas(2027))[0].id),
+    },
+    {
+      rota: 'GET /resenhas',
+      esquema: R.listaDeResenhas,
+      obter: () => listarResenhas({ pagina: 1, porPagina: 3 }),
+    },
+    {
+      rota: 'GET /resenhas/pendentes',
+      esquema: R.listaDePendentes,
+      obter: () => listarPendentes({ pagina: 1, porPagina: 3 }),
+    },
+    {
+      rota: 'GET /resenhas/:id',
+      esquema: R.resenhaCompleta,
+      obter: async () => verResenha((await listarResenhas({ pagina: 1, porPagina: 1 })).resenhas[0].id),
+    },
+    {
+      rota: 'GET /cultos',
+      esquema: R.listaDeCultos,
+      obter: () => listarCultos({ pagina: 1, porPagina: 3 }),
     },
     {
       rota: 'GET /livro/paginas',

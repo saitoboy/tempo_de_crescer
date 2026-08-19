@@ -231,6 +231,16 @@ export const fusaoFeita = z.object({
 // CULTOS
 // ──────────────────────────────────────────────────────────────────────────────
 
+/**
+ * `resenhas` é a **lista**, não a contagem.
+ *
+ * O documento dizia número, e a rota sempre mandou os objetos. O conferidor de
+ * contrato achou assim que a rota entrou na lista dele — e é o segundo caso da
+ * mesma família, depois de `GET /temas`.
+ *
+ * Faz sentido ser lista: um culto de domingo à noite pode ter mais de uma
+ * resenha, e a tela precisa saber quais são para abrir a certa.
+ */
 export const listaDeCultos = paginado(
   'cultos',
   z.object({
@@ -242,7 +252,14 @@ export const listaDeCultos = paginado(
     youtubeVideoId: z.string().nullable(),
     tituloLive: z.string().nullable(),
     qrcode: z.string().nullable().meta({ description: 'O SVG como data URI, pronto para <img src>' }),
-    resenhas: z.int(),
+    resenhas: z.array(
+      z.object({
+        id: z.uuid(),
+        titulo: z.string(),
+        textoBase: z.string().nullable(),
+        pregador: z.object({ nomeCanonico: z.string() }).nullable(),
+      }),
+    ),
   }),
 );
 

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import connection from '../connection';
 import { assincrono } from '../middlewares/erros';
 import { exigirToken } from '../middlewares/autenticacao';
+import { listarResenhas, verResenha } from '../services/acervo';
 import { corrigirResenha, listarPendentes } from '../services/curadoria';
 import { NotFoundError } from '../utils/logger';
 
@@ -40,30 +41,7 @@ export const filtroListagem = z.object({
 rotasResenhas.get(
   '/',
   assincrono(async (req, res) => {
-    const { ano, pregadorId, pagina, porPagina } = filtroListagem.parse(req.query);
-    const where = { ...(ano ? { ano } : {}), ...(pregadorId ? { pregadorId } : {}) };
-
-    const [total, resenhas] = await Promise.all([
-      connection.resenha.count({ where }),
-      connection.resenha.findMany({
-        where,
-        orderBy: [{ publicadoEm: 'desc' }],
-        skip: (pagina - 1) * porPagina,
-        take: porPagina,
-        select: {
-          id: true,
-          slug: true,
-          titulo: true,
-          dataPregacao: true,
-          ano: true,
-          textoBase: true,
-          pregador: { select: { id: true, nomeCanonico: true } },
-          culto: { select: { data: true, turno: true, natureza: true } },
-        },
-      }),
-    ]);
-
-    res.json({ total, pagina, porPagina, paginas: Math.ceil(total / porPagina), resenhas });
+    res.json(await listarResenhas(filtroListagem.parse(req.query)));
   }),
 );
 
@@ -71,19 +49,7 @@ rotasResenhas.get(
   '/:id',
   assincrono(async (req, res) => {
     const { id } = z.object({ id: z.uuid() }).parse(req.params);
-
-    const resenha = await connection.resenha.findUnique({
-      where: { id },
-      include: {
-        pregador: { select: { id: true, nomeCanonico: true, tipo: true } },
-        culto: true,
-        classificacoes: { include: { doutrina: true } },
-        devocional: true,
-      },
-    });
-    if (!resenha) throw new NotFoundError(`Resenha ${id} não encontrada`);
-
-    res.json(resenha);
+    res.json(await verResenha(id));
   }),
 );
 
