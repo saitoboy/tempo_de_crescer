@@ -1,6 +1,7 @@
 import '../utils/timezone';
 import 'dotenv/config';
 import connection from '../connection';
+import { exportarCuradoria } from '../seeds/curadoria';
 import { exportarDevocionais } from '../seeds/devocionais';
 import { logError, logSuccess } from '../utils/logger';
 
@@ -13,6 +14,13 @@ import { logError, logSuccess } from '../utils/logger';
 async function main() {
   const total = await exportarDevocionais();
   logSuccess(`${total} devocionais em prisma/dados/devocionais.json`, 'devocional');
+
+  // Junto de propósito: o livro montado é trabalho humano e se perderia num
+  // banco novo, enquanto os devocionais voltariam pelo arquivo e as resenhas
+  // pela ingestão. Exportar um sem o outro deixaria produção com as páginas
+  // soltas e nenhum mês montado.
+  const paginas = await exportarCuradoria();
+  logSuccess(`${paginas} páginas do livro em prisma/dados/curadoria.json`, 'livro');
 }
 
 main()
