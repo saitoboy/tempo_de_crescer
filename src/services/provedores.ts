@@ -49,6 +49,26 @@ export type Resultado = {
 const ESGOTADA = [401, 402, 403, 429];
 
 /**
+ * O limite que de fato manda: **200.000 tokens por dia, por chave**.
+ *
+ * Isto não aparece em cabeçalho nenhum. `x-ratelimit-limit-tokens: 8000` é o
+ * teto por MINUTO, e ele fica cheio mesmo com a cota diária no fim — foi o que
+ * me fez medir "chave saudável" três vezes enquanto o lote não escrevia nada.
+ * Só o corpo do 429 conta a verdade:
+ *
+ *     on tokens per day (TPD): Limit 200000, Used 197583, Requested 2873
+ *
+ * A ~4.500 tokens por devocional, isso dá **~44 por chave por dia**. Onze
+ * chaves, ~480 por dia. Chave nova soma 44 páginas diárias, e nada mais.
+ */
+const POR_DIA = /tokens per day|TPD/i;
+
+/** Distingue "espere um minuto" de "volte amanhã". */
+export function eCotaDiaria(motivo: string): boolean {
+  return POR_DIA.test(motivo);
+}
+
+/**
  * O modo JSON estrito fica **desligado** por padrão.
  *
  * Parece o caminho óbvio — `response_format: json_object` obriga o modelo a
@@ -65,13 +85,18 @@ const ESGOTADA = [401, 402, 403, 429];
 const jsonEstrito = process.env.GROQ_JSON_ESTRITO === 'true';
 
 /**
- * Quanto esperar quando **todas** as chaves esgotam.
+ * Quantas vezes sondar as chaves antes de desistir do item, e o intervalo.
  *
- * O limite da Groq é por minuto (TPM), não por dia: chave esgotada volta
- * sozinha. Num lote longo, parar seria desistir de algo que se resolve
- * esperando — mas esperar sem teto esconderia uma conta de fato bloqueada.
+ * Curto e repetido de propósito. O `retry-after` da Groq promete minutos, mas
+ * as chaves voltam antes e em ordens diferentes — cada uma é de uma organização
+ * própria. Esperar o número anunciado parava o lote com metade das chaves já
+ * boas; sondar de vinte em vinte segundos acha a janela assim que ela abre.
+ *
+ * Quatro rodadas dão pouco mais de um minuto de insistência. Passou disso, o
+ * item volta para a fila e a execução seguinte o pega — nada se perde.
  */
-const ESPERA_MS = 65_000;
+const RODADAS = 4;
+const ESPERA_ENTRE_RODADAS_MS = 20_000;
 
 /**
  * Baixa, para o texto não variar a cada tentativa mais do que o necessário.
@@ -125,6 +150,28 @@ export function provedoresDoAmbiente(): Provedor[] {
 /** Mostra só o suficiente para identificar a chave no log, nunca o valor. */
 function apelido(chave: string): string {
   return `${chave.slice(0, 7)}…${chave.slice(-4)}`;
+}
+
+/**
+ * Por quanto tempo o provedor pediu para esperar. Só para o log.
+ *
+ * **O 429 não vem do saldo da chave.** Medido: uma chave levou 429 na primeira
+ * requisição com `x-ratelimit-remaining-tokens: 8000` — cheia — e
+ * `retry-after: 184`. Segundos depois, um pedido pequeno passou nela e nas
+ * outras dez. O provedor limita a **rajada**, não o saldo.
+ *
+ * E o número é conservador demais para decidir com ele. Cheguei a pular chave
+ * com `retry-after` pendente e o lote parou por minutos com metade das chaves
+ * já boas — 6 de 11 aceitavam pedido de tamanho real enquanto ele dormia. Um
+ * 429 custa 200 ms; pular uma chave que já voltou custa o item inteiro. Por
+ * isso o rodízio não pula ninguém.
+ *
+ * Cada chave é uma organização própria — onze chaves, onze `org_` distintos —
+ * então somam capacidade de verdade, e voltam em ordens diferentes.
+ */
+function segundosPedidos(resposta: Response): string {
+  const pedido = Number(resposta.headers.get('retry-after'));
+  return Number.isFinite(pedido) && pedido > 0 ? `, pede ${pedido}s` : '';
 }
 
 async function pedirA(
@@ -191,18 +238,32 @@ export async function escrever(
 ): Promise<Resultado> {
   if (modelo) provedores = provedores.map((p) => ({ ...p, modelo }));
 
-  // Uma passada; se todas as chaves esgotarem, espera a janela do minuto virar
-  // e tenta de novo. Duas rodadas, não infinitas: conta bloqueada de verdade
-  // precisa aparecer como erro, não virar espera eterna.
-  try {
-    return await umaPassada(provedores, prompt, limiteMs);
-  } catch (e) {
-    if (!(e instanceof TodasEsgotadas)) throw e;
+  // Insiste algumas vezes, sondando de novo em vez de confiar no `retry-after`.
+  //
+  // As chaves voltam antes do que o cabeçalho promete, e voltam **em ordens
+  // diferentes** — cada uma é de uma organização própria. Esperar o número
+  // anunciado parava o lote por minutos com metade das chaves já boas: numa
+  // medição, 6 de 11 aceitavam pedido de tamanho real enquanto o lote dormia
+  // 200 segundos.
+  //
+  // Espera curta e repetida acha a janela; espera longa e certeira, não.
+  for (let rodada = 1; rodada <= RODADAS; rodada++) {
+    try {
+      return await umaPassada(provedores, prompt, limiteMs);
+    } catch (e) {
+      if (!(e instanceof TodasEsgotadas) || rodada === RODADAS) throw e;
 
-    logInfo(`todas as chaves no limite, esperando ${ESPERA_MS / 1000}s`, 'devocional');
-    await new Promise((r) => setTimeout(r, ESPERA_MS));
-    return umaPassada(provedores, prompt, limiteMs);
+      logInfo(
+        `todas recusaram, sondando de novo em ${ESPERA_ENTRE_RODADAS_MS / 1000}s ` +
+          `(${rodada}/${RODADAS - 1})`,
+        'devocional',
+      );
+      await new Promise((r) => setTimeout(r, ESPERA_ENTRE_RODADAS_MS));
+    }
   }
+
+  // Inalcançável: o laço acima ou devolve ou lança.
+  throw new TodasEsgotadas('nenhuma chave atendeu');
 }
 
 /** Só o esgotamento merece nova rodada; erro de pedido, não. */
@@ -226,6 +287,7 @@ async function umaPassada(
     for (const chave of provedor.chaves) {
       const origem = `${provedor.nome}/${provedor.modelo} (${apelido(chave)})`;
 
+
       let resposta: Response;
       let corpo: string;
       try {
@@ -239,7 +301,7 @@ async function umaPassada(
       }
 
       if (ESGOTADA.includes(resposta.status)) {
-        esgotadas.push(`${origem} → ${resposta.status}`);
+        esgotadas.push(`${origem} → ${resposta.status}${segundosPedidos(resposta)}`);
         continue;
       }
 

@@ -16,7 +16,7 @@ import {
 } from '../services/escrita';
 import { logError, logInfo, logSuccess, logWarning } from '../utils/logger';
 import { urlDoProxy } from '../utils/proxy';
-import { provedoresDoAmbiente } from '../services/provedores';
+import { eCotaDiaria, provedoresDoAmbiente } from '../services/provedores';
 
 /**
  * Escreve os devocionais.
@@ -68,7 +68,7 @@ const PREGADOR_DO_LIVRO = 'Nélio Monteiro';
 
 /** Limite de tokens por minuto de cada chave da Groq, do plano gratuito. */
 const TOKENS_POR_MINUTO_POR_CHAVE = 8000;
-/** Medido ao longo de centenas de gerações: ~2.900 de entrada e ~1.400 de saída. */
+/** Chute inicial, só para o primeiro item; depois vale o medido. */
 const CUSTO_DE_UM_DEVOCIONAL = 4300;
 /** Quanto a chamada leva, para descontar da pausa. */
 const GERACAO_TIPICA_MS = 3500;
@@ -383,6 +383,9 @@ async function main() {
     // uns oitenta itens e depois as cinco chaves caem juntas em 429, a espera
     // de 65s não resolve porque a demanda continua acima da oferta, e o lote
     // aborta por três falhas seguidas. Foi o que aconteceu no item 85 de 626.
+    // Quem segura o ritmo é o `retry-after` do provedor, dentro do rodízio:
+    // chave que levou 429 fica de castigo pelo tempo que ela mesma pediu.
+    // A pausa aqui é só o piso configurável, para quem rodar dois lotes.
     if (i > 0 && pausa > 0) await new Promise((r) => setTimeout(r, pausa));
 
     logInfo(`[${i + 1}/${fila.length}] ${resenha.titulo.slice(0, 55)}`, 'devocional');
@@ -408,6 +411,15 @@ async function main() {
         logError(
           `cota da assinatura esgotada — o lote parou aqui. ` +
             `Os ${feitos} já gravados ficam; a fila retoma sozinha depois do reset.`,
+          'devocional',
+        );
+        break;
+      }
+
+      if (eCotaDiaria(motivo)) {
+        logError(
+          `cota diária da Groq esgotada — são 200.000 tokens por dia em cada chave, ` +
+            `uns 44 devocionais. Os ${feitos} gravados ficam e a fila retoma amanhã.`,
           'devocional',
         );
         break;
