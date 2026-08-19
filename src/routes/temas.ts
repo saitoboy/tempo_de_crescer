@@ -6,6 +6,7 @@ import { assincrono } from '../middlewares/erros';
 import {
   adicionarPagina,
   listarTemas,
+  preencherMes,
   removerPagina,
   reordenar,
   sugerir,
@@ -115,6 +116,23 @@ rotasTemas.delete(
       .parse(req.params);
     await removerPagina(id, devocionalId);
     res.json({ status: 'ok' });
+  }),
+);
+
+/**
+ * Preenche o mês inteiro de uma vez.
+ *
+ * Escolher 31 devocionais de um em um é trabalho que a máquina faz igual — a
+ * ordem sugerida já é a de afinidade. O ganho da curadoria está em trocar o que
+ * não serve, não em repetir trinta vezes o que serve.
+ */
+rotasTemas.post(
+  '/:id/preencher',
+  exigirToken,
+  assincrono(async (req, res) => {
+    const { id } = z.object({ id: z.uuid() }).parse(req.params);
+    const { limite, ...filtro } = filtroDeEscolha.parse(req.query);
+    res.json(await preencherMes(id, filtro));
   }),
 );
 

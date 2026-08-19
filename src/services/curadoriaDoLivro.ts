@@ -323,6 +323,91 @@ export async function removerPagina(temaMesId: string, devocionalId: string) {
 }
 
 /**
+ * Quantos dias tem o mês. É quantas páginas ele comporta.
+ *
+ * `new Date(ano, mes, 0)` devolve o último dia do mês anterior ao índice, e
+ * como `mes` é 1-based isso dá o último dia do próprio mês. Resolve bissexto
+ * sozinho.
+ */
+function diasDoMes(ano: number, mes: number): number {
+  return new Date(ano, mes, 0).getDate();
+}
+
+export type Preenchimento = {
+  adicionados: number;
+  jaEstavam: number;
+  faltaram: number;
+  /** Quantas páginas o mês tem agora, de quantas cabem. */
+  paginas: number;
+  dias: number;
+};
+
+/**
+ * Preenche o mês de uma vez com as melhores sugestões.
+ *
+ * Escolher 31 devocionais de um em um é trabalho que a máquina faz igual: a
+ * ordem sugerida já é a de afinidade, e é dela que quem edita partiria de
+ * qualquer forma. O ganho da curadoria está em **trocar** o que não serve, não
+ * em digitar trinta vezes o que serve.
+ *
+ * Respeita o que já está escolhido — acrescenta ao fim, sem repetir e sem
+ * reordenar o que a pessoa já ajustou. E não passa dos dias do mês: página a
+ * mais não tem dia para ocupar.
+ *
+ * `semantica` decide de onde vêm os candidatos, igual a `sugerir()`: por
+ * doutrina nos meses que têm uma, por semelhança nos que não têm.
+ */
+export async function preencherMes(
+  temaMesId: string,
+  filtro: Omit<FiltroDeEscolha, 'limite'> = {},
+): Promise<Preenchimento> {
+  const tema = await connection.temaMes.findUnique({
+    where: { id: temaMesId },
+    select: { id: true, ano: true, mes: true, doutrinaId: true },
+  });
+  if (!tema) throw new NotFoundError(`Tema ${temaMesId} não encontrado`);
+
+  const dias = diasDoMes(tema.ano, tema.mes);
+
+  const jaEscolhidos = await connection.paginaLivro.findMany({
+    where: { temaMesId },
+    orderBy: { ordem: 'desc' },
+    select: { devocionalId: true, ordem: true },
+  });
+
+  const cabem = dias - jaEscolhidos.length;
+  if (cabem <= 0) {
+    return { adicionados: 0, jaEstavam: jaEscolhidos.length, faltaram: 0, paginas: jaEscolhidos.length, dias };
+  }
+
+  // Pede mais do que cabe: parte das sugestões já está escolhida e sairá fora.
+  const candidatos = await sugerir(temaMesId, {
+    ...filtro,
+    // Sem doutrina no tema, a semelhança é o único critério que sobra.
+    semantica: filtro.semantica ?? !tema.doutrinaId,
+    limite: dias * 2,
+  });
+
+  const presentes = new Set(jaEscolhidos.map((p) => p.devocionalId));
+  const novos = candidatos.filter((c) => !presentes.has(c.id)).slice(0, cabem);
+
+  // Numeração contínua a partir da última: `@@unique([temaMesId, ordem])`
+  // rejeitaria repetida, e criar um a um em laço custaria uma viagem por item.
+  let ordem = jaEscolhidos[0]?.ordem ?? 0;
+  await connection.paginaLivro.createMany({
+    data: novos.map((c) => ({ temaMesId, devocionalId: c.id, ordem: ++ordem })),
+  });
+
+  return {
+    adicionados: novos.length,
+    jaEstavam: jaEscolhidos.length,
+    faltaram: cabem - novos.length,
+    paginas: jaEscolhidos.length + novos.length,
+    dias,
+  };
+}
+
+/**
  * Reordena o mês inteiro de uma vez.
  *
  * A gravação é em duas etapas, com as posições primeiro em negativo: a ordem é

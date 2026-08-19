@@ -502,3 +502,12 @@ const chaveDeApi = z.object({
 
 export const listaDeChaves = z.array(chaveDeApi);
 export const chaveGuardada = chaveDeApi;
+
+/** O que `POST /temas/:id/preencher` devolve. */
+export const mesPreenchido = z.object({
+  adicionados: z.int(),
+  jaEstavam: z.int().meta({ description: 'O que a curadoria já tinha escolhido, e não foi tocado' }),
+  faltaram: z.int().meta({ description: 'Vagas que sobraram por falta de candidato' }),
+  paginas: z.int(),
+  dias: z.int().meta({ description: 'Quantas páginas o mês comporta — um por dia' }),
+});

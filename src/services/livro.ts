@@ -132,9 +132,27 @@ export async function paginasDoTema(
 ): Promise<PaginaDoLivro[]> {
   const tema = await connection.temaMes.findUnique({
     where: { id: temaMesId },
-    select: { tema: true, descricao: true },
+    select: {
+      tema: true,
+      descricao: true,
+      paginas: {
+        orderBy: { ordem: 'asc' },
+        select: { devocional: { select: SELECAO } },
+      },
+    },
   });
   if (!tema) throw new NotFoundError(`Tema ${temaMesId} não encontrado`);
+
+  // **A escolha da curadoria manda.** Havendo página escolhida, é ela que sai,
+  // na ordem definida — a semelhança fica de reserva para o mês ainda vazio.
+  //
+  // Não era assim, e o motivo envelheceu: quando isto foi escrito a curadoria
+  // não existia, então "as páginas de Março" só podiam ser as mais parecidas
+  // com o tema. Agora o pastor escolhe, e imprimir sugestão em cima da escolha
+  // dele é ignorar o trabalho que ele acabou de fazer.
+  if (tema.paginas.length > 0) {
+    return tema.paginas.map((p) => montar(p.devocional));
+  }
 
   const consulta = await comoConsulta([tema.tema, tema.descricao].filter(Boolean).join('. '));
 

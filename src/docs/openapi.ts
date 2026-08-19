@@ -261,6 +261,27 @@ export const especificacao = {
       },
     },
 
+    '/temas/{id}/preencher': {
+      post: {
+        tags: ['Temas do mês'],
+        summary: 'Preenche o mês de uma vez com as melhores sugestões',
+        description: [
+          'Escolher 31 devocionais de um em um é trabalho que a máquina faz',
+          'igual: a ordem sugerida já é a de afinidade. O ganho da curadoria',
+          'está em **trocar** o que não serve, não em repetir trinta vezes o',
+          'que serve.',
+          '',
+          'Respeita o que já está escolhido — acrescenta ao fim, sem repetir e',
+          'sem reordenar o que alguém já ajustou. E não passa dos dias do mês.',
+          '',
+          'Aceita os mesmos filtros de `/sugestoes`.',
+        ].join('\n'),
+        security: protegida,
+        parameters: [idNaRota, ...parametrosDeQuery(filtroDeEscolha)],
+        responses: { 200: respostaJson('Preenchido', R.mesPreenchido), ...ERROS_DE_ESCRITA },
+      },
+    },
+
     '/temas/{id}/paginas': {
       post: {
         tags: ['Temas do mês'],
