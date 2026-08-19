@@ -377,3 +377,56 @@ export const temaSalvo = temaResumido.partial().extend({ id: z.uuid() });
 
 /** Resposta de operação que não devolve corpo, como remover página do mês. */
 export const confirmacao = z.object({ status: z.literal('ok') });
+
+// ──────────────────────────────────────────────────────────────────────────────
+// REVISÃO DOS DEVOCIONAIS
+// ──────────────────────────────────────────────────────────────────────────────
+
+/** O que a conferência contra a ACF achou. Lista vazia é aprovação. */
+const suspeita = z.object({
+  trecho: z.string(),
+  motivo: z.enum(['nao-esta-na-escritura', 'referencia-nao-existe']).meta({
+    description:
+      'A conferência é literal, contra a ACF. Ela NÃO distingue invenção de citação em outra tradução — os números se cruzam — então é sinal para o revisor olhar, não veredito.',
+  }),
+});
+
+export const listaDeDevocionais = paginado(
+  'devocionais',
+  z.object({
+    id: z.uuid(),
+    titulo: z.string(),
+    referencia: z.string().nullable(),
+    status: z.enum(['GERADO', 'REVISADO']),
+    modelo: z.string().nullable(),
+    geradoEm: dataHora,
+    resenhaId: z.uuid(),
+    resenha: z.string(),
+    dataPregacao: dataOuNulo,
+    temQrcode: z.boolean().meta({ description: 'Sem QR a página sai sem o quadrado — triagem, não defeito' }),
+  }),
+);
+
+export const devocionalCompleto = devocional.extend({
+  suspeitas: z.array(suspeita),
+  resenha: z.object({
+    id: z.uuid(),
+    titulo: z.string(),
+    dataPregacao: dataOuNulo,
+    conteudoLimpo: z.string().meta({ description: 'A pregação de origem, para conferir o que foi dito' }),
+    pregador: z.object({ nomeCanonico: z.string() }).nullable(),
+    culto: z.object({ youtubeUrl: z.url().nullable(), qrcodeSvg: z.string().nullable() }).nullable(),
+  }),
+});
+
+export const devocionalCorrigido = z.object({
+  id: z.uuid(),
+  status: z.enum(['GERADO', 'REVISADO']),
+  suspeitas: z.array(suspeita),
+});
+
+export const devocionalAprovado = z.object({
+  id: z.uuid(),
+  titulo: z.string(),
+  status: z.enum(['GERADO', 'REVISADO']),
+});

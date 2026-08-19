@@ -12,6 +12,7 @@ import { tratarErros } from './middlewares/erros';
 import { rotasMeta } from './routes/meta';
 import { rotasAnalise } from './routes/analise';
 import { rotasCultos } from './routes/cultos';
+import { rotasDevocionais } from './routes/devocionais';
 import { rotasLivro } from './routes/livro';
 import { rotasPregadores } from './routes/pregadores';
 import { rotasResenhas } from './routes/resenhas';
@@ -87,6 +88,7 @@ app.use(`${BASE}/cultos`, rotasCultos);
 app.use(`${BASE}/livro`, rotasLivro);
 app.use(`${BASE}/temas`, exigirLeitura, rotasTemas);
 app.use(`${BASE}/resenhas`, exigirLeitura, rotasResenhas);
+app.use(`${BASE}/devocionais`, exigirLeitura, rotasDevocionais);
 app.use(`${BASE}/pregadores`, exigirLeitura, rotasPregadores);
 
 app.get(`${BASE}/openapi.json`, (_req: Request, res: Response) => res.json(especificacao));
