@@ -380,16 +380,35 @@ export async function preencherMes(
     return { adicionados: 0, jaEstavam: jaEscolhidos.length, faltaram: 0, paginas: jaEscolhidos.length, dias };
   }
 
-  // Pede mais do que cabe: parte das sugestões já está escolhida e sairá fora.
+  // O pedido cresce com o que o ano já consumiu.
+  //
+  // Era `dias * 2`, e isso quebrava ao preencher os doze meses em sequência:
+  // os primeiros levavam os melhores, e quando chegava em Dezembro os 62
+  // candidatos pedidos já estavam todos em outro mês — o mês fechava com
+  // **zero**. Somar o que já foi usado garante que sobre gente nova para
+  // escolher.
+  const usadosNoAno = await connection.paginaLivro.count({
+    where: { temaMes: { ano: tema.ano } },
+  });
+
   const candidatos = await sugerir(temaMesId, {
     ...filtro,
     // Sem doutrina no tema, a semelhança é o único critério que sobra.
     semantica: filtro.semantica ?? !tema.doutrinaId,
-    limite: dias * 2,
+    limite: dias * 2 + usadosNoAno,
   });
 
   const presentes = new Set(jaEscolhidos.map((p) => p.devocionalId));
-  const novos = candidatos.filter((c) => !presentes.has(c.id)).slice(0, cabem);
+
+  // **Quem já está em outro mês do ano fica de fora.**
+  //
+  // `sugerir` os devolve marcados de propósito — quem edita precisa saber que a
+  // página existe e onde está. Mas preencher em massa é outra coisa: aceitar o
+  // marcado imprimiria a mesma página duas vezes no mesmo livro, e ninguém
+  // perceberia até a diagramação. Trocar de mês continua possível na mão.
+  const novos = candidatos
+    .filter((c) => !presentes.has(c.id) && !c.jaUsadoEm)
+    .slice(0, cabem);
 
   // Numeração contínua a partir da última: `@@unique([temaMesId, ordem])`
   // rejeitaria repetida, e criar um a um em laço custaria uma viagem por item.
