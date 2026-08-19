@@ -326,21 +326,50 @@ export const paginasDoLivro = z.array(paginaDoLivro);
 // TEMAS DO MÊS
 // ──────────────────────────────────────────────────────────────────────────────
 
+/**
+ * O que `listarTemas` devolve de verdade.
+ *
+ * Estava errado em três campos — dizia `paginas: number`, omitia `nomeDoMes` e
+ * anunciava um `doutrina.id` que a consulta não trazia. Quem integrou pelo
+ * documento bateu de frente com a realidade. É o risco que o comentário no topo
+ * deste arquivo já anunciava: esquema de saída é descrição, e descrição mente
+ * quando o `select` muda e ninguém volta aqui.
+ *
+ * O `doutrina.id` passou a existir de verdade, porque o front precisa dele para
+ * o PATCH de `doutrinaId` — não fazia sentido documentar sem enviar.
+ */
+const doutrinaDoTema = z.object({ id: z.uuid(), numero: z.int(), nome: z.string() }).nullable();
+
 const temaResumido = z.object({
   id: z.uuid(),
   ano: z.int(),
   mes: z.int(),
+  nomeDoMes: z.string().meta({ description: 'Janeiro, Fevereiro… já pronto para a tela' }),
   tema: z.string(),
   descricao: z.string().nullable(),
   versiculo: z.string().nullable(),
   referencia: z.string().nullable(),
-  doutrina: z.object({ id: z.uuid(), numero: z.int(), nome: z.string() }).nullable(),
-  paginas: z.int().meta({ description: 'Quantos devocionais já foram escolhidos para o mês' }),
+  doutrina: doutrinaDoTema,
+  devocionais: z.int().meta({ description: 'Quantos já foram escolhidos para o mês' }),
 });
 
 export const listaDeTemas = z.array(temaResumido);
 
-export const temaCompleto = temaResumido.extend({
+/**
+ * `verTema` vem do `include` do Prisma, então traz as colunas cruas do TemaMes
+ * (`doutrinaId`, `criadoEm`) além do que a tela usa — e `paginas` aqui é a
+ * lista, não a contagem.
+ */
+export const temaCompleto = z.object({
+  id: z.uuid(),
+  ano: z.int(),
+  mes: z.int(),
+  nomeDoMes: z.string(),
+  tema: z.string(),
+  descricao: z.string().nullable(),
+  versiculo: z.string().nullable(),
+  referencia: z.string().nullable(),
+  doutrina: doutrinaDoTema,
   paginas: z.array(
     z.object({
       ordem: z.int(),

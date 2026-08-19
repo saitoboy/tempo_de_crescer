@@ -21,7 +21,7 @@ export async function listarTemas(ano?: number) {
     where: ano ? { ano } : {},
     orderBy: [{ ano: 'asc' }, { mes: 'asc' }],
     include: {
-      doutrina: { select: { numero: true, nome: true } },
+      doutrina: { select: { id: true, numero: true, nome: true } },
       _count: { select: { paginas: true } },
     },
   });
@@ -45,7 +45,7 @@ export async function verTema(id: string) {
   const tema = await connection.temaMes.findUnique({
     where: { id },
     include: {
-      doutrina: { select: { numero: true, nome: true } },
+      doutrina: { select: { id: true, numero: true, nome: true } },
       paginas: {
         orderBy: { ordem: 'asc' },
         include: {
@@ -312,9 +312,13 @@ export async function removerPagina(temaMesId: string, devocionalId: string) {
 
   await connection.$transaction([
     connection.paginaLivro.delete({ where: { id: pagina.id } }),
+    // Sem `::uuid`. A coluna é **text**, não uuid: o id é `String` no schema,
+    // e o Prisma mapeia isso para TEXT. O cast fazia o Postgres comparar
+    // `text = uuid`, que não existe como operador — erro 42883, e a rota
+    // devolvia 500 sem nunca conseguir remover a página.
     connection.$executeRaw`
       UPDATE pagina_livro SET ordem = ordem - 1
-      WHERE "temaMesId" = ${temaMesId}::uuid AND ordem > ${pagina.ordem}`,
+      WHERE "temaMesId" = ${temaMesId} AND ordem > ${pagina.ordem}`,
   ]);
 }
 

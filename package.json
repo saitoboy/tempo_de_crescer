@@ -29,7 +29,8 @@
     "exportar:devocionais": "tsx src/scripts/exportarDevocionais.ts",
     "comparar": "tsx src/scripts/compararModelos.ts",
     "estado": "tsx src/scripts/estado.ts",
-    "regerar": "tsx src/scripts/regerar.ts"
+    "regerar": "tsx src/scripts/regerar.ts",
+    "conferir:contrato": "tsx src/scripts/conferirContrato.ts"
   },
   "repository": {
     "type": "git",
