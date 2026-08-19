@@ -9,7 +9,10 @@ import { listarDevocionais } from '../services/revisaoDeDevocional';
 import { listarCultos, listarResenhas, verResenha } from '../services/acervo';
 import { listarChaves } from '../services/chaves';
 import { listarPendentes } from '../services/curadoria';
-import { coberturaBiblica, distribuicaoPorDoutrina, panorama } from '../services/analise';
+import { coberturaBiblica, distribuicaoPorDoutrina, evolucaoPorAno, panorama, perfilDosPregadores } from '../services/analise';
+import { vocabulario } from '../routes/meta';
+import { listarPregadores } from '../routes/pregadores';
+import { sugerir } from '../services/curadoriaDoLivro';
 import { logError, logInfo, logSuccess } from '../utils/logger';
 
 /**
@@ -96,6 +99,31 @@ async function main() {
       rota: 'GET /analise/biblia',
       esquema: R.cobertura,
       obter: () => coberturaBiblica(),
+    },
+    {
+      rota: 'GET /analise/evolucao',
+      esquema: R.evolucao,
+      obter: () => evolucaoPorAno(),
+    },
+    {
+      rota: 'GET /analise/pregadores',
+      esquema: R.perfilDePregadores,
+      obter: () => perfilDosPregadores(5),
+    },
+    {
+      rota: 'GET /meta',
+      esquema: R.meta,
+      obter: () => vocabulario(),
+    },
+    {
+      rota: 'GET /pregadores',
+      esquema: R.listaDePregadores,
+      obter: () => listarPregadores(),
+    },
+    {
+      rota: 'GET /temas/:id/sugestoes',
+      esquema: R.candidatos,
+      obter: async () => sugerir((await listarTemas(2027))[0].id, { limite: 3 }),
     },
   ];
 

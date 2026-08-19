@@ -79,25 +79,30 @@ function opcoes(enumerado: Record<string, string>) {
   }));
 }
 
+/** O vocabulário montado, para a rota e para o conferidor de contrato. */
+export async function vocabulario() {
+  const doutrinas = await connection.doutrina.findMany({
+    orderBy: { numero: 'asc' },
+    select: { id: true, numero: true, nome: true, perguntaCentral: true },
+  });
+
+  return {
+    turnos: opcoes(Turno),
+    naturezas: opcoes(NaturezaEvento),
+    origensDeData: opcoes(OrigemData),
+    origensDePregador: opcoes(OrigemPregador),
+    tiposDePregador: opcoes(TipoPregador),
+    statusDeResenha: opcoes(StatusResenha),
+    statusDeDevocional: opcoes(StatusDevocional),
+    papeisDeDoutrina: opcoes(PapelDoutrina),
+    papeisDeUsuario: opcoes(Papel),
+    doutrinas,
+  };
+}
+
 rotasMeta.get('/', async (_req, res, next) => {
   try {
-    const doutrinas = await connection.doutrina.findMany({
-      orderBy: { numero: 'asc' },
-      select: { id: true, numero: true, nome: true, perguntaCentral: true },
-    });
-
-    res.json({
-      turnos: opcoes(Turno),
-      naturezas: opcoes(NaturezaEvento),
-      origensDeData: opcoes(OrigemData),
-      origensDePregador: opcoes(OrigemPregador),
-      tiposDePregador: opcoes(TipoPregador),
-      statusDeResenha: opcoes(StatusResenha),
-      statusDeDevocional: opcoes(StatusDevocional),
-      papeisDeDoutrina: opcoes(PapelDoutrina),
-      papeisDeUsuario: opcoes(Papel),
-      doutrinas,
-    });
+    res.json(await vocabulario());
   } catch (e) {
     next(e);
   }
