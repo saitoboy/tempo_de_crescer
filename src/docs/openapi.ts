@@ -7,6 +7,7 @@ import { fusaoPregador, novoPregador } from '../routes/pregadores';
 import { correcaoResenha, filtroListagem, filtroPendentes } from '../routes/resenhas';
 import { filtroDeEscolha, filtroTemas, novaOrdem, novoTema, paginaEscolhida } from '../routes/temas';
 import { filtroDevocionais } from '../routes/devocionais';
+import { chaveNova, situacaoDaChave } from '../routes/chaves';
 import { correcaoDeDevocional } from '../services/revisaoDeDevocional';
 import * as R from './respostas';
 
@@ -150,6 +151,7 @@ export const especificacao = {
     { name: 'Temas do mês', description: 'A curadoria: qual devocional entra em qual mês do livro' },
     { name: 'Meta', description: 'O vocabulário do domínio' },
     { name: 'Devocionais', description: 'A revisão: o pastor corrige no papel, alguém digita aqui' },
+    { name: 'Chaves', description: 'As chaves de API dos provedores de modelo' },
   ],
   components: {
     securitySchemes: {
@@ -291,6 +293,54 @@ export const especificacao = {
         parameters: [idNaRota],
         requestBody: corpo(novaOrdem),
         responses: { 200: respostaJson('Reordenado', R.temaCompleto), ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/chaves': {
+      get: {
+        tags: ['Chaves'],
+        summary: 'As chaves cadastradas',
+        description:
+          'O valor da chave NUNCA é devolvido — só o rótulo e os quatro últimos caracteres. Ela entra uma vez e não sai mais.',
+        security: comLogin,
+        responses: { 200: respostaJson('As chaves', R.listaDeChaves), ...SEM_SESSAO },
+      },
+      post: {
+        tags: ['Chaves'],
+        summary: 'Cadastra uma chave',
+        description: [
+          'Existe porque a cota diária da Groq é de 200.000 tokens por chave —',
+          'uns 44 devocionais — então acrescentar chave é rotina, e fazer isso',
+          'pelo `.env` custa um redeploy a cada vez.',
+          '',
+          'A chave é cifrada com AES-256-GCM antes de gravar. Exige',
+          '`CHAVES_SEGREDO` no ambiente do servidor.',
+          '',
+          'Vale em até um minuto, sem reiniciar: é o tempo do cache.',
+        ].join('\n'),
+        security: protegida,
+        requestBody: corpo(chaveNova),
+        responses: { 201: respostaJson('Cadastrada', R.chaveGuardada), ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/chaves/{id}': {
+      patch: {
+        tags: ['Chaves'],
+        summary: 'Liga e desliga sem apagar',
+        description:
+          'Chave que estourou a cota do dia não precisa ser removida: desligar preserva o rótulo e o histórico de erro, que é o que ajuda a entender qual conta está rendendo.',
+        security: protegida,
+        parameters: [idNaRota],
+        requestBody: corpo(situacaoDaChave),
+        responses: { 200: respostaJson('Alterada', R.chaveGuardada), ...ERROS_DE_ESCRITA },
+      },
+      delete: {
+        tags: ['Chaves'],
+        summary: 'Remove a chave',
+        security: protegida,
+        parameters: [idNaRota],
+        responses: { 200: respostaJson('Removida', R.confirmacao), ...ERROS_DE_ESCRITA },
       },
     },
 

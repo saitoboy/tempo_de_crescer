@@ -14,7 +14,7 @@ import {
   type ResenhaParaDevocional,
 } from '../services/devocional';
 import { carregarEscritura, extrairCitacoes, medirCitacao } from '../services/fidelidade';
-import { escrever, provedoresDoAmbiente } from '../services/provedores';
+import { escrever, provedores as provedoresDisponiveis } from '../services/provedores';
 import { comoDocumento, semelhanca } from '../services/vetores';
 import { logError, logInfo, logSuccess } from '../utils/logger';
 
@@ -110,7 +110,7 @@ async function main() {
   const quantas = Number(process.argv[2]) || QUANTAS_PADRAO;
   const modelos = process.argv[3]?.split(',').map((m) => m.trim()) ?? CANDIDATOS;
 
-  const provedores = provedoresDoAmbiente();
+  const provedores = await provedoresDisponiveis();
   if (provedores.length === 0) {
     throw new Error('Sem GROQ_API_KEYS ou NVIDIA_API_KEYS no .env');
   }

@@ -1,3 +1,4 @@
+import { chavesGuardadas } from './chaves';
 import { aplicarProxy } from '../utils/proxy';
 import { logInfo, logWarning } from '../utils/logger';
 
@@ -114,6 +115,58 @@ const TEMPERATURA = 0.6;
  *     GROQ_API_KEYS=gsk_aaa,gsk_bbb,gsk_ccc
  *     NVIDIA_API_KEYS=nvapi-xxx
  */
+/**
+ * Os provedores prontos para uso: ambiente **mais** banco.
+ *
+ * As do banco vêm primeiro porque são as que alguém acabou de cadastrar pela
+ * tela — a intenção mais recente ganha a vez. As do ambiente ficam como
+ * partida: sem elas, um banco novo sobe sem chave nenhuma e não gera nada até
+ * alguém abrir a tela.
+ *
+ * Duplicata é removida: a mesma chave no `.env` e no banco seria tentada duas
+ * vezes a cada volta, e um 429 nela contaria em dobro.
+ */
+export async function provedores(): Promise<Provedor[]> {
+  const doAmbiente = provedoresDoAmbiente();
+  const doBanco = await chavesGuardadas();
+
+  const porNome = new Map(doAmbiente.map((p) => [p.nome, p]));
+
+  for (const [provedor, chaves] of doBanco) {
+    const nome = provedor.toLowerCase();
+    const existente = porNome.get(nome);
+
+    if (existente) {
+      existente.chaves = [...new Set([...chaves, ...existente.chaves])];
+      continue;
+    }
+
+    porNome.set(nome, {
+      ...(nome === 'nvidia' ? MOLDE_NVIDIA : MOLDE_GROQ),
+      chaves,
+    });
+  }
+
+  return [...porNome.values()].filter((p) => p.chaves.length > 0);
+}
+
+const MOLDE_GROQ = {
+  nome: 'groq',
+  baseUrl: 'https://api.groq.com/openai/v1',
+  get modelo() {
+    return process.env.GROQ_MODELO || 'openai/gpt-oss-120b';
+  },
+  raciocinio: 'low' as const,
+};
+
+const MOLDE_NVIDIA = {
+  nome: 'nvidia',
+  baseUrl: 'https://integrate.api.nvidia.com/v1',
+  get modelo() {
+    return process.env.NVIDIA_MODELO || 'nvidia/nemotron-3-super-120b-a12b';
+  },
+};
+
 export function provedoresDoAmbiente(): Provedor[] {
   const lista = (nome: string) =>
     (process.env[nome] ?? '')

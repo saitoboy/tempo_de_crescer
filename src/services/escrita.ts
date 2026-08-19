@@ -10,7 +10,7 @@ import {
   type ResenhaParaDevocional,
 } from './devocional';
 import { comoCorrecaoDeFidelidade, conferirFidelidade } from './fidelidade';
-import { escrever as escreverPorApi, provedoresDoAmbiente } from './provedores';
+import { escrever as escreverPorApi, provedores as provedoresDisponiveis, type Provedor } from './provedores';
 import { logInfo, logSuccess, logWarning } from '../utils/logger';
 
 /**
@@ -51,7 +51,9 @@ export type Motor = {
   tentativas: number;
 };
 
-export function motorDeApi(provedores = provedoresDoAmbiente()): Motor {
+export async function motorDeApi(lista?: Provedor[]): Promise<Motor> {
+  const provedores = lista ?? (await provedoresDisponiveis());
+
   if (provedores.length === 0) {
     throw new Error('Nenhum provedor configurado — defina GROQ_API_KEYS ou NVIDIA_API_KEYS');
   }
@@ -204,8 +206,9 @@ export type ResultadoDaEscrita = {
 export async function escreverPendentes(
   limite: number,
   pregadorId?: string,
-  motor = motorDeApi(),
+  motor?: Motor,
 ): Promise<ResultadoDaEscrita> {
+  motor ??= await motorDeApi();
   const fila = await filaDeGeracao(limite, pregadorId);
   const resultado: ResultadoDaEscrita = { escritos: 0, falhas: [], entrada: 0, saida: 0 };
 

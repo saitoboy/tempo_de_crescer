@@ -74,7 +74,7 @@ async function main() {
     return;
   }
 
-  const motor = motorDeApi();
+  const motor = await motorDeApi();
   logInfo(`motor: ${motor.nome}`, 'devocional');
 
   const resultado: ResultadoDaEscrita = { escritos: 0, falhas: [], entrada: 0, saida: 0 };

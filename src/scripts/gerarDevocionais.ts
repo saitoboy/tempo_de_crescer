@@ -16,7 +16,7 @@ import {
 } from '../services/escrita';
 import { logError, logInfo, logSuccess, logWarning } from '../utils/logger';
 import { urlDoProxy } from '../utils/proxy';
-import { eCotaDiaria, provedoresDoAmbiente } from '../services/provedores';
+import { eCotaDiaria, provedores as provedoresDisponiveis } from '../services/provedores';
 
 /**
  * Escreve os devocionais.
@@ -322,10 +322,10 @@ async function main() {
 
   // Motor: API se houver chave configurada, CLI caso contrário. `--cli` força
   // o Claude mesmo com chaves no ambiente, para comparar os dois lado a lado.
-  const provedores = provedoresDoAmbiente();
+  const provedores = await provedoresDisponiveis();
   const motor =
     provedores.length > 0 && !process.argv.includes('--cli')
-      ? motorDeApi(provedores)
+      ? await motorDeApi(provedores)
       : motorDoClaude();
   logInfo(`motor: ${motor.nome}`, 'devocional');
 

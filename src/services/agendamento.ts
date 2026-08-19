@@ -4,7 +4,7 @@ import { logError, logInfo, logSuccess, logWarning } from '../utils/logger';
 import { FUSO } from '../utils/timezone';
 import { acharPregador, escreverPendentes, relatarGasto } from './escrita';
 import { ingerirNovos } from './ingestao';
-import { provedoresDoAmbiente } from './provedores';
+import { provedores } from './provedores';
 
 /**
  * Agendamento da ingestão incremental.
@@ -132,7 +132,7 @@ export async function executarEscrita(): Promise<void> {
  * Sem chave de provedor não adianta agendar: avisa e não agenda, em vez de
  * falhar de hora em hora no log.
  */
-export function agendarEscrita(): string | null {
+export async function agendarEscrita(): Promise<string | null> {
   const expressao = config.CRON_DEVOCIONAIS;
 
   if (expressao === 'off') return null;
@@ -141,7 +141,7 @@ export function agendarEscrita(): string | null {
     throw new Error(`CRON_DEVOCIONAIS inválido: "${expressao}"`);
   }
 
-  if (provedoresDoAmbiente().length === 0) {
+  if ((await provedores()).length === 0) {
     logWarning('CRON_DEVOCIONAIS ligado sem GROQ_API_KEYS — escrita não agendada', CONTEXTO);
     return null;
   }

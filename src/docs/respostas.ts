@@ -430,3 +430,29 @@ export const devocionalAprovado = z.object({
   titulo: z.string(),
   status: z.enum(['GERADO', 'REVISADO']),
 });
+
+// ──────────────────────────────────────────────────────────────────────────────
+// CHAVES DE API
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Note o que **não** está aqui: o valor da chave.
+ *
+ * Ela entra uma vez e não sai mais. A tela identifica pelo rótulo e pelos
+ * quatro últimos caracteres; quem precisar do valor de novo cadastra outra
+ * chave, que é mais barato que abrir um caminho de vazamento.
+ */
+const chaveDeApi = z.object({
+  id: z.uuid(),
+  provedor: z.enum(['GROQ', 'NVIDIA']),
+  rotulo: z.string().meta({ description: 'Como a pessoa reconhece esta chave. Não é segredo.' }),
+  final: z.string().meta({ description: 'Os quatro últimos caracteres, para identificar sem revelar' }),
+  ativa: z.boolean(),
+  ultimoErro: z.string().nullable(),
+  ultimoErroEm: dataOuNulo,
+  usadaEm: dataOuNulo,
+  criadaEm: dataHora,
+});
+
+export const listaDeChaves = z.array(chaveDeApi);
+export const chaveGuardada = chaveDeApi;

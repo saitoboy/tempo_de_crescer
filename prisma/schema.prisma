@@ -81,6 +81,11 @@ enum Papel {
   LIDER
 }
 
+enum Provedor {
+  GROQ
+  NVIDIA
+}
+
 enum Testamento {
   ANTIGO
   NOVO
@@ -417,4 +422,36 @@ model Devocional {
   atualizadoEm DateTime @updatedAt
 
   @@map("devocional")
+}
+
+/// Uma chave de API de provedor de modelo, guardada cifrada.
+///
+/// Existe porque a cota diária da Groq é de 200.000 tokens por chave, uns 44
+/// devocionais — trocar e acrescentar chave é rotina, e fazer isso pelo `.env`
+/// obriga a um redeploy a cada vez.
+///
+/// **O valor nunca sai daqui em claro.** É cifrado com AES-256-GCM antes de
+/// gravar e nenhuma rota o devolve: a API mostra só os últimos quatro dígitos,
+/// que bastam para a pessoa reconhecer qual chave é sem entregar nada.
+model ChaveDeApi {
+  id       String   @id @default(uuid())
+  provedor Provedor
+  /// Como a pessoa reconhece esta chave na tela. Não é segredo.
+  rotulo   String
+  /// O valor cifrado, no formato iv:tag:conteudo, tudo em base64.
+  segredo  String
+  /// Os quatro últimos caracteres, para identificar sem revelar.
+  final    String
+  ativa    Boolean  @default(true)
+
+  /// Quando o provedor recusou por último, e o que ele disse.
+  ultimoErro   String?
+  ultimoErroEm DateTime?
+  /// Quando esta chave atendeu por último.
+  usadaEm      DateTime?
+
+  criadaEm DateTime @default(now())
+
+  @@unique([provedor, final, rotulo])
+  @@map("chave_de_api")
 }
