@@ -16,6 +16,45 @@ export const MESES = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 
+/**
+ * De quem é o livro.
+ *
+ * O mesmo nome que o script de geração usa como padrão, e pela mesma razão: as
+ * pregações são de quem as pregou, e devocional escrito a partir da pregação de
+ * outra pessoa não pertence a este livro.
+ *
+ * Aqui isso vira **filtro padrão da curadoria**, não só da geração. Enquanto
+ * quase todo devocional era do Nélio, a falta do filtro não aparecia; com o
+ * acervo dos outros pregadores escrito, `preencherMes` passaria a puxar
+ * pregação do Pr. Gabriel para dentro do livro dele — e o erro só apareceria na
+ * diagramação, tarde demais.
+ *
+ * `todosOsPregadores` abre, para quando o livro não for este.
+ */
+export const PREGADOR_DO_LIVRO = 'Nélio Monteiro';
+
+/**
+ * O recorte por pregador que vale nesta escolha.
+ *
+ * Sem cache de propósito: é uma consulta por nome único, indexada, e um id de
+ * pregador guardado em memória sobreviveria a uma fusão de grafias e passaria a
+ * filtrar por alguém que não existe mais.
+ *
+ * Se o pregador do livro não estiver no cadastro, não filtra — banco recém
+ * semeado não pode devolver lista vazia sem explicação.
+ */
+async function recorteDePregador(filtro: FiltroDeEscolha): Promise<{ pregadorId?: string }> {
+  if (filtro.todosOsPregadores) return {};
+  if (filtro.pregadorId) return { pregadorId: filtro.pregadorId };
+
+  const doLivro = await connection.pregador.findFirst({
+    where: { nomeCanonico: { equals: PREGADOR_DO_LIVRO, mode: 'insensitive' } },
+    select: { id: true },
+  });
+
+  return doLivro ? { pregadorId: doLivro.id } : {};
+}
+
 export async function listarTemas(ano?: number) {
   const temas = await connection.temaMes.findMany({
     where: ano ? { ano } : {},
@@ -86,7 +125,10 @@ export type FiltroDeEscolha = {
   /** Sobrepõe a doutrina do tema. `nenhuma` ignora a classificação. */
   doutrinaId?: string;
   semDoutrina?: boolean;
+  /** Um pregador específico. Sem isto, vale o do livro. */
   pregadorId?: string;
+  /** Abre para o acervo inteiro, ignorando o pregador do livro. */
+  todosOsPregadores?: boolean;
   /** Ano da pregação, não do livro. */
   anoDaPregacao?: number;
   /** Busca no título do devocional e da resenha. */
@@ -126,7 +168,11 @@ export type Candidato = {
  * Sem filtro, parte da doutrina do tema — Escatologia puxa o que a
  * classificação achou de escatologia, do maior z-score para baixo, que são os
  * mais claramente sobre o assunto. Mas tudo é sobreponível: dá para pedir só
- * as pregações do Pr. Gabriel, ou de 2019, ou buscar por palavra no título.
+ * as pregações de 2019, ou buscar por palavra no título.
+ *
+ * **O pregador do livro já vem aplicado**, e é o único filtro que não parte de
+ * vazio. Ver `PREGADOR_DO_LIVRO`. `pregadorId` troca por outro;
+ * `todosOsPregadores` desliga.
  *
  * Os já escolhidos em outro mês do mesmo ano aparecem marcados em vez de
  * sumirem — quem edita precisa saber que a página existe e onde está, senão
@@ -145,7 +191,9 @@ export async function sugerir(temaMesId: string, filtro: FiltroDeEscolha): Promi
   });
   const onde = new Map(usadas.map((p) => [p.devocionalId, `${MESES[p.temaMes.mes - 1]} — ${p.temaMes.tema}`]));
 
-  if (filtro.semantica) return porSemelhanca(tema, filtro, onde);
+  const recorte = await recorteDePregador(filtro);
+
+  if (filtro.semantica) return porSemelhanca(tema, filtro, onde, recorte);
 
   // A doutrina do tema é o ponto de partida, não uma amarra.
   const doutrinaId = filtro.semDoutrina ? undefined : (filtro.doutrinaId ?? tema.doutrinaId ?? undefined);
@@ -153,7 +201,7 @@ export async function sugerir(temaMesId: string, filtro: FiltroDeEscolha): Promi
   const devocionais = await connection.devocional.findMany({
     where: {
       resenha: {
-        ...(filtro.pregadorId ? { pregadorId: filtro.pregadorId } : {}),
+        ...recorte,
         ...(filtro.anoDaPregacao ? { ano: filtro.anoDaPregacao } : {}),
         ...(doutrinaId ? { classificacoes: { some: { doutrinaId, papel: 'PRINCIPAL' } } } : {}),
       },
@@ -221,13 +269,14 @@ async function porSemelhanca(
   tema: { id: string; ano: number; tema: string; descricao: string | null },
   filtro: FiltroDeEscolha,
   onde: Map<string, string>,
+  recorte: { pregadorId?: string },
 ): Promise<Candidato[]> {
   const consulta = await comoConsulta([tema.tema, tema.descricao].filter(Boolean).join('. '));
 
   const comDevocional = await connection.resenha.findMany({
     where: {
       devocional: { isNot: null },
-      ...(filtro.pregadorId ? { pregadorId: filtro.pregadorId } : {}),
+      ...recorte,
       ...(filtro.anoDaPregacao ? { ano: filtro.anoDaPregacao } : {}),
     },
     select: {

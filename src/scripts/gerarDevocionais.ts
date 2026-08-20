@@ -6,7 +6,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import connection from '../connection';
 import { comoPedido, filaDeGeracao, filaDoTema } from '../services/devocional';
-import { MESES } from '../services/curadoriaDoLivro';
+import { MESES, PREGADOR_DO_LIVRO } from '../services/curadoriaDoLivro';
 import {
   acharPregador,
   escreverUm,
@@ -54,18 +54,6 @@ import { eCotaDiaria, provedores as provedoresDisponiveis } from '../services/pr
 const MODELO = 'claude-opus-5';
 const LOTE_PADRAO = 5;
 
-/**
- * De quem é o livro.
- *
- * Não é preferência de quem roda o script: **o livro é do pastor Nélio**, e
- * devocional escrito a partir da pregação de outra pessoa não pertence a ele.
- * Por isso o filtro é o padrão e não uma flag — depender de alguém lembrar de
- * digitar `--pregador` significa que uma distração contamina o acervo do
- * livro, e o erro só apareceria na diagramação.
- *
- * `--todos` desliga, para geração que não seja para este livro.
- */
-const PREGADOR_DO_LIVRO = 'Nélio Monteiro';
 
 /**
  * Os pregadores da casa, para o acervo.
