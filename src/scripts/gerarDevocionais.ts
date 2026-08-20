@@ -26,6 +26,7 @@ import { eCotaDiaria, provedores as provedoresDisponiveis } from '../services/pr
  *     npm run devocionais -- 20 2027-6       # 20 para o mês de Escatologia
  *     npm run devocionais -- 20 2027-6 --listar   # só a lista, sem gastar cota
  *     npm run devocionais -- 20 --todos      # abre para todos os pregadores
+ *     npm run devocionais -- 20 --acervo     # os pregadores da casa, sem o Nelio
  *     npm run devocionais -- 20 --cli        # força o Claude, ignorando as chaves
  *
  * **Dois motores.** Com `GROQ_API_KEYS` ou `NVIDIA_API_KEYS` no ambiente, usa a
@@ -65,6 +66,29 @@ const LOTE_PADRAO = 5;
  * `--todos` desliga, para geração que não seja para este livro.
  */
 const PREGADOR_DO_LIVRO = 'Nélio Monteiro';
+
+/**
+ * Os pregadores da casa, para o acervo.
+ *
+ * Não é o livro — o livro é do Nélio. É o resto do que a igreja pregou, que
+ * merece virar devocional mesmo sem destino de página definido: os outros
+ * pastores, o seminarista e os irmãos que assumem o púlpito.
+ *
+ * **A lista é explícita, e não uma regra sobre `tipo`.** Filtrar por
+ * `PASTOR | SEMINARISTA` traria pregador que passou uma vez pela igreja em
+ * 2019, e deixaria de fora quem é da casa e está cadastrado como `IRMAO`. Quem
+ * entra aqui é decisão da igreja, não do enum — os quarenta e quatro
+ * convidados de uma pregação só ficam de fora de propósito, e para eles existe
+ * `--todos`.
+ */
+const ACERVO = [
+  'Gabriel Monteiro',
+  'Ryan Souza',
+  'Jaine Feliciano',
+  'Daniel Monteiro',
+  'Jailson',
+  'Guilherme de Souza Saito',
+];
 
 /** Limite de tokens por minuto de cada chave da Groq, do plano gratuito. */
 const TOKENS_POR_MINUTO_POR_CHAVE = 8000;
@@ -308,17 +332,45 @@ function motorDoClaude(): Motor {
   };
 }
 
+/**
+ * De quem são as resenhas desta rodada.
+ *
+ * **O pregador é padrão, não opção.** Esquecer a flag uma vez colocaria
+ * pregação de outra pessoa dentro do livro do Nélio, e o erro só apareceria na
+ * diagramação. Por isso são três recortes explícitos e nenhum implícito:
+ *
+ * - sem flag: só o pregador do livro
+ * - `--acervo`: os pregadores da casa, **sem** o do livro
+ * - `--pregador "Fulano"`: um nome
+ * - `--todos`: ninguém filtrado, convidados de uma pregação só incluídos
+ *
+ * `--acervo` tira o Nélio de propósito. Ele já tem quase todo o acervo escrito,
+ * e deixá-lo na lista faria a rodada gastar cota na cauda dele em vez de nos
+ * outros — que é justamente o que a flag existe para alcançar.
+ */
+async function recortarPregadores(): Promise<{ ids?: string | string[]; rotulo: string | null }> {
+  if (process.argv.includes('--todos')) return { rotulo: null };
+
+  if (process.argv.includes('--acervo')) {
+    const achados = await Promise.all(ACERVO.map(acharPregador));
+    return {
+      ids: achados.map((p) => p.id),
+      rotulo: achados.map((p) => p.nomeCanonico).join(', '),
+    };
+  }
+
+  const pedido = process.argv.indexOf('--pregador');
+  const pregador = await acharPregador(
+    pedido > -1 ? (process.argv[pedido + 1] ?? '') : PREGADOR_DO_LIVRO,
+  );
+  return { ids: pregador.id, rotulo: pregador.nomeCanonico };
+}
+
 async function main() {
   const limite = Number(process.argv[2]) || LOTE_PADRAO;
   const alvo = process.argv[3]?.startsWith('--') ? undefined : process.argv[3];
 
-  // O pregador é padrão, não opção: esquecer a flag uma vez colocaria pregação
-  // de outra pessoa dentro do livro do Nélio. `--todos` abre para o acervo
-  // inteiro, para quando a geração não for para este livro.
-  const pedido = process.argv.indexOf('--pregador');
-  const pregador = process.argv.includes('--todos')
-    ? null
-    : await acharPregador(pedido > -1 ? (process.argv[pedido + 1] ?? '') : PREGADOR_DO_LIVRO);
+  const recorte = await recortarPregadores();
 
   // Motor: API se houver chave configurada, CLI caso contrário. `--cli` força
   // o Claude mesmo com chaves no ambiente, para comparar os dois lado a lado.
@@ -346,15 +398,15 @@ async function main() {
   let fila;
   if (alvo) {
     const tema = await acharTema(alvo);
-    fila = (await filaDoTema(tema.id, limite, pregador?.id)).fila;
+    fila = (await filaDoTema(tema.id, limite, recorte.ids)).fila;
     logInfo(
       `por afinidade com ${MESES[tema.mes - 1]}/${tema.ano} — "${tema.tema}"` +
-        (pregador ? `, só de ${pregador.nomeCanonico}` : ''),
+        (recorte.rotulo ? `, só de ${recorte.rotulo}` : ''),
       'devocional',
     );
   } else {
-    fila = await filaDeGeracao(limite, pregador?.id);
-    logInfo(`das mais recentes${pregador ? `, só de ${pregador.nomeCanonico}` : ''}`, 'devocional');
+    fila = await filaDeGeracao(limite, recorte.ids);
+    logInfo(`das mais recentes${recorte.rotulo ? `, só de ${recorte.rotulo}` : ''}`, 'devocional');
   }
 
   // Conferir antes de gastar: 20 devocionais são ~560k tokens de entrada, mais

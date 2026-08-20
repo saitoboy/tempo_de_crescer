@@ -205,7 +205,7 @@ export type ResultadoDaEscrita = {
  */
 export async function escreverPendentes(
   limite: number,
-  pregadorId?: string,
+  pregadorId?: string | string[],
   motor?: Motor,
 ): Promise<ResultadoDaEscrita> {
   motor ??= await motorDeApi();
