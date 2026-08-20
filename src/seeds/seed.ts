@@ -1,8 +1,10 @@
 import connection from '../connection';
 import { TipoPregador } from '../generated/prisma/enums';
 import { logInfo, logSuccess, logWarning } from '../utils/logger';
+import { anosDaCuradoria, importarCuradoria } from './curadoria';
 import { importarDevocionais } from './devocionais';
 import { semearSubtemas } from './subtemas';
+import { semearTemas } from './temas';
 import { gerarHash } from '../utils/senha';
 
 /**
@@ -37,12 +39,12 @@ const PREGADORES: Array<{ nomeCanonico: string; tipo: TipoPregador; aliases: str
   { nomeCanonico: 'Robson Soares', tipo: 'PASTOR', aliases: ['robson soares', 'robson'] },
   { nomeCanonico: 'Jailson', tipo: 'PASTOR', aliases: ['jailson'] },
   { nomeCanonico: 'Daniel Monteiro', tipo: 'SEMINARISTA', aliases: ['daniel monteiro', 'daniel'] },
-  { nomeCanonico: 'Jaine Feliciano', tipo: 'IRMAO', aliases: ['jaine feliciano', 'missionária jaine', 'missionaria jaine', 'jaine'] },
+  { nomeCanonico: 'Jaine Feliciano', tipo: 'EDUCADOR_RELIGIOSO', aliases: ['jaine feliciano', 'missionária jaine', 'missionaria jaine', 'jaine'] },
 
   // Nomes que o blog escreve errado, abreviado ou de mais de um jeito.
   // O nomeCanonico é o correto, confirmado pela igreja; os aliases são as
   // grafias que aparecem nas assinaturas.
-  { nomeCanonico: 'Guilherme de Souza Saito', tipo: 'IRMAO', aliases: ['guilherme saito', 'guilherme de souza saito', 'guilherme'] },
+  { nomeCanonico: 'Guilherme de Souza Saito', tipo: 'SEMINARISTA', aliases: ['guilherme saito', 'guilherme de souza saito', 'guilherme'] },
   { nomeCanonico: 'Fernando Arêdes', tipo: 'PASTOR', aliases: ['fernando arede', 'fernando arêde', 'fernando aredes', 'fernando arêdes'] },
   { nomeCanonico: 'Estevão Vianna', tipo: 'CONVIDADO', aliases: ['estevao vianna', 'estevão vianna', 'estevao', 'estevão', 'estevam'] },
   { nomeCanonico: 'Geovane Glória', tipo: 'CONVIDADO', aliases: ['geovane gloria', 'geovane glória', 'giovani gloria', 'giovani glória', 'geovane'] },
@@ -83,6 +85,13 @@ async function main() {
   // gerar de novo produziria outro texto, e o que o pastor revisou só viaja
   // como dado. A importação nunca sobrescreve o que já está no destino.
   await importarDevocionais();
+  // Depois dos devocionais, de propósito: a página aponta para um devocional,
+  // e sem ele não há o que montar. E os temas do ano vêm antes da curadoria,
+  // porque a página também aponta para um TemaMes que num banco novo não
+  // existe. Os anos saem do próprio arquivo — semear 2028 sem livro de 2028
+  // seria inventar trabalho.
+  for (const ano of anosDaCuradoria()) await semearTemas(ano);
+  await importarCuradoria();
   await fundirDuplicados();
   await criarAdmin();
 }

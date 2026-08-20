@@ -394,18 +394,32 @@ async function umaPassada(
       const escolha = json.choices?.[0];
       const texto = escolha?.message?.content;
 
-      if (!texto) {
-        // O caso comum não é "o modelo não respondeu", é "o modelo gastou a
-        // saída inteira raciocinando". Dizer isso poupa a investigação que
-        // custou meia hora aqui.
+      // Resposta vazia com `finish_reason: length` é chave sem espaço, não
+      // modelo com defeito — e por isso passa a vez em vez de derrubar o item.
+      //
+      // **A Groq desconta da janela de TPM o teto de saída, não o que foi
+      // usado.** Medido: o mesmo pedido que passa sem `max_completion_tokens`
+      // volta 429 na hora se pedir 8.000, com a chave cheia. Logo, sem teto
+      // explícito ela concede o que resta da janela — e numa chave quase
+      // gasta isso são uns três mil tokens, que o raciocínio consome inteiros
+      // antes de escrever a primeira palavra da resposta.
+      //
+      // O sintoma engana: `reasoning_tokens: 3070` parece raciocínio
+      // descontrolado, e a mensagem antiga mandava baixar o
+      // `reasoning_effort`, que já está em `low` e não é o problema. A prova
+      // de que o teto não é fixo: um pedido longo numa chave descansada para
+      // sozinho em 2.200 tokens, com `finish_reason: stop`.
+      //
+      // Pôr um teto nosso resolveria a metade errada — cobraria o teto cheio
+      // da janela a cada pedido e traria os 429 de volta.
+      if (!texto && escolha?.finish_reason === 'length') {
         const raciocinio = json.usage?.completion_tokens_details?.reasoning_tokens ?? 0;
-        const diagnostico =
-          escolha?.finish_reason === 'length' && raciocinio > 0
-            ? `gastou ${raciocinio} tokens raciocinando e não sobrou saída para a resposta — ` +
-              `use reasoning_effort mais baixo`
-            : corpo.slice(0, 200);
+        esgotadas.push(`${origem} → janela quase cheia, sobraram ~${raciocinio} tokens`);
+        continue;
+      }
 
-        throw new Error(`${origem} devolveu resposta sem conteúdo: ${diagnostico}`);
+      if (!texto) {
+        throw new Error(`${origem} devolveu resposta sem conteúdo: ${corpo.slice(0, 200)}`);
       }
 
       if (esgotadas.length > 0) {

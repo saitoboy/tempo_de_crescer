@@ -24,12 +24,14 @@
     "qrcodes": "tsx src/scripts/gerarQrCodes.ts",
     "classificar": "tsx src/scripts/classificar.ts",
     "devocionais": "tsx src/scripts/gerarDevocionais.ts",
+    "devocionais:acervo": "tsx src/scripts/gerarDevocionais.ts 217 --acervo",
     "seed:temas": "tsx src/scripts/semearTemas.ts",
     "vetorizar": "tsx src/scripts/vetorizar.ts",
     "exportar:devocionais": "tsx src/scripts/exportarDevocionais.ts",
     "comparar": "tsx src/scripts/compararModelos.ts",
     "estado": "tsx src/scripts/estado.ts",
-    "regerar": "tsx src/scripts/regerar.ts"
+    "regerar": "tsx src/scripts/regerar.ts",
+    "conferir:contrato": "tsx src/scripts/conferirContrato.ts"
   },
   "repository": {
     "type": "git",

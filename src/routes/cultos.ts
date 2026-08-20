@@ -3,7 +3,8 @@ import { z } from 'zod';
 import connection from '../connection';
 import { exigirPapel } from '../middlewares/autenticacao';
 import { assincrono } from '../middlewares/erros';
-import { comoDataUri, gerarSvg } from '../services/qrcode';
+import { listarCultos } from '../services/acervo';
+import { gerarSvg } from '../services/qrcode';
 import { NotFoundError } from '../utils/logger';
 
 export const rotasCultos = Router();
@@ -23,62 +24,7 @@ rotasCultos.get(
   '/',
   exigirPapel('LIDER', 'PASTOR'),
   assincrono(async (req, res) => {
-    const { ano, turno, natureza, comVideo, pagina, porPagina } = filtroCultos.parse(req.query);
-
-    const where = {
-      ...(turno ? { turno } : {}),
-      ...(natureza ? { natureza } : {}),
-      ...(comVideo === 'true' ? { youtubeVideoId: { not: null } } : {}),
-      ...(comVideo === 'false' ? { youtubeVideoId: null } : {}),
-      ...(ano
-        ? {
-            data: {
-              gte: new Date(`${ano}-01-01T00:00:00Z`),
-              lt: new Date(`${ano + 1}-01-01T00:00:00Z`),
-            },
-          }
-        : {}),
-    };
-
-    const [total, cultos] = await Promise.all([
-      connection.culto.count({ where }),
-      connection.culto.findMany({
-        where,
-        orderBy: [{ data: 'desc' }],
-        skip: (pagina - 1) * porPagina,
-        take: porPagina,
-        select: {
-          id: true,
-          data: true,
-          turno: true,
-          natureza: true,
-          youtubeUrl: true,
-          tituloLive: true,
-          qrcodeSvg: true,
-          resenhas: {
-            select: {
-              id: true,
-              titulo: true,
-              textoBase: true,
-              pregador: { select: { nomeCanonico: true } },
-            },
-          },
-        },
-      }),
-    ]);
-
-    res.json({
-      total,
-      pagina,
-      porPagina,
-      paginas: Math.ceil(total / porPagina),
-      // O SVG cru não vai na listagem: são 2,4 KB por culto e inflaria a
-      // resposta. Vai a forma embutível, que é o que o front e o InDesign usam.
-      cultos: cultos.map(({ qrcodeSvg, ...culto }) => ({
-        ...culto,
-        qrcode: qrcodeSvg ? comoDataUri(qrcodeSvg) : null,
-      })),
-    });
+    res.json(await listarCultos(filtroCultos.parse(req.query)));
   }),
 );
 

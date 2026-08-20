@@ -26,7 +26,7 @@ const dataOuNulo = z.iso.datetime().nullable();
 
 const turno = z.enum(['DIA', 'NOITE']);
 const natureza = z.enum(['CULTO', 'CELEBRACAO', 'EBD', 'ESTUDO', 'VIGILIA', 'CONFERENCIA', 'FUNEBRE']);
-const tipoPregador = z.enum(['PASTOR', 'SEMINARISTA', 'CONVIDADO', 'IRMAO']);
+const tipoPregador = z.enum(['PASTOR', 'SEMINARISTA', 'CONVIDADO', 'IRMAO', 'EDUCADOR_RELIGIOSO']);
 const papel = z.enum(['ADMIN', 'PASTOR', 'LIDER']);
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -231,6 +231,16 @@ export const fusaoFeita = z.object({
 // CULTOS
 // ──────────────────────────────────────────────────────────────────────────────
 
+/**
+ * `resenhas` é a **lista**, não a contagem.
+ *
+ * O documento dizia número, e a rota sempre mandou os objetos. O conferidor de
+ * contrato achou assim que a rota entrou na lista dele — e é o segundo caso da
+ * mesma família, depois de `GET /temas`.
+ *
+ * Faz sentido ser lista: um culto de domingo à noite pode ter mais de uma
+ * resenha, e a tela precisa saber quais são para abrir a certa.
+ */
 export const listaDeCultos = paginado(
   'cultos',
   z.object({
@@ -242,7 +252,14 @@ export const listaDeCultos = paginado(
     youtubeVideoId: z.string().nullable(),
     tituloLive: z.string().nullable(),
     qrcode: z.string().nullable().meta({ description: 'O SVG como data URI, pronto para <img src>' }),
-    resenhas: z.int(),
+    resenhas: z.array(
+      z.object({
+        id: z.uuid(),
+        titulo: z.string(),
+        textoBase: z.string().nullable(),
+        pregador: z.object({ nomeCanonico: z.string() }).nullable(),
+      }),
+    ),
   }),
 );
 
@@ -326,21 +343,50 @@ export const paginasDoLivro = z.array(paginaDoLivro);
 // TEMAS DO MÊS
 // ──────────────────────────────────────────────────────────────────────────────
 
+/**
+ * O que `listarTemas` devolve de verdade.
+ *
+ * Estava errado em três campos — dizia `paginas: number`, omitia `nomeDoMes` e
+ * anunciava um `doutrina.id` que a consulta não trazia. Quem integrou pelo
+ * documento bateu de frente com a realidade. É o risco que o comentário no topo
+ * deste arquivo já anunciava: esquema de saída é descrição, e descrição mente
+ * quando o `select` muda e ninguém volta aqui.
+ *
+ * O `doutrina.id` passou a existir de verdade, porque o front precisa dele para
+ * o PATCH de `doutrinaId` — não fazia sentido documentar sem enviar.
+ */
+const doutrinaDoTema = z.object({ id: z.uuid(), numero: z.int(), nome: z.string() }).nullable();
+
 const temaResumido = z.object({
   id: z.uuid(),
   ano: z.int(),
   mes: z.int(),
+  nomeDoMes: z.string().meta({ description: 'Janeiro, Fevereiro… já pronto para a tela' }),
   tema: z.string(),
   descricao: z.string().nullable(),
   versiculo: z.string().nullable(),
   referencia: z.string().nullable(),
-  doutrina: z.object({ id: z.uuid(), numero: z.int(), nome: z.string() }).nullable(),
-  paginas: z.int().meta({ description: 'Quantos devocionais já foram escolhidos para o mês' }),
+  doutrina: doutrinaDoTema,
+  devocionais: z.int().meta({ description: 'Quantos já foram escolhidos para o mês' }),
 });
 
 export const listaDeTemas = z.array(temaResumido);
 
-export const temaCompleto = temaResumido.extend({
+/**
+ * `verTema` vem do `include` do Prisma, então traz as colunas cruas do TemaMes
+ * (`doutrinaId`, `criadoEm`) além do que a tela usa — e `paginas` aqui é a
+ * lista, não a contagem.
+ */
+export const temaCompleto = z.object({
+  id: z.uuid(),
+  ano: z.int(),
+  mes: z.int(),
+  nomeDoMes: z.string(),
+  tema: z.string(),
+  descricao: z.string().nullable(),
+  versiculo: z.string().nullable(),
+  referencia: z.string().nullable(),
+  doutrina: doutrinaDoTema,
   paginas: z.array(
     z.object({
       ordem: z.int(),
@@ -456,3 +502,12 @@ const chaveDeApi = z.object({
 
 export const listaDeChaves = z.array(chaveDeApi);
 export const chaveGuardada = chaveDeApi;
+
+/** O que `POST /temas/:id/preencher` devolve. */
+export const mesPreenchido = z.object({
+  adicionados: z.int(),
+  jaEstavam: z.int().meta({ description: 'O que a curadoria já tinha escolhido, e não foi tocado' }),
+  faltaram: z.int().meta({ description: 'Vagas que sobraram por falta de candidato' }),
+  paginas: z.int(),
+  dias: z.int().meta({ description: 'Quantas páginas o mês comporta — um por dia' }),
+});

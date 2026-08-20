@@ -1,0 +1,3 @@
+-- AlterEnum
+ALTER TYPE "TipoPregador" ADD VALUE 'EDUCADOR_RELIGIOSO';
+

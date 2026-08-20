@@ -8,29 +8,32 @@ import { NotFoundError, ValidationError } from '../utils/logger';
 
 export const rotasPregadores = Router();
 
+/** O cadastro com a contagem de resenhas de cada um. */
+export async function listarPregadores() {
+  const pregadores = await connection.pregador.findMany({
+    orderBy: [{ tipo: 'asc' }, { nomeCanonico: 'asc' }],
+    include: { _count: { select: { resenhas: true } } },
+  });
+
+  return pregadores.map((p) => ({
+    id: p.id,
+    nomeCanonico: p.nomeCanonico,
+    tipo: p.tipo,
+    aliases: p.aliases,
+    resenhas: p._count.resenhas,
+  }));
+}
+
 rotasPregadores.get(
   '/',
   assincrono(async (_req, res) => {
-    const pregadores = await connection.pregador.findMany({
-      orderBy: [{ tipo: 'asc' }, { nomeCanonico: 'asc' }],
-      include: { _count: { select: { resenhas: true } } },
-    });
-
-    res.json(
-      pregadores.map((p) => ({
-        id: p.id,
-        nomeCanonico: p.nomeCanonico,
-        tipo: p.tipo,
-        aliases: p.aliases,
-        resenhas: p._count.resenhas,
-      })),
-    );
+    res.json(await listarPregadores());
   }),
 );
 
 export const novoPregador = z.object({
   nomeCanonico: z.string().trim().min(2).max(120),
-  tipo: z.enum(['PASTOR', 'SEMINARISTA', 'CONVIDADO', 'IRMAO']).default('CONVIDADO'),
+  tipo: z.enum(['PASTOR', 'SEMINARISTA', 'CONVIDADO', 'IRMAO', 'EDUCADOR_RELIGIOSO']).default('CONVIDADO'),
   aliases: z.array(z.string().trim().min(2)).default([]),
 });
 

@@ -458,9 +458,9 @@ export async function passagemEmAcf(
  * transmitir em 2020, então as pregações recentes são as que têm culto casado
  * e QR code. Começar pelas novas rende página completa desde o primeiro lote.
  */
-export function filaDeGeracao(limite: number, pregadorId?: string) {
+export function filaDeGeracao(limite: number, pregadorId?: string | string[]) {
   return connection.resenha.findMany({
-    where: { ...PENDENTES, ...(pregadorId ? { pregadorId } : {}) },
+    where: { ...PENDENTES, ...soDe(pregadorId) },
     // `nulls: 'last'` é o ponto: sem ele o Postgres põe os NULL primeiro num
     // `DESC`, e as sem data — que não têm QR nem crédito — passariam na frente
     // das recentes, que têm os dois. Elas entram, mas por último.
@@ -487,6 +487,20 @@ const PENDENTES = {
   devocional: null,
   conteudoLimpo: { not: '' },
 } as const;
+
+/**
+ * O recorte por pregador, que aceita um nome ou vários.
+ *
+ * Um só é o caso do livro — ele é do Nélio. Vários é o acervo: gerar de uma
+ * vez para os pastores e seminaristas da casa, sem rodar o script seis vezes e
+ * sem abrir para os quarenta e quatro convidados que pregaram uma vez cada.
+ *
+ * Sem argumento não filtra nada, que é o que `--todos` usa.
+ */
+function soDe(pregadorId?: string | string[]) {
+  if (!pregadorId) return {};
+  return Array.isArray(pregadorId) ? { pregadorId: { in: pregadorId } } : { pregadorId };
+}
 
 const CAMPOS_DA_FILA = {
   id: true,
@@ -520,7 +534,7 @@ const CAMPOS_DA_FILA = {
  * A comparação é sobre o vetor da resenha, não do devocional — que nem existe
  * ainda. É a pregação inteira que carrega o assunto.
  */
-export async function filaDoTema(temaMesId: string, limite: number, pregadorId?: string) {
+export async function filaDoTema(temaMesId: string, limite: number, pregadorId?: string | string[]) {
   const tema = await connection.temaMes.findUnique({
     where: { id: temaMesId },
     select: { tema: true, descricao: true },
@@ -532,7 +546,7 @@ export async function filaDoTema(temaMesId: string, limite: number, pregadorId?:
   // Só id e vetor: trazer o conteúdo de mil resenhas para ordenar seria
   // carregar megabytes de texto e descartar quase tudo.
   const candidatas = await connection.resenha.findMany({
-    where: { ...PENDENTES, ...(pregadorId ? { pregadorId } : {}) },
+    where: { ...PENDENTES, ...soDe(pregadorId) },
     select: { id: true, embedding: true },
   });
 
@@ -559,7 +573,7 @@ export async function filaDoTema(temaMesId: string, limite: number, pregadorId?:
     where: {
       conteudoLimpo: { not: '' },
       dataPregacao: { not: null },
-      ...(pregadorId ? { pregadorId } : {}),
+      ...soDe(pregadorId),
     },
     select: { id: true, embedding: true },
   });

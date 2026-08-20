@@ -6,6 +6,7 @@ import { assincrono } from '../middlewares/erros';
 import {
   adicionarPagina,
   listarTemas,
+  preencherMes,
   removerPagina,
   reordenar,
   sugerir,
@@ -68,7 +69,10 @@ export const filtroDeEscolha = z.object({
   doutrinaId: z.uuid().optional(),
   /** Ignora a classificação e traz o acervo todo. */
   semDoutrina: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
+  /** Um pregador específico. Sem isto, vale o pregador do livro. */
   pregadorId: z.uuid().optional(),
+  /** Abre para o acervo inteiro, ignorando o pregador do livro. */
+  todosOsPregadores: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
   /** Ano da pregação, não do livro. */
   anoDaPregacao: z.coerce.number().int().min(2000).max(2100).optional(),
   busca: z.string().trim().min(2).max(80).optional(),
@@ -85,6 +89,9 @@ export const filtroDeEscolha = z.object({
  *
  * Parte da doutrina do tema, mas tudo é sobreponível: por pastor, por ano da
  * pregação, por palavra no título, ou sem doutrina nenhuma.
+ *
+ * **Traz só o pregador do livro por padrão.** `pregadorId` troca por outro,
+ * `todosOsPregadores=true` abre para o acervo inteiro.
  */
 rotasTemas.get(
   '/:id/sugestoes',
@@ -115,6 +122,23 @@ rotasTemas.delete(
       .parse(req.params);
     await removerPagina(id, devocionalId);
     res.json({ status: 'ok' });
+  }),
+);
+
+/**
+ * Preenche o mês inteiro de uma vez.
+ *
+ * Escolher 31 devocionais de um em um é trabalho que a máquina faz igual — a
+ * ordem sugerida já é a de afinidade. O ganho da curadoria está em trocar o que
+ * não serve, não em repetir trinta vezes o que serve.
+ */
+rotasTemas.post(
+  '/:id/preencher',
+  exigirToken,
+  assincrono(async (req, res) => {
+    const { id } = z.object({ id: z.uuid() }).parse(req.params);
+    const { limite, ...filtro } = filtroDeEscolha.parse(req.query);
+    res.json(await preencherMes(id, filtro));
   }),
 );
 
