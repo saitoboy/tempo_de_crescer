@@ -82,6 +82,12 @@ npm-debug.log*
 .env.local
 .env.*.local
 
+# Documento com as credenciais reais para colar no painel do EasyPanel.
+# Existe só até o deploy ser feito, e é apagado depois. Nunca versionar:
+# credencial em repositório não se apaga com `git rm` — fica no histórico.
+CREDENCIAIS.md
+CREDENCIAIS*.md
+
 # ==================== PROJETO ESPECÍFICO ====================
 
 # JSONs de pregações (se não quiser versionar)

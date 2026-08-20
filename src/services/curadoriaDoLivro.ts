@@ -1,3 +1,4 @@
+import { config } from '../config';
 import connection from '../connection';
 import { NotFoundError, ValidationError } from '../utils/logger';
 import { comoConsulta, emAfinidade, maisParecidos } from './vetores';
@@ -30,8 +31,11 @@ export const MESES = [
  * diagramação, tarde demais.
  *
  * `todosOsPregadores` abre, para quando o livro não for este.
+ *
+ * Sai do ambiente porque produção pode montar o livro de outra pessoa sem
+ * rebuild — e porque o valor já estava em `config`, esperando por isto.
  */
-export const PREGADOR_DO_LIVRO = 'Nélio Monteiro';
+export const PREGADOR_DO_LIVRO = config.PREGADOR_DO_LIVRO;
 
 /**
  * O recorte por pregador que vale nesta escolha.
