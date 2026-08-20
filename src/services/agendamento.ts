@@ -2,6 +2,8 @@ import { schedule, validate } from 'node-cron';
 import { config } from '../config';
 import { logError, logInfo, logSuccess, logWarning } from '../utils/logger';
 import { FUSO } from '../utils/timezone';
+import { importarCuradoria } from '../seeds/curadoria';
+import { importarDevocionais } from '../seeds/devocionais';
 import { acharPregador, escreverPendentes, relatarGasto } from './escrita';
 import { ingerirNovos } from './ingestao';
 import { provedores } from './provedores';
@@ -44,6 +46,8 @@ export async function executarIngestao(): Promise<void> {
         `${resultado.gravadas} resenhas novas guardadas (de ${resultado.novas} encontradas no blog)`,
         CONTEXTO,
       );
+
+      await carregarOQueDependeDasResenhas();
     }
 
     for (const falha of resultado.falhas) {
@@ -55,6 +59,42 @@ export async function executarIngestao(): Promise<void> {
     logError(`erro na ingestão: ${(e as Error).message}`, CONTEXTO);
   } finally {
     rodando = false;
+  }
+}
+
+/**
+ * Os devocionais e o livro, que só casam depois que as resenhas existem.
+ *
+ * **É o que faz um deploy novo nascer com o acervo, e não vazio.** O seed roda
+ * na partida do contêiner, antes do servidor, e nessa hora o banco não tem
+ * resenha nenhuma: a ingestão só acontece depois, em segundo plano. Como a
+ * importação casa devocional com resenha **pelo slug**, um banco recém-criado
+ * terminava o seed com os 1.049 devocionais e as 365 páginas do livro todos
+ * recusados por "sem resenha correspondente" — e produção subia com o acervo
+ * baixado e nenhum devocional.
+ *
+ * Rodar de novo aqui resolve porque as duas importações são idempotentes e não
+ * destrutivas: devocional que já existe não é tocado, mês que já tem páginas é
+ * preservado. Em banco cheio isto não cria nada.
+ *
+ * Só é chamado quando a ingestão gravou resenha nova — sem isso não há o que
+ * casar, e a passada de rotina não paga o custo à toa.
+ */
+async function carregarOQueDependeDasResenhas(): Promise<void> {
+  try {
+    const devocionais = await importarDevocionais();
+    const livro = await importarCuradoria();
+
+    if (devocionais.criados > 0 || livro.criadas > 0) {
+      logSuccess(
+        `${devocionais.criados} devocionais e ${livro.criadas} páginas do livro casaram com as resenhas novas`,
+        CONTEXTO,
+      );
+    }
+  } catch (e) {
+    // Mesma regra da ingestão: não derruba o servidor. A próxima passada com
+    // resenha nova tenta de novo, e o seed manual sempre resolve.
+    logError(`erro ao casar devocionais e livro: ${(e as Error).message}`, CONTEXTO);
   }
 }
 

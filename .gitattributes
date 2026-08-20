@@ -1,0 +1,5 @@
+# O entrypoint do contêiner roda em Alpine. Se o git entregar o arquivo com
+# CRLF, o `#!/bin/sh` vira um interpretador que não existe e o contêiner
+# morre com "no such file or directory" — erro que aponta para o lugar errado.
+*.sh text eol=lf
+Dockerfile text eol=lf
