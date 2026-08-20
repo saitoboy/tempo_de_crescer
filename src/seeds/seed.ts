@@ -39,12 +39,12 @@ const PREGADORES: Array<{ nomeCanonico: string; tipo: TipoPregador; aliases: str
   { nomeCanonico: 'Robson Soares', tipo: 'PASTOR', aliases: ['robson soares', 'robson'] },
   { nomeCanonico: 'Jailson', tipo: 'PASTOR', aliases: ['jailson'] },
   { nomeCanonico: 'Daniel Monteiro', tipo: 'SEMINARISTA', aliases: ['daniel monteiro', 'daniel'] },
-  { nomeCanonico: 'Jaine Feliciano', tipo: 'IRMAO', aliases: ['jaine feliciano', 'missionária jaine', 'missionaria jaine', 'jaine'] },
+  { nomeCanonico: 'Jaine Feliciano', tipo: 'EDUCADOR_RELIGIOSO', aliases: ['jaine feliciano', 'missionária jaine', 'missionaria jaine', 'jaine'] },
 
   // Nomes que o blog escreve errado, abreviado ou de mais de um jeito.
   // O nomeCanonico é o correto, confirmado pela igreja; os aliases são as
   // grafias que aparecem nas assinaturas.
-  { nomeCanonico: 'Guilherme de Souza Saito', tipo: 'IRMAO', aliases: ['guilherme saito', 'guilherme de souza saito', 'guilherme'] },
+  { nomeCanonico: 'Guilherme de Souza Saito', tipo: 'SEMINARISTA', aliases: ['guilherme saito', 'guilherme de souza saito', 'guilherme'] },
   { nomeCanonico: 'Fernando Arêdes', tipo: 'PASTOR', aliases: ['fernando arede', 'fernando arêde', 'fernando aredes', 'fernando arêdes'] },
   { nomeCanonico: 'Estevão Vianna', tipo: 'CONVIDADO', aliases: ['estevao vianna', 'estevão vianna', 'estevao', 'estevão', 'estevam'] },
   { nomeCanonico: 'Geovane Glória', tipo: 'CONVIDADO', aliases: ['geovane gloria', 'geovane glória', 'giovani gloria', 'giovani glória', 'geovane'] },

@@ -75,11 +75,12 @@ const PREGADOR_DO_LIVRO = 'Nélio Monteiro';
  * pastores, o seminarista e os irmãos que assumem o púlpito.
  *
  * **A lista é explícita, e não uma regra sobre `tipo`.** Filtrar por
- * `PASTOR | SEMINARISTA` traria pregador que passou uma vez pela igreja em
- * 2019, e deixaria de fora quem é da casa e está cadastrado como `IRMAO`. Quem
- * entra aqui é decisão da igreja, não do enum — os quarenta e quatro
- * convidados de uma pregação só ficam de fora de propósito, e para eles existe
- * `--todos`.
+ * `PASTOR | SEMINARISTA` traria pastor visitante que passou uma vez pela
+ * igreja em 2019 e continuaria deixando gente da casa de fora — a Jaine é
+ * educadora religiosa, e a próxima pessoa a assumir o púlpito pode não ter
+ * título nenhum. Quem entra aqui é decisão da igreja, não do enum. Os quarenta
+ * e quatro convidados de uma pregação só ficam de fora de propósito, e para
+ * eles existe `--todos`.
  */
 const ACERVO = [
   'Gabriel Monteiro',

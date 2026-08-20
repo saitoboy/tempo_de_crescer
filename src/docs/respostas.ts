@@ -26,7 +26,7 @@ const dataOuNulo = z.iso.datetime().nullable();
 
 const turno = z.enum(['DIA', 'NOITE']);
 const natureza = z.enum(['CULTO', 'CELEBRACAO', 'EBD', 'ESTUDO', 'VIGILIA', 'CONFERENCIA', 'FUNEBRE']);
-const tipoPregador = z.enum(['PASTOR', 'SEMINARISTA', 'CONVIDADO', 'IRMAO']);
+const tipoPregador = z.enum(['PASTOR', 'SEMINARISTA', 'CONVIDADO', 'IRMAO', 'EDUCADOR_RELIGIOSO']);
 const papel = z.enum(['ADMIN', 'PASTOR', 'LIDER']);
 
 // ──────────────────────────────────────────────────────────────────────────────

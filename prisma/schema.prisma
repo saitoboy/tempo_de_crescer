@@ -48,6 +48,8 @@ enum TipoPregador {
   /// Missionários e pregadores de fora, que costumam aparecer uma vez só.
   CONVIDADO
   IRMAO
+  /// Formação da Convenção Batista, distinta de seminarista.
+  EDUCADOR_RELIGIOSO
 }
 
 /// De onde veio a informação do pregador daquela resenha.

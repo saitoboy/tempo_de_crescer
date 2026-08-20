@@ -54,6 +54,7 @@ const ROTULOS: Record<string, string> = {
   SEMINARISTA: 'Seminarista',
   CONVIDADO: 'Convidado',
   IRMAO: 'Irmão',
+  EDUCADOR_RELIGIOSO: 'Educador(a) Religioso(a)',
   LIDER: 'Líder',
   ADMIN: 'Administrador',
 

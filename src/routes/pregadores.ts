@@ -33,7 +33,7 @@ rotasPregadores.get(
 
 export const novoPregador = z.object({
   nomeCanonico: z.string().trim().min(2).max(120),
-  tipo: z.enum(['PASTOR', 'SEMINARISTA', 'CONVIDADO', 'IRMAO']).default('CONVIDADO'),
+  tipo: z.enum(['PASTOR', 'SEMINARISTA', 'CONVIDADO', 'IRMAO', 'EDUCADOR_RELIGIOSO']).default('CONVIDADO'),
   aliases: z.array(z.string().trim().min(2)).default([]),
 });
 
