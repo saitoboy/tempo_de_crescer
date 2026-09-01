@@ -19,6 +19,7 @@ import { rotasPregadores } from './routes/pregadores';
 import { rotasResenhas } from './routes/resenhas';
 import { rotasTemas } from './routes/temas';
 import { rotasSessao } from './routes/sessao';
+import { rotasUsuarios } from './routes/usuarios';
 import { agendarEscrita, agendarIngestao, executarIngestao } from './services/agendamento';
 import { logInfo, logSuccess } from './utils/logger';
 import { aplicarProxy } from './utils/proxy';
@@ -92,6 +93,9 @@ app.use(`${BASE}/resenhas`, exigirLeitura, rotasResenhas);
 app.use(`${BASE}/devocionais`, exigirLeitura, rotasDevocionais);
 // Chave de API é assunto de quem administra, não de quem lê o acervo.
 app.use(`${BASE}/chaves`, exigirPapel(), rotasChaves);
+// Cadastro de gente é de ADMIN, e sempre com sessão: as travas de "não mexer
+// na própria conta" precisam saber quem está chamando, e o API_TOKEN não diz.
+app.use(`${BASE}/usuarios`, exigirPapel(), rotasUsuarios);
 app.use(`${BASE}/pregadores`, exigirLeitura, rotasPregadores);
 
 app.get(`${BASE}/openapi.json`, (_req: Request, res: Response) => res.json(especificacao));

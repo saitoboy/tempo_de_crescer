@@ -112,6 +112,27 @@ export const login = z.object({
 
 export const eu = usuario.extend({ ativo: z.boolean() }).nullable();
 
+/** O cadastro como as telas de administração mostram. `senhaHash` nunca sai. */
+const usuarioCompleto = usuario.extend({
+  ativo: z.boolean(),
+  criadoEm: dataHora,
+  atualizadoEm: dataHora,
+});
+
+export const listaDeUsuarios = z.array(usuarioCompleto);
+export const usuarioSalvo = usuarioCompleto;
+
+export const senhaRedefinida = z.object({
+  status: z.literal('ok'),
+  senha: z
+    .string()
+    .optional()
+    .meta({
+      description:
+        'Só vem quando o servidor sorteou a senha. Aparece uma única vez — anote e entregue à pessoa.',
+    }),
+});
+
 // ──────────────────────────────────────────────────────────────────────────────
 // RESENHAS
 // ──────────────────────────────────────────────────────────────────────────────
