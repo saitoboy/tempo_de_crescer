@@ -2,12 +2,13 @@ import { z } from 'zod';
 import { filtroPregadores } from '../routes/analise';
 import { filtroCultos } from '../routes/cultos';
 import { filtroLivro } from '../routes/livro';
-import { credenciais } from '../routes/sessao';
+import { credenciais, trocaDeSenha } from '../routes/sessao';
 import { fusaoPregador, novoPregador } from '../routes/pregadores';
 import { correcaoResenha, filtroListagem, filtroPendentes } from '../routes/resenhas';
 import { filtroDeEscolha, filtroTemas, novaOrdem, novoTema, paginaEscolhida } from '../routes/temas';
 import { filtroDevocionais } from '../routes/devocionais';
 import { chaveNova, situacaoDaChave } from '../routes/chaves';
+import { alteracaoUsuario, novoUsuario, redefinicaoDeSenha } from '../routes/usuarios';
 import { correcaoDeDevocional } from '../services/revisaoDeDevocional';
 import * as R from './respostas';
 
@@ -152,6 +153,7 @@ export const especificacao = {
     { name: 'Meta', description: 'O vocabulário do domínio' },
     { name: 'Devocionais', description: 'A revisão: o pastor corrige no papel, alguém digita aqui' },
     { name: 'Chaves', description: 'As chaves de API dos provedores de modelo' },
+    { name: 'Usuários', description: 'Quem entra na API. Só ADMIN administra.' },
   ],
   components: {
     securitySchemes: {
@@ -319,6 +321,57 @@ export const especificacao = {
         parameters: [idNaRota],
         requestBody: corpo(novaOrdem),
         responses: { 200: respostaJson('Reordenado', R.temaCompleto), ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/usuarios': {
+      get: {
+        tags: ['Usuários'],
+        summary: 'Todos os usuários',
+        description: 'Só ADMIN. A senha nunca sai, nem em hash.',
+        security: comLogin,
+        responses: { 200: respostaJson('Os usuários', R.listaDeUsuarios), ...SEM_SESSAO },
+      },
+      post: {
+        tags: ['Usuários'],
+        summary: 'Cadastra um usuário',
+        security: comLogin,
+        requestBody: corpo(novoUsuario),
+        responses: { 201: respostaJson('Cadastrado', R.usuarioSalvo), ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/usuarios/{id}': {
+      patch: {
+        tags: ['Usuários'],
+        summary: 'Altera nome, papel ou situação',
+        description:
+          'Ninguém altera o próprio papel nem se desativa: sem essa trava o único ADMIN se rebaixa por engano e ninguém consegue desfazer.',
+        security: comLogin,
+        parameters: [idNaRota],
+        requestBody: corpo(alteracaoUsuario),
+        responses: { 200: respostaJson('Alterado', R.usuarioSalvo), ...ERROS_DE_ESCRITA },
+      },
+      delete: {
+        tags: ['Usuários'],
+        summary: 'Exclui o usuário',
+        description: 'A própria conta não pode ser excluída.',
+        security: comLogin,
+        parameters: [idNaRota],
+        responses: { 200: respostaJson('Excluído', R.confirmacao), ...ERROS_DE_ESCRITA },
+      },
+    },
+
+    '/usuarios/{id}/senha': {
+      post: {
+        tags: ['Usuários'],
+        summary: 'Redefine a senha de outra pessoa',
+        description:
+          'Sem `senha` no corpo, o servidor sorteia uma e devolve na resposta — é o caminho de "esqueci a minha". Ela aparece uma única vez.',
+        security: comLogin,
+        parameters: [idNaRota],
+        requestBody: corpo(redefinicaoDeSenha),
+        responses: { 200: respostaJson('Redefinida', R.senhaRedefinida), ...ERROS_DE_ESCRITA },
       },
     },
 
@@ -506,6 +559,22 @@ export const especificacao = {
         summary: 'Quem sou eu',
         security: protegida,
         responses: { 200: respostaJson('O usuário da sessão', R.eu), 401: respostaErro('Faça login') },
+      },
+    },
+
+    '/sessao/senha': {
+      patch: {
+        tags: ['Sessão'],
+        summary: 'Troca a própria senha',
+        description:
+          'Exige a senha atual mesmo com sessão válida: token roubado não pode virar posse permanente da conta.',
+        security: comLogin,
+        requestBody: corpo(trocaDeSenha),
+        responses: {
+          200: respostaJson('Trocada', R.confirmacao),
+          400: respostaErro('Dados inválidos'),
+          401: respostaErro('Senha atual incorreta'),
+        },
       },
     },
 

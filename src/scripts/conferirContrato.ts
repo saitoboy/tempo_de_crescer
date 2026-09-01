@@ -8,6 +8,7 @@ import { paginas } from '../services/livro';
 import { listarDevocionais } from '../services/revisaoDeDevocional';
 import { listarCultos, listarResenhas, verResenha } from '../services/acervo';
 import { listarChaves } from '../services/chaves';
+import { listarUsuarios } from '../services/usuarios';
 import { listarPendentes } from '../services/curadoria';
 import { coberturaBiblica, distribuicaoPorDoutrina, evolucaoPorAno, panorama, perfilDosPregadores } from '../services/analise';
 import { vocabulario } from '../routes/meta';
@@ -79,6 +80,11 @@ async function main() {
       rota: 'GET /devocionais',
       esquema: R.listaDeDevocionais,
       obter: () => listarDevocionais({ pagina: 1, porPagina: 3 }),
+    },
+    {
+      rota: 'GET /usuarios',
+      esquema: R.listaDeUsuarios,
+      obter: () => listarUsuarios(),
     },
     {
       rota: 'GET /chaves',
